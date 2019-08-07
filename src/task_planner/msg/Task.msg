@@ -1,0 +1,13 @@
+Header      header
+bool        take
+bool        go_home
+int32       ID_ROBOT
+uint32      item
+uint32      order
+uint32      demand
+uint32      priority
+uint32      src
+uint32      dst
+uint32      path_distance
+uint32[]    route
+uint32[]    condition

@@ -1,0 +1,6 @@
+cinstance (pose [21.098000 9.270800 0 0] name "instance0" color "orange")
+cinstance (pose [26.180000 9.270800 0 0] name "instance1" color "yellow")
+cinstance (pose [31.261999 9.270800 0 0] name "instance2" color "yellow")
+cinstance (pose [36.343998 9.270800 0 0] name "instance3" color "yellow")
+cinstance (pose [41.425999 9.270800 0 0] name "instance4" color "yellow")
+cinstance (pose [46.507999 9.270800 0 0] name "instance5" color "yellow")

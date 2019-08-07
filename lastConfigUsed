@@ -1,0 +1,12 @@
+[Config]
+map: model5
+nrobots: 1
+from: 0
+to: 0
+algorithm: CYCLE
+locmode: odom
+gwait: 0
+term: gnome-terminal
+master: true
+networkif: lo
+robot: virtual

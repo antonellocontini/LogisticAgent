@@ -1,0 +1,8 @@
+<launch>
+  <param name="amcl/initial_pose_x" value="24.225"/>
+  <param name="amcl/initial_pose_y" value="1.575"/>
+  <param name="amcl/initial_pose_a" value="1.57079632679"/>
+  <param name="srrg_localizer/initial_pose_x" value="24.225"/>
+  <param name="srrg_localizer/initial_pose_y" value="1.575"/>
+  <param name="srrg_localizer/initial_pose_a" value="1.57079632679"/>
+</launch>

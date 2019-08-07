@@ -1,0 +1,21 @@
+include "../hokuyo.inc"
+include "../crobot.inc"
+include "../floorplan.inc"
+include "../cpoint.inc"
+
+window( 
+  size   [ 460 180 1 ]         
+  rotate [ 0.000 0.000 ]    
+  center [ 11.5 4.0 ]   
+  scale 20
+  show_data 1
+)
+
+floorplan (
+  size [23.0 8.0  1] 
+  pose [11.5 4.0 0 0]
+  bitmap "model3.pgm"
+)
+
+include "robots.inc"
+include "point.inc"

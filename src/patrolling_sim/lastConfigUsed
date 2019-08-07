@@ -1,0 +1,8 @@
+[Config]
+map: model5
+nrobots: 1
+algorithm: CYCLE
+locmode: odom
+navmode: ros
+gwait: 0
+term: xterm
