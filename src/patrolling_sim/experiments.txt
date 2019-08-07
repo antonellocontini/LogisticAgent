@@ -1657,3 +1657,6 @@ results/model5_4/TP/ubuntu-HT/20190807_165915
 results/model5_4/TP/ubuntu-HT/20190807_170414
 results/model5_4/TP/ubuntu-HT/20190807_170755
 results/model5_4/TP/ubuntu-HT/20190807_171227
+results/model5_4/TP/ubuntu-HT/20190807_201737
+results/model5_4/TP/ubuntu-HT/20190807_202538
+results/model5_4/TP/ubuntu-HT/20190807_202732

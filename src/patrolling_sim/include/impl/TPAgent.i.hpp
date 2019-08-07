@@ -167,13 +167,13 @@ int TPAgent::compute_next_vertex()
     }
 
     assert(!mission.empty());
-    if (current_vertex == mission[id_task].dst)
+    if (current_vertex == 6)
     {
         c_print("[DEBUG]\tReached pickup point", yellow);
         reached_pickup = true;
     }
 
-    if (current_vertex == 6 && reached_pickup)
+    if (current_vertex == mission[id_task].dst && reached_pickup)
     // if (current_vertex == mission[id_task].trail.back())
     {
         if (mission[id_task].take)
@@ -192,13 +192,13 @@ int TPAgent::compute_next_vertex()
     if (!reached_pickup)
     {
         c_print("[DEBUG]\tCalling tp_dijkstra, first leg", yellow);
-        tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
+        tp_dijkstra(current_vertex, 6, path, path_length);
         // dijkstra(current_vertex, mission[id_task].dst, path, path_length, vertex_web, dimension);
     }
     else
     {
         c_print("[DEBUG]\tCalling tp_dijkstra, last leg", yellow);
-        tp_dijkstra(current_vertex, 6, path, path_length);
+        tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
         // dijkstra(current_vertex, mission[id_task].trail.back(), path, path_length, vertex_web, dimension);
     }
     vertex = path[1];
