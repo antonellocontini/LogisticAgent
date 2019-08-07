@@ -12,7 +12,11 @@ namespace tpagent
             ros::Subscriber token_sub;
 
             std::vector< std::vector<uint> > token_weight_map;
-            bool reached_pickup;
+            bool reached_pickup, go_home;
+
+            uint home_vertex;
+
+            uint num_robots;
 
         public:
             virtual void init(int argc, char **argv);

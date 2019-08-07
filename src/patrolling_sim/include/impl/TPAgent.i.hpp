@@ -6,6 +6,8 @@ namespace tpagent
 
 void TPAgent::init(int argc, char **argv)
 {
+    num_robots = atoi(argv[6]);
+
     PatrolAgent::init(argc, argv);
     ros::NodeHandle nh;
 
@@ -17,6 +19,7 @@ void TPAgent::init(int argc, char **argv)
     init_tw_map();
 
     reached_pickup = false;
+    go_home = false;
 }
 
 void TPAgent::run()
@@ -59,6 +62,10 @@ void TPAgent::run()
 
     // c_print("RequestTask", green);
     // request_Task();
+    home_vertex = current_vertex;
+    c_print("current_vertex: ", current_vertex, red);
+    c_print("home_vertex: ", home_vertex, red);
+    c_print("Team size: ", num_robots, red);
     sleep(5);
 
     ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
@@ -134,7 +141,6 @@ void TPAgent::onGoalComplete()
         current_vertex = next_vertex;
     }
 
-
     c_print("compute_next_vertex", yellow);
     next_vertex = compute_next_vertex();
 
@@ -182,6 +188,9 @@ int TPAgent::compute_next_vertex()
             request_Task();
             reached_pickup = false;
             sleep(10);
+        } else {
+            c_print("Going home...", green);
+            go_home = true;
         }
 
         send_task_reached();
@@ -195,11 +204,16 @@ int TPAgent::compute_next_vertex()
         tp_dijkstra(current_vertex, 6, path, path_length);
         // dijkstra(current_vertex, mission[id_task].dst, path, path_length, vertex_web, dimension);
     }
-    else
+    else if(!go_home)
     {
         c_print("[DEBUG]\tCalling tp_dijkstra, last leg", yellow);
         tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
         // dijkstra(current_vertex, mission[id_task].trail.back(), path, path_length, vertex_web, dimension);
+    }
+    else
+    {
+        c_print("[DEBUG]\tCalling tp_dijkstra, going home", yellow);
+        tp_dijkstra(current_vertex, home_vertex, path, path_length);
     }
     vertex = path[1];
 
@@ -260,11 +274,11 @@ void TPAgent::token_callback(const patrolling_sim::TokenConstPtr &msg)
             TEAMSIZE = msg->TEAMSIZE;
         }
     }
-    else if (ID_ROBOT == (msg->ID_ROBOT + 1) % (CAPACITY+1))
+    else if (ID_ROBOT == (msg->ID_ROBOT + 1) % num_robots)
     {
         std::ostringstream oss;
         oss << "[DEBUG]\tToken ricevuto! ID messaggio: " << msg->ID_ROBOT
-            << "\tID robot: " << ID_ROBOT << "\tTEAMSIZE: " << CAPACITY+1;
+            << "\tID robot: " << ID_ROBOT << "\tTEAMSIZE: " << num_robots;
         std::string s = oss.str();
         // c_print(s.c_str(), yellow);
 
@@ -272,7 +286,7 @@ void TPAgent::token_callback(const patrolling_sim::TokenConstPtr &msg)
         patrolling_sim::Token t;
         t.ID_ROBOT = ID_ROBOT;
         t.INIT_DONE = true;
-        t.TEAMSIZE = CAPACITY+1;
+        t.TEAMSIZE = num_robots;
         t.ID_ROBOT_VERTEX = msg->ID_ROBOT_VERTEX;
         t.SRC_VERTEX = msg->SRC_VERTEX;
         t.DST_VERTEX = msg->DST_VERTEX;
