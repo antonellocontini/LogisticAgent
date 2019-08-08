@@ -173,47 +173,54 @@ int TPAgent::compute_next_vertex()
     }
 
     assert(!mission.empty());
-    if (current_vertex == 6)
+    if (mission[id_task].take == false)
+    {
+        c_print("Going home...", green);
+        go_home = true;
+    }
+    else if (current_vertex == 6)
     {
         c_print("[DEBUG]\tReached pickup point", yellow);
         reached_pickup = true;
     }
 
-    if (current_vertex == mission[id_task].dst && reached_pickup)
+    if (current_vertex == mission[id_task].dst && reached_pickup && !go_home)
     // if (current_vertex == mission[id_task].trail.back())
     {
         if (mission[id_task].take)
         {
             c_print("RequestTask", green);
             request_Task();
-            reached_pickup = false;
             sleep(10);
-        } else {
-            c_print("Going home...", green);
-            go_home = true;
         }
+        reached_pickup = false;
 
+        send_task_reached();
+    }
+    else if(current_vertex == home_vertex && go_home)
+    {
+        c_print("Reached home", green);
         send_task_reached();
     }
 
     int path[dimension];
     uint path_length;
-    if (!reached_pickup)
+    if(go_home)
+    {
+        c_print("[DEBUG]\tCalling tp_dijkstra, going home", yellow);
+        tp_dijkstra(current_vertex, home_vertex, path, path_length);
+    }
+    else if (!reached_pickup)
     {
         c_print("[DEBUG]\tCalling tp_dijkstra, first leg", yellow);
         tp_dijkstra(current_vertex, 6, path, path_length);
         // dijkstra(current_vertex, mission[id_task].dst, path, path_length, vertex_web, dimension);
     }
-    else if(!go_home)
+    else
     {
         c_print("[DEBUG]\tCalling tp_dijkstra, last leg", yellow);
         tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
         // dijkstra(current_vertex, mission[id_task].trail.back(), path, path_length, vertex_web, dimension);
-    }
-    else
-    {
-        c_print("[DEBUG]\tCalling tp_dijkstra, going home", yellow);
-        tp_dijkstra(current_vertex, home_vertex, path, path_length);
     }
     vertex = path[1];
 
