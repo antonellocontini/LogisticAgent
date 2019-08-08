@@ -163,7 +163,6 @@ void TPAgent::onGoalComplete()
 
 int TPAgent::compute_next_vertex()
 {
-    c_print("[DEBUG]\tCalled compute_next_vertex()", yellow);
     int vertex;
 
     while(mission.empty())
@@ -171,20 +170,14 @@ int TPAgent::compute_next_vertex()
         c_print("[WARN]\tMission not received! Waiting...", yellow);
         usleep(200000);
     }
-
     assert(!mission.empty());
-    if (mission[id_task].take == false)
-    {
-        c_print("Going home...", green);
-        go_home = true;
-    }
-    else if (current_vertex == 6)
+
+    if (current_vertex == 6 && !go_home)
     {
         c_print("[DEBUG]\tReached pickup point", yellow);
         reached_pickup = true;
-    }
-
-    if (current_vertex == mission[id_task].dst && reached_pickup && !go_home)
+    } 
+    else if (current_vertex == mission[id_task].dst && reached_pickup && !go_home)
     // if (current_vertex == mission[id_task].trail.back())
     {
         if (mission[id_task].take)
@@ -192,12 +185,18 @@ int TPAgent::compute_next_vertex()
             c_print("RequestTask", green);
             request_Task();
             sleep(10);
+            // ora il task è cambiato, controllo se devo tornare a casa
+            if (!mission[id_task].take)
+            {
+                c_print("Going home...", green);
+                go_home = true;
+            }
         }
         reached_pickup = false;
 
         send_task_reached();
     }
-    else if(current_vertex == home_vertex && go_home)
+    else if(current_vertex == mission[id_task].dst && go_home)
     {
         c_print("Reached home", green);
         send_task_reached();
@@ -208,7 +207,7 @@ int TPAgent::compute_next_vertex()
     if(go_home)
     {
         c_print("[DEBUG]\tCalling tp_dijkstra, going home", yellow);
-        tp_dijkstra(current_vertex, home_vertex, path, path_length);
+        tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
     }
     else if (!reached_pickup)
     {

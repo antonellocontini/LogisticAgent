@@ -921,6 +921,7 @@ void PatrolAgent::receive_mission_Callback(const task_planner::TaskConstPtr &msg
       dijkstra(current_vertex, home, shortest_path, elem_s_path, vertex_web, dimension);
       Task t;
       t.take = msg->take;
+      t.dst = msg->dst; //aggiunta destinazione casa al task
       // Route step;
       for (auto i = 2; i < elem_s_path; i++)
       {

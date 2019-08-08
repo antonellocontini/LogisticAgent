@@ -7,3 +7,6 @@ results/
 .catkin_tools
 
 # *.txt
+
+src/patrolling_sim/experiments.txt
+src/patrolling_sim/rostime.txt
