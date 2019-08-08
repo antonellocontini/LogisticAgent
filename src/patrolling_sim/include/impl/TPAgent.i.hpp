@@ -20,6 +20,7 @@ void TPAgent::init(int argc, char **argv)
 
     reached_pickup = false;
     go_home = false;
+    reached_home = false;
 }
 
 void TPAgent::run()
@@ -199,6 +200,7 @@ int TPAgent::compute_next_vertex()
     else if(current_vertex == mission[id_task].dst && go_home)
     {
         c_print("Reached home", green);
+        reached_home = true;
         send_task_reached();
     }
 
@@ -206,8 +208,17 @@ int TPAgent::compute_next_vertex()
     uint path_length;
     if(go_home)
     {
-        c_print("[DEBUG]\tCalling tp_dijkstra, going home", yellow);
-        tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
+        if(!reached_home)
+        {
+            c_print("[DEBUG]\tCalling tp_dijkstra, going home", yellow);
+            tp_dijkstra(current_vertex, mission[id_task].dst, path, path_length);
+        }
+        else
+        {
+            c_print("Reached home...", green);
+            sleep(2);
+            return current_vertex;
+        }
     }
     else if (!reached_pickup)
     {
@@ -228,7 +239,10 @@ int TPAgent::compute_next_vertex()
     {
         c_print("\t\t",path[i], yellow);
     }
-    c_print("current vertex: ", current_vertex, "\tnext vertex: ", vertex, "\tdestination: ", mission[id_task].dst, magenta);
+    if(!mission.empty())
+    {
+        c_print("current vertex: ", current_vertex, "\tnext vertex: ", vertex, "\tdestination: ", mission[id_task].dst, magenta);
+    }
     return vertex;
 } // compute_next_vertex()
 
