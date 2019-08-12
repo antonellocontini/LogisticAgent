@@ -75,7 +75,8 @@
 //#include <tcp_interface/RCOMMessage.h>
 #endif
 
-// definizione principale di agente, LogicAgent con TaskPlanner e TPAgent con Token 
+// definizione principale di Agent, LogicAgent con TaskPlanner e TPAgent con Token e TaskPlanner
+// Token_Agent Token
 
 namespace agent
 {

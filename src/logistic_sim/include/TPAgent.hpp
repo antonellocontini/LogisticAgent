@@ -1,11 +1,11 @@
-#include "PatrolAgent.hpp"
+#include "LogicAgent.hpp"
 #include "patrolling_sim/Token.h"
 
 namespace tpagent
 {
-    using namespace patrolagent;
+    using namespace logicagent;
 
-    class TPAgent : public PatrolAgent
+    class TPAgent : public LogicAgent
     {
         protected:
             ros::Publisher token_pub;

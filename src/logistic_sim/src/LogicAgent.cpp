@@ -13,3 +13,17 @@ void LogicAgent::init(int argc, char** argv)
     // possibili variabili da settare
 }
 
+void LogicAgent::run()
+{
+
+}
+
+void LogicAgent::onGoalComplete()
+{
+
+}
+
+int LogicAgent::compute_next_vertex()
+{
+
+}
