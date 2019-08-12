@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(patrolling_sim)
+project(logistic_sim)
 
 add_compile_options(-std=c++11)
 
@@ -7,8 +7,8 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-message_generation
-std_msgs
+  message_generation
+  std_msgs
   actionlib
   move_base_msgs
   nav_msgs
@@ -92,7 +92,7 @@ add_message_files(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   # INCLUDE_DIRS src
-   LIBRARIES PatrolAgent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent
+   LIBRARIES PatrolAgent SSIPatrolAgent LogicAgent
    CATKIN_DEPENDS message_runtime roscpp std_msgs geometry_msgs
 #  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs roscpp tf
 #  DEPENDS system_lib
@@ -136,51 +136,9 @@ add_library(LogicAgent
 
 add_dependencies(LogicAgent ${PROJECT_NAME}_generate_messages_cpp)
 
-# Declare a cpp library
-add_library(CycleAgent
-  src/CycleAgent.cpp
-)
-
-add_dependencies(CycleAgent ${PROJECT_NAME}_generate_messages_cpp)
-
-add_library(CycleOptAgent
-  src/CycleOptAgent.cpp
-)
-add_dependencies(CycleOptAgent ${PROJECT_NAME}_generate_messages_cpp)
-
-add_library(CFAgent 
-src/CFAgent.cpp
-)
-
-add_dependencies(CFAgent ${PROJECT_NAME}_generate_messages_cpp)
-
 ########################################################################################################################
 
 # add_dependencies(PatrolAgent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-
-## Declare a cpp executable 
-add_executable(LOGA src/LOGA_Agent.cpp)
-## Specify libraries to link a library or executable target against
-add_dependencies(LOGA ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-target_link_libraries(LOGA PatrolAgent LogicAgent ${catkin_LIBRARIES})
-
-## Declare a cpp executable 
-add_executable(CYCLE src/CYCLE_Agent.cpp)
-add_dependencies(CYCLE ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(CYCLE PatrolAgent CycleAgent ${catkin_LIBRARIES})
-
-## Declare a cpp executable 
-add_executable(CYCLEOPT src/CYCLE_Opt_Agent.cpp)
-add_dependencies(CYCLEOPT ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(CYCLEOPT PatrolAgent CycleOptAgent ${catkin_LIBRARIES})
-
-## Declare a cpp executable 
-add_executable(CFAGENT src/CF_Agent.cpp)
-add_dependencies(CFAGENT ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(CFAGENT PatrolAgent CFAgent ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(TP src/TPAgent.cpp)

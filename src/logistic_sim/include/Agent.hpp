@@ -75,37 +75,18 @@
 //#include <tcp_interface/RCOMMessage.h>
 #endif
 
-namespace patrolagent
-{
+// definizione principale di agente, LogicAgent con TaskPlanner e TPAgent con Token 
 
-struct Task
+namespace agent
 {
-  bool take;
-  int item;
-  int order;
-  int demand;
-  int dst;
-  int path_distance;
-  std::vector<uint> trail;
-};
-
-ostream &operator<<(ostream &os, const Task &t)
-{
-  os << "\nRoute: \n";
-  for (auto i = 0; t.trail.size(); i++)
-  {
-    os << t.trail[i] << " ";
-  }
-  os << "\n";
-}
 
 using uint = unsigned int;
 using MoveBaseClient = actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction>;
 using namespace std;
 
-const std::string PS_path = ros::package::getPath("patrolling_sim"); // D.Portugal => get pkg path
+const std::string PS_path = ros::package::getPath("logistic_sim"); // D.Portugal => get pkg path
 
-class PatrolAgent
+class Agent
 {
 protected:
   int TEAMSIZE;
@@ -150,47 +131,20 @@ protected:
   vertex *vertex_web;
 
   std::vector<int> vresults; // results exchanged among robots
-  std::vector<int> shared_array;
-
+ 
   tf::TransformListener *listener;
   MoveBaseClient *ac; // action client for reaching target goals
 
-  ros::Subscriber odom_sub, positions_sub;
-// /------------------------------------------------------------------------
-#if DBG
-  ros::Subscriber sub_to_task_planner_mission;
-  ros::Publisher pub_to_task_planner_needtask;
-  ros::Publisher pub_to_task_planner_needmission;
-  ros::Publisher pub_to_task_planner_init;
-
-  ros::Subscriber sub_to_task_planner_init;
-
-  // ros::Subscriber rcom_sub;
-  // ros::Publisher rcom_pub;
-#endif
-  ros::Subscriber pose_sub;
-
-  ros::Publisher positions_pub;
+  ros::Subscriber odom_sub;
+  ros::Subscriber positions_sub;
   ros::Subscriber results_sub;
-  ros::Publisher results_pub;
+
   ros::Publisher cmd_vel_pub;
-
-  ros::Publisher pub_broadcast_msg;
-  ros::Subscriber sub_broadcast_msg;
-
-  std::vector<Task> mission;
-
-  bool *ok;
-  bool at_home = false;
-  uint id_vertex = 0;
-  uint id_task = 0;
-  uint route_dimension;
-  uint loading[6] = {2, 1, 0, 3, 5, 6};
-  uint downloading[5] = {4, 7, 10, 13, 16};
-  uint route_to_src[5] = {1, 0, 3, 5, 6};
+  ros::Publisher positions_pub;
+  ros::Publisher results_pub;
 
 public:
-  PatrolAgent()
+  Agent()
   {
     listener = NULL;
     next_vertex = -1;
@@ -200,25 +154,18 @@ public:
   }
 
   virtual void init(int argc, char **argv);
+  void ready();
+  void initialize_node();
   void readParams(); // read ROS parameters
-  // void initialize_node();
-  void update_idleness(); // local idleness
-
-  void send_initialize_msg();
-  void init_Callback(const std_msgs::Int16MultiArrayConstPtr &msg);
-  // void poseCB(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr &msg);
 
   virtual void run();
-  void ready();
-  virtual void onGoalComplete(); // what to do when a goal has been reached
-
+ 
   void getRobotPose(int robotid, float &x, float &y, float &theta);
   void odomCB(const nav_msgs::Odometry::ConstPtr &msg);
-
+  
   void sendGoal(int next_vertex);
-  void sendMissionGoal(vector<uint> mission);
   void cancelGoal();
-
+  
   void goalDoneCallback(const actionlib::SimpleClientGoalState &state,
                         const move_base_msgs::MoveBaseResultConstPtr &result);
   void goalActiveCallback();
@@ -228,13 +175,13 @@ public:
   void send_task_reached();
   bool check_interference(int ID_ROBOT);
   void do_interference_behavior();
-  // void backup();
+  void backup();
 
-  // void onGoalNotComplete(); // what to do when a goal has NOT been reached
-  // (aborted)
+  void onGoalNotComplete(); // what to do when a goal has NOT been reached (aborted)
 
   // Events
   virtual void processEvents(); // processes algorithm-specific events
+  virtual void onGoalComplete(); // what to do when a goal has been reached
 
   // Robot-Robot Communication
   void send_positions();
@@ -246,28 +193,11 @@ public:
   void send_resendgoal();
   void positionsCB(const nav_msgs::Odometry::ConstPtr &msg);
   void resultsCB(const std_msgs::Int16MultiArray::ConstPtr &msg);
-#if DBG
-  // void resultsCB(const tcp_interface::RCOMMessage::ConstPtr &msg);
-#endif
+
   // Must be implemented by sub-classes
-  virtual int compute_next_vertex();
-
-  //--------------------------------------------------------------------------
-
-  int ccor(vector<uint> v);
-
-  void calc_route_to_src();
-  void init_agent();
-#if DBG
-  void request_Task();
-  void request_Mission();
-  void receive_mission_Callback(const task_planner::TaskConstPtr &msg);
-  //   ^ nuovi messaggi di task NB route[];
-#endif
-  void broadcast_msg_Callback(const std_msgs::Int16MultiArray::ConstPtr &msg);
-  //----------------------------------------------------------------------
+  virtual int compute_next_vertex(); 
 };
 
-} // namespace patrolagent
+} // namespace agent
 
-#include "impl/PatrolAgent.i.hpp"
+#include "impl/Agent.i.hpp"

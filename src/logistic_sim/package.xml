@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>patrolling_sim</name>
+  <name>logistic_sim</name>
   <version>2.2.2</version>
   <description>Multi-Robot Patrolling Stage/ROS Simulation Package.</description>
 
