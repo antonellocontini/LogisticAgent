@@ -221,21 +221,25 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
     logistic_sim::Token token;
     token = *msg;
+
+    token.ID_SENDER = ID_ROBOT;
+    c_print("TEAMSIZE: ",TEAM_SIZE, yellow);
+    if (msg->ID_RECEIVER == TEAM_SIZE - 1)
+    {
+        token.ID_RECEIVER = TASK_PLANNER_ID;
+    }
+    else
+    {
+        token.ID_RECEIVER = (ID_ROBOT + 1) % TEAM_SIZE;
+    }
+
     if (msg->INIT)
     {
-        token.ID_SENDER = ID_ROBOT;
-        if (msg->ID_RECEIVER == TEAM_SIZE - 1)
-        {
-            token.ID_RECEIVER = TASK_PLANNER_ID;
-        }
-        else
-        {
-            token.ID_RECEIVER = (ID_ROBOT + 1) % TEAM_SIZE;
-        }
-       
         token.CAPACITY.push_back(CAPACITY);
         token.CURR_VERTEX.push_back(current_vertex);
         token.NEXT_VERTEX.push_back(current_vertex);
+
+        initialize = false;
     }
     else if(need_task)
     {

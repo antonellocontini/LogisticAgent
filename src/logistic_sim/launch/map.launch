@@ -3,5 +3,5 @@
   <arg name="map" default="grid" />
   <arg name="stage_pkg" default="stage_ros" />
   
-  <node name="stageros" pkg="$(arg stage_pkg)" type="stageros" args="$(find patrolling_sim)/maps/$(arg map)/$(arg map).world" output="screen"/>    
+  <node name="stageros" pkg="$(arg stage_pkg)" type="stageros" args="$(find logistic_sim)/maps/$(arg map)/$(arg map).world" output="screen"/>    
 </launch>

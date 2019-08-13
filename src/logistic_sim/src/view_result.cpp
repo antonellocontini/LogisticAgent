@@ -94,7 +94,7 @@ string algorithm, algparams, nav_mod, initial_positions;
 //     ros::spinOnce();
 // }
 // 
-const std::string PS_path = ros::package::getPath("patrolling_sim");  // D.Portugal => get pkg path
+const std::string PS_path = ros::package::getPath("logistic_sim");  // D.Portugal => get pkg path
 
 int number_of_visits[MAX_DIMENSION];
 size_t dimension;  // graph size

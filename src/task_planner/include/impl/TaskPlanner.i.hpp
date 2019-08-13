@@ -9,7 +9,7 @@ TaskPlanner::TaskPlanner(ros::NodeHandle &nh_)
   sub_task = nh_.subscribe("task", 10, &TaskPlanner::task_Callback, this);
 
   pub_task = nh_.advertise<task_planner::Task>("answer", 10);
-  pub_token = nh_.advertise<std_msgs::Int16MultiArray>("token", 1);
+  pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
 }
 
 
@@ -20,7 +20,7 @@ void TaskPlanner::init(int argc, char **argv)
   srand(time(NULL));
   chdir(PS_path.c_str());
   string mapname = string(argv[1]);
-  string graph_file = "/home/antonello/Tesi/LogisticAgent_ws/src/patrolling_sim/maps/" + mapname + "/" + mapname + ".graph";
+  string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
   uint dimension = GetGraphDimension(graph_file.c_str());
   vertex_web = new vertex[dimension];
   GetGraphInfo(vertex_web, dimension, graph_file.c_str());
@@ -35,6 +35,9 @@ void TaskPlanner::init(int argc, char **argv)
   //                           ^ figo!
   pa = new ProcessAgent[TEAM_SIZE];
 
+  // aspetto che arrivino gli agenti
+  sleep(10);
+
   // giro di inizializzazione
   logistic_sim::Token token;
   token.ID_SENDER = TASK_PLANNER_ID;
@@ -42,6 +45,9 @@ void TaskPlanner::init(int argc, char **argv)
   token.INIT = true;
 
   pub_token.publish(token);
+  ros::spinOnce();
+
+  sleep(1);
 
   c_print("INIT", green);
 }
@@ -170,6 +176,8 @@ void TaskPlanner::task_Callback(const logistic_sim::TaskRequestConstPtr &tr)
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
+  c_print(msg->ID_SENDER," " , msg->ID_RECEIVER, green);
+
    if(msg->ID_RECEIVER != TASK_PLANNER_ID)
       return;
 

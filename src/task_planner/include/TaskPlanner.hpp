@@ -33,7 +33,7 @@
 namespace taskplanner {
 
 
-const std::string PS_path = ros::package::getPath("task_planner");
+const std::string PS_path = ros::package::getPath("logistic_sim");
 
 class TaskPlanner {
 public:

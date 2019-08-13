@@ -3,38 +3,6 @@
 namespace agent
 {
 
-// DA SISTEMARE
-void Agent::initialize_node()
-{
-    int value = ID_ROBOT;
-    if (value == -1)
-    {
-        value = 0;
-    }
-    ROS_INFO("Initialize Node: Robot %d", value);
-
-    std_msgs::Int16MultiArray msg;
-    msg.data.clear();
-    msg.data.push_back(value);
-    msg.data.push_back(INITIALIZE_MSG_TYPE);
-    msg.data.push_back(1); // Robot initialized
-    msg.data.push_back(CAPACITY);
-
-    int count = 0;
-
-    //ATENÇÃO ao PUBLICADOR!
-    ros::Rate loop_rate(0.5); //meio segundo
-
-    while (count < 3)
-    { //send activation msg 3times
-        results_pub.publish(msg);
-        ros::spinOnce();
-        loop_rate.sleep();
-        count++;
-    }
-    c_print("Fine inizializzazione del nodo", magenta, P);
-}
-
 void Agent::ready()
 {
     char move_base[40];
@@ -57,7 +25,7 @@ void Agent::ready()
     }
     c_print("Connected with move_base action server", green, P);
 
-    initialize_node(); // robot is alive
+    // initialize_node(); // robot is alive
 
     ros::Rate loop_rate(1);
     // routine per tornare a casa (non la usiamo pe ora)
