@@ -1,5 +1,5 @@
 #pragma once
-#include "patrolling_sim/Token.h"
+#include "logistic_sim/Token.h"
 
 namespace tpagent
 {
@@ -8,12 +8,12 @@ void TPAgent::init(int argc, char **argv)
 {
     num_robots = atoi(argv[6]);
 
-    PatrolAgent::init(argc, argv);
+    Agent::init(argc, argv);
     ros::NodeHandle nh;
 
-    token_pub = nh.advertise<patrolling_sim::Token>("token_msg", 1);
+    token_pub = nh.advertise<logistic_sim::Token>("token_msg", 1);
 
-    token_sub = nh.subscribe<patrolling_sim::Token>("token_msg", 20,
+    token_sub = nh.subscribe<logistic_sim::Token>("token_msg", 20,
                                                     boost::bind(&TPAgent::token_callback, this, _1));
 
     init_tw_map();
@@ -79,9 +79,9 @@ void TPAgent::run()
         request_Task();
         sleep(5);
 
-        patrolling_sim::Token t;
+        logistic_sim::Token t;
         t.ID_ROBOT = 0;
-        t.TEAMSIZE = TEAMSIZE;
+        t.TEAM_SIZE = TEAM_SIZE;
         t.INIT_DONE = true;
         t.ID_ROBOT_VERTEX.push_back(0);
         t.SRC_VERTEX.push_back(current_vertex);
@@ -283,15 +283,15 @@ void TPAgent::tp_dijkstra(uint source, uint destination, int *shortest_path, uin
 }
 
 
-void TPAgent::token_callback(const patrolling_sim::TokenConstPtr &msg)
+void TPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
     // c_print("[DEBUG]\tCalled token_callback()", yellow);
     // calcolo dimensione team
     if (!msg->INIT_DONE)
     {
-        if (msg->TEAMSIZE > TEAMSIZE)
+        if (msg->TEAM_SIZE > TEAM_SIZE)
         {
-            TEAMSIZE = msg->TEAMSIZE;
+            TEAM_SIZE = msg->TEAM_SIZE;
         }
     }
     else if (ID_ROBOT == (msg->ID_ROBOT + 1) % num_robots)
@@ -303,10 +303,10 @@ void TPAgent::token_callback(const patrolling_sim::TokenConstPtr &msg)
         // c_print(s.c_str(), yellow);
 
         // riempo campi messaggio
-        patrolling_sim::Token t;
+        logistic_sim::Token t;
         t.ID_ROBOT = ID_ROBOT;
         t.INIT_DONE = true;
-        t.TEAMSIZE = num_robots;
+        t.TEAM_SIZE = num_robots;
         t.ID_ROBOT_VERTEX = msg->ID_ROBOT_VERTEX;
         t.SRC_VERTEX = msg->SRC_VERTEX;
         t.DST_VERTEX = msg->DST_VERTEX;

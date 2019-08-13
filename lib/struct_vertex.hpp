@@ -15,6 +15,7 @@ struct vertex{
     uint id, num_neigh;
     float x,y;
     uint id_neigh[8], cost[8];
+    double cost_m[8];
     bool visited[8];
     char dir[8][3];
 };

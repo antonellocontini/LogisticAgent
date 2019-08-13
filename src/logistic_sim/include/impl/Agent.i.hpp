@@ -3,6 +3,7 @@
 namespace agent
 {
 
+// DA SISTEMARE
 void Agent::initialize_node()
 {
     int value = ID_ROBOT;
@@ -31,7 +32,6 @@ void Agent::initialize_node()
         loop_rate.sleep();
         count++;
     }
-    // listener = new tf::TransformListener();
     c_print("Fine inizializzazione del nodo", magenta, P);
 }
 
@@ -60,6 +60,7 @@ void Agent::ready()
     initialize_node(); // robot is alive
 
     ros::Rate loop_rate(1);
+    // routine per tornare a casa (non la usiamo pe ora)
     // ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
     // std_srvs::Empty srv;
     // if (client.call(srv))
@@ -328,7 +329,7 @@ bool Agent::check_interference(int robot_id)
         return false;                                      // false if within 10 seconds from the last one
 
     /* Poderei usar TEAMSIZE para afinar */
-    for (i = 0; i < robot_id; i++)
+    for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
 
         dist_quad = (xPos[i] - xPos[robot_id]) * (xPos[i] - xPos[robot_id]) + (yPos[i] - yPos[robot_id]) * (yPos[i] - yPos[robot_id]);
@@ -578,6 +579,12 @@ void Agent::send_interference()
     ros::spinOnce();
 }
 
+ void Agent::send_resendgoal()
+ {
+     // TODO
+ }
+
+// DA SISTEMARE
 void Agent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr &msg)
 {
 

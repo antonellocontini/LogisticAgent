@@ -54,26 +54,11 @@
 #include <vector>
 
 #include "algorithms.hpp" // <<< ALGO
-#include "getgraph.hpp"
+#include "get_graph.hpp"
 #include "message_types.hpp"
+#include "struct_task.hpp"
 
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-
-#define NUM_MAX_ROBOTS 32
-#define INTERFERENCE_DISTANCE 2.5
-#define SHARE_MSG 33
-#define DELTA_TIME_SEQUENTIAL_START 15
-#define SIMULATE_FOREVER false // WARNING: Set this to false, if you want a finishing condition.
-#define DBG true
-
-#if DBG
-#include <task_planner/Task.h>
-#include <patrolling_sim/MissionRequest.h>
-#include <patrolling_sim/TaskRequest.h>
-// #include <patrolling_sim/Vertex.h>
-// #include <patrolling_sim/VertexWeb.h>
-//#include <tcp_interface/RCOMMessage.h>
-#endif
+// #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 // definizione principale di Agent, LogicAgent con TaskPlanner e TPAgent con Token e TaskPlanner
 // Token_Agent Token
@@ -90,7 +75,7 @@ const std::string PS_path = ros::package::getPath("logistic_sim"); // D.Portugal
 class Agent
 {
 protected:
-  int TEAMSIZE;
+  int TEAM_SIZE;
   int ID_ROBOT;
   int CAPACITY; //////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,6 +115,10 @@ protected:
   double goal_reached_wait, communication_delay, last_communication_delay_time, lost_message_rate;
 
   vertex *vertex_web;
+  std::vector<uint> path;
+  std::vector<Task> mission;
+  uint id_vertex = 0;
+  uint id_task = 0;
 
   std::vector<int> vresults; // results exchanged among robots
  

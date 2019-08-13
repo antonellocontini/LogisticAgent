@@ -144,10 +144,6 @@ void Agent::init(int argc, char** argv) {
     results_pub = nh.advertise<std_msgs::Int16MultiArray>("results", 100);
     // results_sub = nh.subscribe("results", 10, resultsCB); //Subscrever "results" vindo dos robots
     results_sub = nh.subscribe<std_msgs::Int16MultiArray>("results", 100, boost::bind(&Agent::resultsCB, this, _1) ); //Subscrever "results" vindo dos robots
-
-    token_pub = nh.advertise<logistic_sim::Token>("token", 100);
-
-    token_sub = nh.subscribe<logistic_sim::Token>("token", 100, boost::bind(&Agent::token_Callback, this, _1));
     // last time comm delay has been applied
     last_communication_delay_time = ros::Time::now().toSec();   
 
@@ -164,7 +160,7 @@ int Agent::compute_next_vertex()
     {
         vertex = path[id_vertex];
         id_vertex = 0;
-        need_token_mission = true;
+        // need_token_mission = true;
     }
     else
     {

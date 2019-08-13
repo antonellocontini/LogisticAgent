@@ -2,7 +2,7 @@
 
 uint WIDTH_PX;
 uint HEIGHT_PX;
-float RESOLUTION;
+// float RESOLUTION;
 //  float WIDTH_M;
 //  float HEIGHT_M;
 float OFFSET_X;

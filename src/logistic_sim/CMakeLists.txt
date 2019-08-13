@@ -54,7 +54,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  MissionRequest.msg
+  Task.msg
   TaskRequest.msg
   Token.msg
   # Vertex.msg
@@ -78,7 +78,6 @@ add_message_files(
  generate_messages(
    DEPENDENCIES 
    std_msgs 
-   geometry_msgs
  )
 
 ###################################
@@ -91,8 +90,8 @@ add_message_files(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  # INCLUDE_DIRS src
-   LIBRARIES PatrolAgent SSIPatrolAgent LogicAgent
+   INCLUDE_DIRS include
+   LIBRARIES Agent SSIPatrolAgent
    CATKIN_DEPENDS message_runtime roscpp std_msgs geometry_msgs
 #  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs roscpp tf
 #  DEPENDS system_lib
@@ -109,61 +108,65 @@ include_directories(
   include
   # src
   ${catkin_INCLUDE_DIRS}
-  /home/dave/LogisticAgent/lib
+  ../../lib
+  #/home/dave/LogisticAgent/lib
 )
 
 # Declare a cpp library
-add_library(PatrolAgent
-  src/PatrolAgent.cpp
-  src/getgraph.cpp
-  src/algorithms.cpp
+add_library(Agent
+  src/Agent.cpp
+  # src/algorithms.cpp
   src/config.cpp
 )
 
-add_dependencies(PatrolAgent ${PROJECT_NAME}_generate_messages_cpp)
+# add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp)
 
 # Declare a cpp library
 add_library(SSIPatrolAgent
   src/SSIPatrolAgent.cpp
 )
 
-add_dependencies(SSIPatrolAgent ${PROJECT_NAME}_generate_messages_cpp)
-
-# Declare a cpp library
-add_library(LogicAgent
-  src/LogicAgent.cpp
-)
-
-add_dependencies(LogicAgent ${PROJECT_NAME}_generate_messages_cpp)
-
+# add_dependencies(SSIPatrolAgent ${PROJECT_NAME}_generate_messages_cpp)
 ########################################################################################################################
 
-# add_dependencies(PatrolAgent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+# add_dependencies(Agent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable 
-add_executable(TP src/TPAgent.cpp)
-add_dependencies(TP ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(TP PatrolAgent ${catkin_LIBRARIES})
+# add_executable(TP src/TPAgent.cpp)
+# add_dependencies(TP ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+# ## Specify libraries to link a library or executable target against
+# target_link_libraries(TP Agent ${catkin_LIBRARIES})
 
+
+## Declare a cpp executable 
+add_executable(TokenAgent src/TokenAgent.cpp)
+add_dependencies(TokenAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(TokenAgent Agent ${catkin_LIBRARIES})
+
+## Declare a cpp executable 
+add_executable(LogicAgent src/LogicAgent.cpp)
+add_dependencies(LogicAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(LogicAgent Agent ${catkin_LIBRARIES})
 ########################################################################################################################
 
 # Results and Monitor Node:
  
 ## Declare a cpp executable 
-add_executable(monitor src/view_result.cpp src/getgraph.cpp)
-add_dependencies(monitor ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+# add_executable(monitor src/view_result.cpp src/getgraph.cpp)
+# add_dependencies(monitor ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(monitor ${catkin_LIBRARIES})
+# target_link_libraries(monitor ${catkin_LIBRARIES})
 
 # add_executable(GoToStartPos src/GoToStartPos.cpp)
 # add_dependencies(GoToStartPos ${PROJECT_NAME}_gencpp ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(GoToStartPos ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
-add_executable(idlHistogram src/idlHistogram.cpp)
+# add_executable(idlHistogram src/idlHistogram.cpp)
 ## Specify libraries to link a library or executable target against
-target_link_libraries(idlHistogram ${catkin_LIBRARIES})
+# target_link_libraries(idlHistogram ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable/library

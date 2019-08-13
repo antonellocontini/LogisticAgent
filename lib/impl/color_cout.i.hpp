@@ -33,26 +33,26 @@ void c_print(T t, R r, const string color)
   cout << env_in << color << t << r << env_out << "\n";
 }
 
-template <typename T, typename R, typename P>
-void c_print(T t, R r, P p, const string color)
+template <typename T, typename R, typename PP>
+void c_print(T t, R r, PP p, const string color)
 {
   cout << env_in << color << t << r << p << env_out << "\n";
 }
 
-template <typename T, typename R, typename P, typename F>
-void c_print(T t, R r, P p, F f, const string color)
+template <typename T, typename R, typename PP, typename F>
+void c_print(T t, R r, PP p, F f, const string color)
 {
   cout << env_in << color << t << r << p << f << env_out << "\n";
 }
 
-template <typename T, typename R, typename P, typename F, typename Q>
-void c_print(T t, R r, P p, F f, Q q, const string color)
+template <typename T, typename R, typename PP, typename F, typename Q>
+void c_print(T t, R r, PP p, F f, Q q, const string color)
 {
   cout << env_in << color << t << r << p << f << q << env_out << "\n";
 }
 
-template <typename T, typename R, typename P, typename F, typename Q, typename Z>
-void c_print(T t, R r, P p, F f, Q q, Z z, const string color)
+template <typename T, typename R, typename PP, typename F, typename Q, typename Z>
+void c_print(T t, R r, PP p, F f, Q q, Z z, const string color)
 {
   cout << env_in << color << t << r << p << f << q << z << env_out << "\n";
 }
@@ -78,29 +78,29 @@ void c_print(T t, R r, const string color, bool print)
     cout << env_in << color << t << r << env_out << "\n";
 }
 
-template <typename T, typename R, typename P>
-void c_print(T t, R r, P p, const string color, bool print)
+template <typename T, typename R, typename PP>
+void c_print(T t, R r, PP p, const string color, bool print)
 {
   if (print == true)
     cout << env_in << color << t << r << p << env_out << "\n";
 }
 
-template <typename T, typename R, typename P, typename F>
-void c_print(T t, R r, P p, F f, const string color, bool print)
+template <typename T, typename R, typename PP, typename F>
+void c_print(T t, R r, PP p, F f, const string color, bool print)
 {
   if (print == true)
     cout << env_in << color << t << r << p << f << env_out << "\n";
 }
 
-template <typename T, typename R, typename P, typename F, typename Q>
-void c_print(T t, R r, P p, F f, Q q, const string color, bool print)
+template <typename T, typename R, typename PP, typename F, typename Q>
+void c_print(T t, R r, PP p, F f, Q q, const string color, bool print)
 {
   if (print == true)
     cout << env_in << color << t << r << p << f << q << env_out << "\n";
 }
 
-template <typename T, typename R, typename P, typename F, typename Q, typename Z>
-void c_print(T t, R r, P p, F f, Q q, Z z, const string color, bool print)
+template <typename T, typename R, typename PP, typename F, typename Q, typename Z>
+void c_print(T t, R r, PP p, F f, Q q, Z z, const string color, bool print)
 {
   if (print == true)
     cout << env_in << color << t << r << p << f << q << z << env_out << "\n";

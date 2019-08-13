@@ -30,11 +30,11 @@ namespace logicagent
 
         virtual void init(int argc, char** argv);
         virtual void run();
-        virtual void OnGoalComplete();
+        virtual void onGoalComplete();
         virtual int compute_next_vertex();
 
         void request_Task();
-        void receive_Task_Callback(const task_planner::TaskConstPts &msg);
+        void receive_Task_Callback(const task_planner::TaskConstPtr &msg);
     };
 } // namespace logagent
 

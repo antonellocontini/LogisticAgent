@@ -1,5 +1,7 @@
 #pragma once
 
+#include "message_types.hpp"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <cmath>
@@ -9,7 +11,7 @@
 
 extern uint WIDTH_PX;
 extern uint HEIGHT_PX;
-extern float RESOLUTION;
+float RESOLUTION = 1.0;
 // extern float WIDTH_M;
 // extern float HEIGHT_M;
 extern float OFFSET_X;

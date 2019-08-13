@@ -41,7 +41,7 @@
 #include <stdio.h>
 #include <color_cout.hpp>
 
-#include "PatrolAgent.hpp"
+#include "Agent.hpp"
 #include "config.hpp"
 
 
@@ -53,7 +53,7 @@
 
 namespace ssipatrolagent {
 
-using namespace patrolagent;
+using namespace agent;
 
 //a tuple <robotId,bidValue>
 typedef struct bid_tuple {
@@ -61,7 +61,7 @@ typedef struct bid_tuple {
 	int robotId;
 } bid_tuple;
 
-class SSIPatrolAgent: public PatrolAgent {
+class SSIPatrolAgent: public Agent {
 
 protected:
     // Mutex to update global_idleness safely

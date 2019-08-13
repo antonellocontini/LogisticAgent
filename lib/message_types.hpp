@@ -35,7 +35,17 @@
 * Author: Luca Iocchi (2014-2016)
 *********************************************************************/
 
+#pragma once
+
 // Message types
+#define NUM_MAX_ROBOTS 32
+#define INTERFERENCE_DISTANCE 2.5
+#define SHARE_MSG 33
+#define DELTA_TIME_SEQUENTIAL_START 15
+#define SIMULATE_FOREVER false // WARNING: Set this to false, if you want a finishing condition.
+#define P true  //print
+#define DBG true
+
 #define INITIALIZE_MSG_TYPE 10
 #define TARGET_REACHED_MSG_TYPE 11
 #define INTERFERENCE_MSG_TYPE 12
@@ -68,7 +78,7 @@
                                         // considered dead
 #define TIMEOUT_WRITE_RESULTS 180.0     // (seconds) timeout for writing results to file
 // For hystograms
-#define RESOLUTION 1.0     // seconds
+// #define RESOLUTION 1.0     // seconds
 #define MAXIDLENESS 500.0  // seconds
 
 #define LOG_MONITOR 0

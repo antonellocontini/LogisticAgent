@@ -6,7 +6,7 @@ using uint = unsigned int;
 
 struct Task
 {
-  bool flag;
+  bool take;
   uint id;
   uint item;
   uint demand;
@@ -17,7 +17,7 @@ struct Task
 inline Task mkTask(uint item, uint id, uint demand, uint dst)
 {
   Task t;
-  t.flag = false;
+  t.take = false;
   t.item = item;
   t.id = id;
   t.demand = demand;
@@ -29,7 +29,7 @@ inline Task mkTask(uint item, uint id, uint demand, uint dst)
 std::ostream &operator<<(std::ostream &os, const Task &t)
 {
   os << "Task id: " << t.id << "\n"
-     << " - flag: " << t.flag << "\n"
+     << " - take: " << t.take << "\n"
      << " - item: " << t.item << "\n"
      << " - demand: " << t.demand << "\n"
      << " - dst: " << t.dst << "\n";
@@ -37,7 +37,7 @@ std::ostream &operator<<(std::ostream &os, const Task &t)
 
 struct Mission
 {
-  bool flag;
+  bool take;
   uint id;
   std::vector<Task> mission;
   std::vector<uint> path;
@@ -49,7 +49,7 @@ struct Mission
 std::ostream &operator<<(std::ostream &os, const Mission &m)
 {
   os << "Mission id: " << m.id << "\n"
-     << " - flag: " << m.flag << "\n"
+     << " - take: " << m.take << "\n"
      << " - Mission: \n";
   for (auto i = 0; m.mission.size(); i++)
   {
@@ -134,7 +134,7 @@ struct ProcessAgent
 {
   uint ID_ROBOT;
   uint CAPACITY;
-  bool flag;
+  bool take;
   vector<Task> mission; // task da concatenare
   vector<uint> route;   // vettore di vertici del path finale
   uint *dst;
@@ -165,7 +165,7 @@ inline ProcessAgent mkPA(uint id, uint c)
 
   pa.ID_ROBOT = id;
   pa.CAPACITY = c;
-  pa.flag = false;
+  pa.take = false;
   pa.mission.clear();
   pa.route.clear(); // route definitiva
   pa.dst;

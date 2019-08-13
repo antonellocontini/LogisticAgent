@@ -5,6 +5,7 @@
 #include <geometry_msgs/Twist.h>
 #include "patrolling_sim/GoToStartPosSrv.h" 
 
+// routine per tornare a casa dopo aver finito i task (DA SISTEMARE)
 
  typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 

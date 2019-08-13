@@ -35,7 +35,9 @@
 * Author: David Portugal (2011-2014), and Luca Iocchi (2014-2016)
 *********************************************************************/
 
-#include "getgraph.hpp"
+#pragma once
+
+#include "get_graph.hpp"
 
 typedef unsigned int uint;
 
@@ -157,3 +159,5 @@ void update_likelihood(reinforcement_learning RL, double *real_histogram, uint *
 void update_likelihood_new(reinforcement_learning RL, uint *node_count_table, double *inst_idleness, uint dimension, double *real_histogram, uint *source, uint *destination, uint hist_dimension, vertex *vertex_web, uint robotid);
 
 int learning_algorithm(uint current_vertex, vertex *vertex_web, double *instantaneous_idleness, double *avg_idleness, int *tab_intention, double *histogram, uint *source, uint *destination, uint hist_dimension, int nr_robots, int id_robot, uint *node_count, reinforcement_learning &RL);
+
+#include "impl/algorithms.i.hpp"

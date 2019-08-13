@@ -6,7 +6,7 @@ using namespace std;
 
 void SSIPatrolAgent::init(int argc, char** argv) {
         
-    PatrolAgent::init(argc,argv);
+    Agent::init(argc,argv);
 
     //initialize structures
     next_vertex = -1; 

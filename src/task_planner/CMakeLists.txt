@@ -21,7 +21,7 @@ std_msgs
 #  rospy
   roslib
 #   tf
-  # patrolling_sim
+  logistic_sim
   # task_planner
 )
 
@@ -63,7 +63,6 @@ std_msgs
 add_message_files(
 FILES
 Task.msg
-Mission.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -112,7 +111,8 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  /home/dave/LogisticAgent/lib
+  ../../lib
+  #/home/dave/LogisticAgent/lib
 )
 
 # # Declare a cpp library
@@ -123,16 +123,10 @@ include_directories(
 ########################################################################################################################
 
 # ## Declare a cpp executable 
-add_executable(TaskPlanner src/TaskPlanner.cpp src/getgraph.cpp src/partition.cpp)
+add_executable(TaskPlanner src/TaskPlanner.cpp)
 add_dependencies(TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # ## Specify libraries to link a library or executable target against
 target_link_libraries(TaskPlanner ${catkin_LIBRARIES})
-
-# ## Declare a cpp executable 
-add_executable(Part src/part_test.cpp src/partition.cpp)
-add_dependencies(Part ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# ## Specify libraries to link a library or executable target against
-target_link_libraries(Part ${catkin_LIBRARIES})
 
 
 # ########################################################################################################################
