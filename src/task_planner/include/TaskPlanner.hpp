@@ -43,6 +43,7 @@ public:
   vertex *vertex_web;
 
   uint TEAM_CAPACITY = 0;
+  std::vector<uint> CAPACITY;
   uint TEAM_SIZE = 0;
   uint nTask = 0;
   uint id = 0;
@@ -63,7 +64,7 @@ public:
                          19, 22, 21, 20, 18, 15, 13, 10, 8,  5};
   //----------------------------------------------------------------------------
 
-  vector<Task> tasks;
+  vector<logistic_sim::Task> tasks;
 
   bool *init_agent;
   ProcessAgent *pa;

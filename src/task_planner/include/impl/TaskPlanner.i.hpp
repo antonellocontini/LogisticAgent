@@ -35,6 +35,14 @@ void TaskPlanner::init(int argc, char **argv)
   //                           ^ figo!
   pa = new ProcessAgent[TEAM_SIZE];
 
+  // giro di inizializzazione
+  logistic_sim::Token token;
+  token.ID_SENDER = TASK_PLANNER_ID;
+  token.ID_RECEIVER = 0;
+  token.INIT = true;
+
+  pub_token.publish(token);
+
   c_print("INIT", green);
 }
 
@@ -162,7 +170,27 @@ void TaskPlanner::task_Callback(const logistic_sim::TaskRequestConstPtr &tr)
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
-  
+   if(msg->ID_RECEIVER != TASK_PLANNER_ID)
+      return;
+
+    logistic_sim::Token token;
+    token = *msg;
+    token.ID_SENDER = TASK_PLANNER_ID;
+    token.ID_RECEIVER = 0;
+    if (msg->INIT)
+    {
+      CAPACITY = msg->CAPACITY;
+      token.INIT = false;
+      // inserire task
+      token.MISSION = tasks;
+    }
+    else
+    {
+      // se devo inserire altri task e monitor
+    }
+    
+    pub_token.publish(token);
+    ros::spinOnce();
 }
 
 

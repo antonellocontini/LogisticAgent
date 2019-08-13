@@ -18,7 +18,7 @@ import datetime
 import rospkg
 
 import os
-dirname = rospkg.RosPack().get_path('patrolling_sim')
+dirname = rospkg.RosPack().get_path('logistic_sim')
 
 Alg_names = [ 
         [ 'RAND', 'Random' ],
@@ -36,7 +36,8 @@ Alg_names = [
         [ 'CYCLE','CYCLE'],
         [ 'CYCLEOPT','CYCLEOPT'],
         [ 'CFAGENT', 'CFAGENT'],
-        [ 'TP',   'TP']
+        [ 'TP',   'TP'],
+        [ 'TokenAgent', 'TokenAgent']
      ]
 
 Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1','model1','model2','model3','model4','model5']   
@@ -158,11 +159,12 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     print cmd    
     os.system('sleep 1')
 
-    cmd_monitor = 'rosrun patrolling_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS  
+    #cmd_monitor = 'rosrun logistic_sim monitor '+MAP+' '+ALG_SHORT+' '+NROBOTS  
+    cmd_monitor = ''
     custom_stage = ''
     if (CUSTOM_STAGE=="true"):
       custom_stage = ' custom_stage:=true'
-    cmd_stage = 'roslaunch patrolling_sim map.launch map:='+MAP+custom_stage
+    cmd_stage = 'roslaunch logistic_sim map.launch map:='+MAP+custom_stage
     if (os.getenv('ROS_DISTRO')=='groovy'):
       cmd_stage = cmd_stage + " stage_pkg:=stage"
     print cmd_monitor
@@ -184,7 +186,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     gcmd = 'gnome-terminal '
     for i in range(0,int(NROBOTS)):
         print 'Run robot ',i
-        cmd = 'bash -c \'roslaunch patrolling_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+' '
+        cmd = 'bash -c \'roslaunch logistic_sim '+robot_launch+' robotname:=robot_'+str(i)+' mapname:='+MAP+' '
         
         # Set navigation modules
         if (NAV_MODULE=="ros"):
@@ -215,18 +217,18 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     for i in range(0,int(NROBOTS)):
         print 'Run patrol robot ',i
         if (ALG_SHORT=='MSP'):
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
+            cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' MSP/'+MAP+'/'+MAP+'_'+str(NROBOTS)+'_'+str(i)+' '+'\''
         elif (ALG_SHORT=='GBS' or ALG_SHORT=='SEBS' or ALG_SHORT=='CBLS'):
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' '+str(NROBOTS)+'\''
+            cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' '+str(NROBOTS)+'\''
         elif (ALG_SHORT=='TP'):
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' robot_'+str(i)+' '+str(CAPACITY)+' '+str(NROBOTS)+'\';bash'
+            cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' robot_'+str(i)+' '+str(CAPACITY)+' '+str(NROBOTS)+'\''
         else:
             now = datetime.datetime.now()
             dateString = now.strftime("%Y-%m-%d-%H:%M")
-            #cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
-            # cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+' robotname:=robot_'+str(i)+' '+str(CAPACITY)+' '+'\''
-            # cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' '+str(CAPACITY)+' '+'\''
-            cmd = 'bash -c \'rosrun patrolling_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' robot_'+str(i)+' '+str(CAPACITY)+'\';bash'
+            #cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
+            # cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+' robotname:=robot_'+str(i)+' '+str(CAPACITY)+' '+'\''
+            # cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' '+str(CAPACITY)+' '+'\''
+            cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' robot_'+str(i)+' '+str(CAPACITY)+' '+str(NROBOTS)+'\''
 
         print cmd
         if (TERM == 'xterm'):

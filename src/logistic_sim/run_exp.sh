@@ -19,7 +19,7 @@
 MAP=model5
 NROBOTS=2
 INITPOS=default
-ALG=TP
+ALG=TokenAgent
 LOC=AMCL
 NAV=ros
 GWAIT=0

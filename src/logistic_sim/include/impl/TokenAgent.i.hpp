@@ -1,5 +1,4 @@
 #pragma once
-#include "patrolling_sim/Token.h"
 
 namespace tokenagent
 {
@@ -9,10 +8,12 @@ void TokenAgent::init(int argc, char **argv)
     Agent::init(argc, argv);
     ros::NodeHandle nh;
 
-    token_pub = nh.advertise<patrolling_sim::Token>("token_msg", 1);
+    token_pub = nh.advertise<logistic_sim::Token>("token", 1);
 
-    token_sub = nh.subscribe<patrolling_sim::Token>("token_msg", 20,
+    token_sub = nh.subscribe<logistic_sim::Token>("token", 20,
                                                     boost::bind(&TokenAgent::token_callback, this, _1));
+
+    init_tw_map();
 }
 
 void TokenAgent::run()
@@ -104,6 +105,17 @@ void TokenAgent::onGoalComplete()
         current_vertex = next_vertex;
     }
 
+   // aggiorniamo condizioni destinazione
+    if (current_vertex == 6)
+    {
+        reached_pickup = false;
+    }
+    else if(current_vertex == current_task.DSTS[0] && reached_pickup)
+    {
+        need_task = true;
+        reached_pickup = false;
+    }
+
     c_print("compute_next_vertex", yellow);
     next_vertex = compute_next_vertex();
 
@@ -126,15 +138,150 @@ void TokenAgent::onGoalComplete()
 
 int TokenAgent::compute_next_vertex()
 {
-    int vertex = 0;
+    int vertex;
+
+    // alloco un vettore per il percorso
+    int path[dimension];
+    uint path_length;
+
+    if (!reached_pickup)
+    {
+        tp_dijkstra(current_vertex, 6, path, path_length);
+    }
+    else if(!go_home)
+    {
+        tp_dijkstra(current_vertex, current_task.DSTS[0], path, path_length);
+    }
+    else
+    {
+        tp_dijkstra(current_vertex, initial_vertex, path, path_length);
+    }
+
+    
+    vertex = path[0];
+
     return vertex;
 } // compute_next_vertex()
 
-
-void TokenAgent::token_callback(const patrolling_sim::TokenConstPtr &msg)
+void TokenAgent::init_tw_map()
 {
-    
-    // c_print("[DEBUG]\ttoken_callback() terminated", yellow);
+    token_weight_map.clear();
+    for (int i = 0; i < dimension; i++)
+    {
+        std::vector<uint> v;
+        for (int j = 0; j < dimension; j++)
+        {
+            v.push_back(0);
+        }
+        token_weight_map.push_back(v);
+    }
+}
+
+
+void TokenAgent::tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path)
+{
+    const int PENALTY=500;
+
+    vertex web_copy[dimension];
+    for( int i=0; i<dimension; i++ )
+    {
+        // copia della struttura
+        // web_copy[i] = vertex_web[i];
+        web_copy[i].id = vertex_web[i].id;
+        web_copy[i].num_neigh = vertex_web[i].num_neigh;
+        web_copy[i].x = vertex_web[i].x;
+        web_copy[i].y = vertex_web[i].y;
+        memcpy( web_copy[i].id_neigh, vertex_web[i].id_neigh, sizeof(uint)*8 );
+        memcpy( web_copy[i].cost, vertex_web[i].cost, sizeof(uint)*8 );
+        memcpy( web_copy[i].cost_m, vertex_web[i].cost_m, sizeof(float)*8 );
+        memcpy( web_copy[i].visited, vertex_web[i].visited, sizeof(bool)*8 );
+        for( int j=0; j<web_copy[i].num_neigh; j++)
+        {
+            memcpy( web_copy[i].dir[j], vertex_web[i].dir[j], sizeof(char)*3 );
+        }
+
+        // incremento il peso degli archi occupati
+        for( int j=0; j<web_copy[i].num_neigh; j++ )
+        {
+            uint from = web_copy[i].id;
+            uint to = web_copy[i].id_neigh[j];
+            web_copy[i].cost[j] += PENALTY*token_weight_map[from][to];
+        }
+    }
+
+    // calcolo il percorso con il nuovo grafo
+    dijkstra( source, destination, shortest_path, elem_s_path, web_copy, dimension );
+}
+
+void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
+{
+    // se non è per me termino
+    if(msg->ID_RECEIVER != ID_ROBOT)
+        return;
+
+    logistic_sim::Token token;
+    token = *msg;
+    if (msg->INIT)
+    {
+        token.ID_SENDER = ID_ROBOT;
+        if (msg->ID_RECEIVER == TEAM_SIZE - 1)
+        {
+            token.ID_RECEIVER = TASK_PLANNER_ID;
+        }
+        else
+        {
+            token.ID_RECEIVER = (ID_ROBOT + 1) % TEAM_SIZE;
+        }
+       
+        token.CAPACITY.push_back(CAPACITY);
+        token.CURR_VERTEX.push_back(current_vertex);
+        token.NEXT_VERTEX.push_back(current_vertex);
+    }
+    else if(need_task)
+    {
+        if(!msg->MISSION.empty())
+        {
+            // prendo la prima missione
+            auto t = msg->MISSION.back();
+            token.MISSION.pop_back();
+            token.ASSIGNED_MISSION.push_back(t);
+            current_task = t;
+            
+
+            // aggiorno la mappa
+            init_tw_map();
+            // c_print("[DEBUG]\tinit_tw_map() terminato\n\tAggiornamento mappa archi...", yellow);
+            for (auto i=0; i<TEAM_SIZE; i++)
+            {
+                int dst = (int) token.NEXT_VERTEX[i];
+                int src = (int) token.CURR_VERTEX[i];
+                if (dst >= 0 && dst < dimension &&
+                    src >= 0 && src < dimension &&
+                    i != ID_ROBOT)
+                {
+                    // c_print("\t\ti:",i,"\tsrc: ",t.SRC_VERTEX[i],"\tdst: ",t.DST_VERTEX[i], yellow);
+
+                    //svaforisco la mia direzione
+                    // token_weight_map[t.SRC_VERTEX[i]][t.DST_VERTEX[i]]++;
+                    //sfavorisco la direzione inversa
+                    token_weight_map[token.NEXT_VERTEX[i]][token.CURR_VERTEX[i]]++;
+                }
+            }
+
+            need_task = false;
+        }
+        else
+        {
+            go_home = true;
+        }
+
+        // metto nel token quale arco sto occupando
+        token.CURR_VERTEX[ID_ROBOT] = current_vertex;
+        token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+    }
+
+    token_pub.publish(token);
+    ros::spinOnce();
 } // token_callback()
 
 

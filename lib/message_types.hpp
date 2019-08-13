@@ -88,3 +88,5 @@
 #define SIMULATE_FOREVER false             // WARNING: Set this to false, if you want a finishing condition.
 #define TIMEOUT_WRITE_RESULTS_FOREVER 900.0  // timeout for writing results to file when simulating forever
 #define MAX_DIMENSION 200
+
+#define TASK_PLANNER_ID 333

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <sstream>
+#include "logistic_sim/Task.h"
 
 using uint = unsigned int;
 
@@ -14,14 +15,13 @@ struct Task
 };
 
 // costruttore
-inline Task mkTask(uint item, uint id, uint demand, uint dst)
+inline logistic_sim::Task mkTask(uint item, uint id, uint demand, uint dst)
 {
-  Task t;
-  t.take = false;
-  t.item = item;
-  t.id = id;
-  t.demand = demand;
-  t.dst = dst;
+  logistic_sim::Task t;
+  t.ITEM = item;
+  t.ORDER = id;
+  t.DEMAND = demand;
+  t.DSTS.push_back(dst);
   return t;
 }
 
