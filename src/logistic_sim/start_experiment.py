@@ -228,7 +228,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
             #cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' > logs/'+ALG+'-'+dateString+'-robot'+str(i)+'.log \''
             # cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+' robotname:=robot_'+str(i)+' '+str(CAPACITY)+' '+'\''
             # cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' '+str(CAPACITY)+' '+'\''
-            cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' robot_'+str(i)+' '+str(CAPACITY)+' '+str(NROBOTS)+'\''
+            cmd = 'bash -c \'rosrun logistic_sim '+ALG+' __name:=patrol_robot'+str(i)+' '+MAP+' '+str(i)+' robot_'+str(i)+' '+str(CAPACITY)+' '+str(NROBOTS)+'\';bash'
 
         print cmd
         if (TERM == 'xterm'):

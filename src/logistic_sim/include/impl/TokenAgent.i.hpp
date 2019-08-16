@@ -106,9 +106,13 @@ void TokenAgent::onGoalComplete()
     }
 
    // aggiorniamo condizioni destinazione
-    if (current_vertex == 6)
+    if(go_home && current_vertex == initial_vertex)
     {
-        reached_pickup = false;
+        need_task = true;
+    }
+    else if (current_vertex == 6)
+    {
+        reached_pickup = true;
     }
     else if(current_vertex == current_task.DSTS[0] && reached_pickup)
     {
@@ -116,12 +120,10 @@ void TokenAgent::onGoalComplete()
         reached_pickup = false;
     }
 
-    c_print("compute_next_vertex", yellow);
+    c_print("before compute_next_vertex()", yellow);
     next_vertex = compute_next_vertex();
 
     c_print("   @ compute_next_vertex: ", next_vertex, green);
-
-    c_print("[DEBUG]\tid_task: ", id_task, "\tdst: ", mission[id_task].dst, "\tnext_vertex: ", next_vertex, yellow);
 
     send_goal_reached(); // Send TARGET to monitor
 
@@ -144,21 +146,28 @@ int TokenAgent::compute_next_vertex()
     int path[dimension];
     uint path_length;
 
-    if (!reached_pickup)
+    if(go_home)
+    {
+        c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
+        tp_dijkstra(current_vertex, initial_vertex, path, path_length);
+    }
+    else if (!reached_pickup)
     {
         tp_dijkstra(current_vertex, 6, path, path_length);
     }
-    else if(!go_home)
+    else
     {
         tp_dijkstra(current_vertex, current_task.DSTS[0], path, path_length);
     }
-    else
+
+    c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
+    for(int i=0; i<path_length; i++)
     {
-        tp_dijkstra(current_vertex, initial_vertex, path, path_length);
+        c_print("\t\t", path[i], yellow);
     }
 
     
-    vertex = path[0];
+    vertex = path[1];   //il primo vertice è quello di partenza, ritorno il secondo
 
     return vertex;
 } // compute_next_vertex()
@@ -223,7 +232,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token = *msg;
 
     token.ID_SENDER = ID_ROBOT;
-    c_print("TEAMSIZE: ",TEAM_SIZE, yellow);
+    // c_print("TEAMSIZE: ",TEAM_SIZE, yellow);
     if (msg->ID_RECEIVER == TEAM_SIZE - 1)
     {
         token.ID_RECEIVER = TASK_PLANNER_ID;
@@ -271,19 +280,20 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     token_weight_map[token.NEXT_VERTEX[i]][token.CURR_VERTEX[i]]++;
                 }
             }
-
-            need_task = false;
         }
         else
         {
             go_home = true;
         }
+        need_task = false;
+        goal_complete = true;
 
         // metto nel token quale arco sto occupando
         token.CURR_VERTEX[ID_ROBOT] = current_vertex;
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
     }
 
+    usleep(200000);
     token_pub.publish(token);
     ros::spinOnce();
 } // token_callback()
