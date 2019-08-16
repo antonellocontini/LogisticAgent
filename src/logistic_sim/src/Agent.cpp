@@ -97,6 +97,7 @@ void Agent::init(int argc, char** argv) {
     
     //   printf("initial position: x = %f, y = %f\n", initial_x, initial_y);
     current_vertex = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+    initial_vertex = current_vertex;
     //   printf("initial vertex = %d\n\n",current_vertex);  
     
     
