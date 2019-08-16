@@ -166,8 +166,15 @@ int TokenAgent::compute_next_vertex()
         c_print("\t\t", path[i], yellow);
     }
 
+    if (path_length > 1)
+    {
+        vertex = path[1];   //il primo vertice è quello di partenza, ritorno il secondo
+    }
+    else
+    {
+        vertex = current_vertex;
+    }
     
-    vertex = path[1];   //il primo vertice è quello di partenza, ritorno il secondo
 
     return vertex;
 } // compute_next_vertex()
