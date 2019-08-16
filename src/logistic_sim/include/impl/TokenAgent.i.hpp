@@ -257,48 +257,52 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
         initialize = false;
     }
-    else if(need_task)
+    else
     {
-        if(!msg->MISSION.empty())
+        if(need_task)
         {
-            // prendo la prima missione
-            auto t = msg->MISSION.back();
-            token.MISSION.pop_back();
-            token.ASSIGNED_MISSION.push_back(t);
-            current_task = t;
-            
-
-            // aggiorno la mappa
-            init_tw_map();
-            // c_print("[DEBUG]\tinit_tw_map() terminato\n\tAggiornamento mappa archi...", yellow);
-            for (auto i=0; i<TEAM_SIZE; i++)
+            if(!msg->MISSION.empty())
             {
-                int dst = (int) token.NEXT_VERTEX[i];
-                int src = (int) token.CURR_VERTEX[i];
-                if (dst >= 0 && dst < dimension &&
-                    src >= 0 && src < dimension &&
-                    i != ID_ROBOT)
-                {
-                    // c_print("\t\ti:",i,"\tsrc: ",t.SRC_VERTEX[i],"\tdst: ",t.DST_VERTEX[i], yellow);
+                // prendo la prima missione
+                auto t = msg->MISSION.back();
+                token.MISSION.pop_back();
+                token.ASSIGNED_MISSION.push_back(t);
+                current_task = t;
+            }
+            else
+            {
+                go_home = true;
+            }
+            need_task = false;
+            goal_complete = true;
+        }
 
-                    //svaforisco la mia direzione
-                    // token_weight_map[t.SRC_VERTEX[i]][t.DST_VERTEX[i]]++;
-                    //sfavorisco la direzione inversa
-                    token_weight_map[token.NEXT_VERTEX[i]][token.CURR_VERTEX[i]]++;
-                }
+        // aggiorno la mappa
+        init_tw_map();
+        // c_print("[DEBUG]\tinit_tw_map() terminato\n\tAggiornamento mappa archi...", yellow);
+        for (auto i=0; i<TEAM_SIZE; i++)
+        {
+            int dst = (int) token.NEXT_VERTEX[i];
+            int src = (int) token.CURR_VERTEX[i];
+            if (dst >= 0 && dst < dimension &&
+                src >= 0 && src < dimension &&
+                i != ID_ROBOT)
+            {
+
+                c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
+                //svaforisco la mia direzione
+                token_weight_map[src][dst]++;
+                //sfavorisco la direzione inversa
+                token_weight_map[dst][src]+=3;
             }
         }
-        else
-        {
-            go_home = true;
-        }
-        need_task = false;
-        goal_complete = true;
 
         // metto nel token quale arco sto occupando
         token.CURR_VERTEX[ID_ROBOT] = current_vertex;
-        token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+        token.NEXT_VERTEX[ID_ROBOT] = next_vertex;   
     }
+
+        
 
     usleep(200000);
     token_pub.publish(token);
