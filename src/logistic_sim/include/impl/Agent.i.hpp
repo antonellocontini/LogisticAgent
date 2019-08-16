@@ -299,6 +299,10 @@ bool Agent::check_interference(int robot_id)
     /* Poderei usar TEAMSIZE para afinar */
     for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
+        
+        //DC...
+        if( i == robot_id)
+            continue;
 
         dist_quad = (xPos[i] - xPos[robot_id]) * (xPos[i] - xPos[robot_id]) + (yPos[i] - yPos[robot_id]) * (yPos[i] - yPos[robot_id]);
 
@@ -505,7 +509,7 @@ void Agent::positionsCB(const nav_msgs::Odometry::ConstPtr &msg)
         //      printf ("Position Table:\n frame.id = %s\n id_robot = %d\n xPos[%d] = %f\n yPos[%d] = %f\n\n", id, idx, idx, xPos[idx], idx, yPos[idx] );
     }
 
-    c_print("TEAMSIZE: ", TEAM_SIZE, red);
+    // c_print("TEAMSIZE: ", TEAM_SIZE, red);
 
     receive_positions();
 }
