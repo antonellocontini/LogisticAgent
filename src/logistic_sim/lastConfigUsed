@@ -1,7 +1,7 @@
 [Config]
 map: model5
-nrobots: 1
-algorithm: CYCLE
+nrobots: 2
+algorithm: TokenAgent
 locmode: odom
 navmode: ros
 gwait: 0

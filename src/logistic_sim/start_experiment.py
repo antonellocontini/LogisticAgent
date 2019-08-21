@@ -208,7 +208,12 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     print 'bash -c \rosrun task_planner TaskPlanner'
     cmd_taskplanner = 'bash -c \'rosrun task_planner TaskPlanner '+ MAP+' '+'ALG'+' '+str(NROBOTS)+'\''
     cmd_TP = 'gnome-terminal  --tab -e "'+cmd_taskplanner+'"&'
-    os.system(cmd_TP)
+    
+    if (TERM == 'xterm'):
+        os.system('xterm -e "'+cmd_taskplanner+'" &')
+    else:
+        os.system(cmd_TP)
+            
     # os.system('gnome-terminal  --tab -e "bash -c \'rosrun task_planner TaskPlanner \'" &')    
     os.system('sleep 5')   
         
