@@ -149,6 +149,14 @@ add_executable(LogicAgent src/LogicAgent.cpp)
 add_dependencies(LogicAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(LogicAgent Agent ${catkin_LIBRARIES})
+
+## Declare a cpp executable 
+add_executable(DistrAgent src/DistrAgent.cpp)
+add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(DistrAgent Agent ${catkin_LIBRARIES})
+
+
 ########################################################################################################################
 
 # Results and Monitor Node:

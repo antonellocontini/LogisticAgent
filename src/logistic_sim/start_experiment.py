@@ -37,7 +37,8 @@ Alg_names = [
         [ 'CYCLEOPT','CYCLEOPT'],
         [ 'CFAGENT', 'CFAGENT'],
         [ 'TP',   'TP'],
-        [ 'TokenAgent', 'TokenAgent']
+        [ 'TokenAgent', 'TokenAgent'],
+        [ 'DistrAgent', 'DistrAgent']
      ]
 
 Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1','model1','model2','model3','model4','model5']   
@@ -485,8 +486,8 @@ def main():
     TERM = sys.argv[9]
     TIMEOUT = int(sys.argv[10])
     CUSTOM_STAGE = False
-    SPEEDUP = 1.0
-    CAPACITY = sys.argv[13]
+    SPEEDUP = float(1.0)
+    CAPACITY = int(sys.argv[13])
 
     # MAP = model5
     # NROBOTS = 2
@@ -504,14 +505,14 @@ def main():
 
 
 
-    if (len(sys.argv)>=12):
-      CUSTOM_STAGE = sys.argv[11]
-    if (len(sys.argv)>=13):
-      SPEEDUP = float(sys.argv[12])
+    # if (len(sys.argv)>=12):
+    #   CUSTOM_STAGE = sys.argv[11]
+    # if (len(sys.argv)>=13):
+    #   SPEEDUP = float(sys.argv[12])
 
-    # print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY
+    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY
     
-    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY)
+    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY)
 
  
 
