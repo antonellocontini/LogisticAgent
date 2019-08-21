@@ -2,7 +2,8 @@
 map: model5
 nrobots: 2
 algorithm: TokenAgent
-locmode: odom
+locmode: AMCL
 navmode: ros
 gwait: 0
+capacity: 3
 term: xterm

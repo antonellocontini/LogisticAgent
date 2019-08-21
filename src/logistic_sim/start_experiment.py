@@ -44,6 +44,8 @@ Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_f
 
 NRobots_list = ['1','2','4','6','8','10','12']
 
+RobotsCapacity_list = ['3', '5', '7']
+
 LocalizationMode_list = ['AMCL','fake_localization']
 
 NavigationMode_list = ['ros','spqrel_navigation']
@@ -384,6 +386,20 @@ class DIP(tk.Frame):
 
         _row = _row + 1
 
+        lbl = Label(self, text="Capacity")
+        lbl.grid(sticky=W, row=_row, column=0, pady=4, padx=5)
+
+        self.capacity_list = RobotsCapacity_list
+        self.capacity_ddm = StringVar(self)
+        try:
+            lastcapacity=self.oldConfigs["capacity"]
+        except:
+            lastcapacity=self.capacity_list[0]
+        self.capacity_ddm.set(lastcapacity)
+        tk.OptionMenu(self,self.capacity_ddm, *self.capacity_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
+
+        _row = _row + 1
+
         lbl = Label(self, text="Terminal")
         lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
 
@@ -426,6 +442,7 @@ class DIP(tk.Frame):
       f.write("locmode: %s\n"%self.locmode_ddm.get())
       f.write("navmode: %s\n"%self.navmode_ddm.get())
       f.write("gwait: %s\n"%self.gwait_ddm.get())
+      f.write("capacity: %s\n"%self.capacity_ddm.get())
       f.write("term: %s\n"%self.term_ddm.get())
       f.close()
 
@@ -452,9 +469,9 @@ def main():
     root.geometry("300x320+0+0")
     root.mainloop()  
 
-  elif (len(sys.argv)<10):
+  elif (len(sys.argv)<13):
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
+    print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <capacity> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
 
   else:
     MAP = sys.argv[1]
@@ -470,10 +487,29 @@ def main():
     CUSTOM_STAGE = False
     SPEEDUP = 1.0
     CAPACITY = sys.argv[13]
+
+    # MAP = model5
+    # NROBOTS = 2
+    # INITPOS = default
+    # ALG_SHORT = TokenAgent
+    # LOC_MODE = AMCL
+    # NAV_MODULE = ros
+    # GWAIT = 0
+    # COMMDELAY= 0
+    # TERM = xterm
+    # TIMEOUT = 1800
+    # CUSTOM_STAGE = False
+    # SPEEDUP = 1.0
+    # CAPACITY = 3
+
+
+
     if (len(sys.argv)>=12):
       CUSTOM_STAGE = sys.argv[11]
     if (len(sys.argv)>=13):
       SPEEDUP = float(sys.argv[12])
+
+    # print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY
     
     run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY)
 
@@ -482,5 +518,21 @@ def main():
 
 if __name__ == '__main__':
     os.chdir(dirname)
+    # print "diocan"
+    # MAP = "model5"
+    # NROBOTS = 2
+    # INITPOS = "default"
+    # ALG_SHORT = "TokenAgent"
+    # LOC_MODE = "AMCL"
+    # NAV_MODULE = "ros"
+    # GWAIT = 0
+    # COMMDELAY= 0
+    # TERM = "xterm"
+    # TIMEOUT = 1800
+    # CUSTOM_STAGE = False
+    # SPEEDUP = 1.0
+    # CAPACITY = 3
+
+    # print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY
     main()
 
