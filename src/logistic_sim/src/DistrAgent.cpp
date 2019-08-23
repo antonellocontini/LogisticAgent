@@ -1,4 +1,3 @@
-
 #include "DistrAgent.hpp"
 
 int main(int argc, char *argv[])

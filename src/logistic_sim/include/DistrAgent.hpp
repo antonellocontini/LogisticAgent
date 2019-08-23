@@ -1,4 +1,5 @@
 #include "Agent.hpp"
+#pragma once
 #include "logistic_sim/Token.h"
 
 namespace distragent
@@ -15,6 +16,7 @@ protected:
     bool reached_pickup, go_home = false;
     logistic_sim::Task current_task;
     std::vector<std::vector<uint>> token_weight_map;
+    std::vector<logistic_sim::Mission> coalition;
 
 public:
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
@@ -37,7 +39,8 @@ public:
     //
     uint compute_id_path(std::vector<logistic_sim::Task> m);
     void compute_travell(uint id_path, logistic_sim::Mission m);
-    int compute_cost_of_route(std::vector<unit> r);
+    int compute_cost_of_route(std::vector<uint> r);
+    logistic_sim::Mission coalition_formation(logistic_sim::Token token);
     //
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();

@@ -242,32 +242,32 @@ void DistrAgent::tp_dijkstra(uint source, uint destination, int *shortest_path, 
 uint DistrAgent::compute_id_path(std::vector<logistic_sim::Task> m)
 {
     uint res = 0;
-    std::vector<uint> tmp_d;
-    tmp_d.clear();
+    std::vector<uint> d;
+    d.clear();
     for (auto i = 0; i < m.size(); i++)
     {
-        auto d = m[i].dst;
-        tmp_d.push_back(d);
+        d = m[i].DSTS;
+        
     }
-    sort(tmp_d.begin(), tmp_d.end());
-    tmp_d.erase(unique(tmp_d.begin(), tmp_d.end()), tmp_d.end());
+    sort(d.begin(), d.end());
+    d.erase(unique(d.begin(), d.end()), d.end());
 
-    if (tmp_d.size() == 1)
+    if (d.size() == 1)
     {
-        if (tmp_d[0] == 11)
+        if (d[0] == 11)
             res = 1;
-        else if (tmp_d[0] == 16)
+        else if (d[0] == 16)
             res = 2;
         else
             res = 3;
     }
-    else if (tmp_d.size() == 2)
+    else if (d.size() == 2)
     {
-        if ((tmp_d[0] == 11) && (tmp_d[1] == 16))
+        if ((d[0] == 11) && (d[1] == 16))
         {
             res = 4;
         }
-        else if ((tmp_d[0] == 11) && (tmp_d[1] == 21))
+        else if ((d[0] == 11) && (d[1] == 21))
         {
             res = 5;
         }
@@ -286,139 +286,116 @@ uint DistrAgent::compute_id_path(std::vector<logistic_sim::Task> m)
 
 int DistrAgent::compute_cost_of_route(std::vector<uint> route)
 {
-  int custo_final = 0;
-  for (int i = 1; i < route.size(); i++)
-  {
-    int anterior = route[i - 1];
-    int proximo = route[i];
-
-    for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
+    int custo_final = 0;
+    for (int i = 1; i < route.size(); i++)
     {
-      if (vertex_web[anterior].id_neigh[j] == proximo)
-      {
-        custo_final += vertex_web[anterior].cost[j];
-        break;
-      }
+        int anterior = route[i - 1];
+        int proximo = route[i];
+
+        for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
+        {
+            if (vertex_web[anterior].id_neigh[j] == proximo)
+            {
+                custo_final += vertex_web[anterior].cost[j];
+                break;
+            }
+        }
     }
-  }
-  return custo_final;
+    return custo_final;
 }
 
 void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission m)
 {
-      
- 
-  switch (id_path)
-  {
+    switch (id_path)
+    {
     case 1:
     {
-      for (auto i = 0; i < 8; i++)
-      {
-        m.ROUTE.push_back(p_11[i]);
-      }
-    
-      m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
-      m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 8; i++)
+        {
+            m.ROUTE.push_back(p_11[i]);
+        }
+
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
     case 2:
     {
-      for (auto i = 0; i < 12; i++)
-      {
-         m.ROUTE.push_back();
-      }
-      ele->path_distance = ccor(ele->route);
-      // ele->V = ele->path_distance / ele->tot_demand;
-      ele->V = (double)ele->path_distance / (double)ele->tot_demand;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 12; i++)
+        {
+            m.ROUTE.push_back(p_16[i]);
+        }
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
     case 3:
     {
-      for (auto i = 0; i < 16; i++)
-      {
-         m.ROUTE.push_back();
-      }
-      ele->path_distance = ccor(ele->route);
-      // ele->V = ele->path_distance / ele->tot_demand;
-      ele->V = (double)ele->path_distance / (double)ele->tot_demand;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 16; i++)
+        {
+            m.ROUTE.push_back(p_21[i]);
+        }
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
     case 4:
     {
-      for (auto i = 0; i < 14; i++)
-      {
-         m.ROUTE.push_back();
-      }
-      ele->path_distance = ccor(ele->route);
-      ele->V = (double)ele->path_distance / (double)ele->tot_demand;
-      // ele->V = ele->path_distance / ele->tot_demand;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 14; i++)
+        {
+            m.ROUTE.push_back(p_11_16[i]);
+        }
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
 
     case 5:
     {
-      for (auto i = 0; i < 18; i++)
-      {
-         m.ROUTE.push_back();
-      }
-      ele->path_distance = ccor(ele->route);
-      ele->V = (double)ele->path_distance / (double)ele->tot_demand;
-      // ele->V = ele->path_distance / ele->tot_demand;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 18; i++)
+        {
+            m.ROUTE.push_back(p_11_21[i]);
+        }
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
     case 6:
     {
-      for (auto i = 0; i < 18; i++)
-      {
-         m.ROUTE.push_back();
-      }
-      ele->path_distance = ccor(ele->route);
-      ele->V = (double)ele->path_distance / (double)ele->tot_demand;
-      // ele->V = ele->path_distance / ele->tot_demand;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 18; i++)
+        {
+            m.ROUTE.push_back(p_16_21[i]);
+        }
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
     case 7:
     {
-      for (auto i = 0; i < 20; i++)
-      {
-         m.ROUTE.push_back();
-      }
-      ele->path_distance = ccor(ele->route);
-      ele->V = (double)ele->path_distance / (double)ele->tot_demand;
-      // ele->V = ele->path_distance / ele->tot_demand;
-      // c_print("V: ", ele->V, red);
+        for (auto i = 0; i < 20; i++)
+        {
+            m.ROUTE.push_back(p_11_16_21[i]);
+        }
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     }
     break;
     default:
     {
-      c_print("ERR", red);
+        c_print("ERR", red);
     }
     break;
-  }
+    }
 }
 
-void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
+logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
 {
-    auto max_el = CAPACITY;
-    // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
-
-    // se non è per me termino
-    if (msg->ID_RECEIVER != ID_ROBOT)
-        return;
-
-    logistic_sim::Token token;
-    token = *msg;
+    auto tmp_CAPACITY = CAPACITY;
 
     auto size_tasks_set = token.MISSION.size();
 
     int id = 0;
-
+    // init
     for (auto i = 0; i < size_tasks_set; i++)
     {
 
@@ -428,8 +405,71 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         m.MISSION.push_back(token.MISSION[i]);
         m.TOT_DEMAND = token.MISSION[i].DEMAND;
         uint id_path = compute_id_path(token.MISSION);
-        compute_route(id_path, m);
+        compute_travell(id_path, m);
+        if (coalition.empty())
+        {
+            c_print("[W] coalition vuota!", yellow, P);
+        }
+        coalition.push_back(m);
     }
+    // doppio ciclo
+    logistic_sim::Mission mission1;
+    logistic_sim::Mission mission2;
+    auto new_id = coalition.size();
+    for (auto i = 0; i < coalition.size(); i++)
+    {
+        mission1 = coalition[i];
+        for (auto j = 0; j < coalition.size(); j++)
+        {
+            mission2 = coalition[j];
+            if (mission1.ID != mission2.ID)
+            {
+                auto dEMAND = mission1.TOT_DEMAND + mission2.TOT_DEMAND;
+                if (dEMAND <= tmp_CAPACITY)
+                {
+                    logistic_sim::Mission mission3;
+                    mission3.ID = new_id;
+                    new_id++;
+                    mission3.TOT_DEMAND = dEMAND;
+                    for (auto y = 0; y < mission1.MISSION.size(); y++)
+                        mission3.MISSION.push_back(mission1.MISSION[y]);
+                    for (auto w = 0; w < mission2.MISSION.size(); w++)
+                        mission3.MISSION.push_back(mission2.MISSION[w]);
+                    uint id_path = compute_id_path(mission3.MISSION);
+                    compute_travell(id_path, mission3);
+
+                    if ((mission3.V - mission1.V - mission2.V) < 0)
+                    {
+                        cout << " mission3: "<< mission3.ROUTE.size() << "\n";
+                        for (auto i = 0; i  < mission3.ROUTE.size(); i++)
+                        {
+                            cout << mission3.ROUTE[i]<< " ";
+                        }
+                        cout << " \n";
+                        // mission3 e' la prima coalizione che mi va bene
+                        // devo rimuovere dal token i task della coalizione e rimandare il token
+                    }
+                }
+            }
+        }
+    }
+    //
+}
+
+void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
+{
+
+    // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
+
+    // se non è per me termino
+    if (msg->ID_RECEIVER != ID_ROBOT)
+        return;
+
+    logistic_sim::Token token;
+    token = *msg;
+
+    logistic_sim::Mission m = coalition_formation(token);
+
 
     token.ID_SENDER = ID_ROBOT;
     // c_print("TEAMSIZE: ",TEAM_SIZE, yellow);
