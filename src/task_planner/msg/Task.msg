@@ -1,4 +1,5 @@
 Header      header
+uint32      id
 bool        take
 bool        go_home
 int32       ID_ROBOT
@@ -11,3 +12,4 @@ uint32      dst
 uint32      path_distance
 uint32[]    route
 uint32[]    condition
+float64     V

@@ -57,6 +57,7 @@ add_message_files(
   Task.msg
   TaskRequest.msg
   Token.msg
+  Mission.msg
   # Vertex.msg
   # VertexWeb.ms/g
 )
@@ -155,7 +156,6 @@ add_executable(DistrAgent src/DistrAgent.cpp)
 add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(DistrAgent Agent ${catkin_LIBRARIES})
-
 
 ########################################################################################################################
 

@@ -58,6 +58,9 @@
 #include "message_types.hpp"
 #include "struct_task.hpp"
 
+
+#include "logistic_sim/Mission.h"
+
 // #include <geometry_msgs/PoseWithCovarianceStamped.h>
 
 // definizione principale di Agent, LogicAgent con TaskPlanner e TPAgent con Token e TaskPlanner
