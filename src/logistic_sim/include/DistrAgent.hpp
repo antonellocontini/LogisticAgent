@@ -14,11 +14,8 @@ protected:
 
     bool need_task = true;
     bool reached_pickup, go_home = false;
-    logistic_sim::Task current_task;
-    std::vector<std::vector<uint>> token_weight_map;
-    std::vector<logistic_sim::Mission> coalition;
+    uint tmp_CAPACITY = 0;
 
-public:
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
     uint p_21[16] = {6, 7, 9, 12, 14, 17, 19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
@@ -31,6 +28,13 @@ public:
 
     uint p_11_16_21[20] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 17,
                            19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
+    
+    logistic_sim::Task current_task;
+    logistic_sim::Mission current_mission;
+    std::vector<std::vector<uint>> token_weight_map;
+    std::vector<logistic_sim::Mission> coalition;
+
+public:
 
     virtual void init(int argc, char **argv);
     virtual void run();

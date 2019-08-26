@@ -6,6 +6,10 @@ namespace distragent
 void DistrAgent::init(int argc, char **argv)
 {
     Agent::init(argc, argv);
+
+    // inizializzazione della tmp_CAPCACITY
+    tmp_CAPACITY = CAPACITY;
+
     ros::NodeHandle nh;
 
     token_pub = nh.advertise<logistic_sim::Token>("token", 1);
@@ -388,17 +392,17 @@ void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission m)
     }
 }
 
+// mi basta la prima coalizione buona e poi posso uscire dal ciclo
 logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
 {
-    auto tmp_CAPACITY = CAPACITY;
-
+    logistic_sim::Mission M;
+    // in coalition ho tutte le missioni cerco la combinazione che mi soddisfa e passo il token 
     auto size_tasks_set = token.MISSION.size();
 
     int id = 0;
     // init
     for (auto i = 0; i < size_tasks_set; i++)
     {
-
         logistic_sim::Mission m;
         m.ID = id;
         id++;
@@ -412,6 +416,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
         }
         coalition.push_back(m);
     }
+    c_print("inizializzazione della coalizione", green, P);
     // doppio ciclo
     logistic_sim::Mission mission1;
     logistic_sim::Mission mission2;
@@ -438,6 +443,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
                     uint id_path = compute_id_path(mission3.MISSION);
                     compute_travell(id_path, mission3);
 
+                    // minimizzazione
                     if ((mission3.V - mission1.V - mission2.V) < 0)
                     {
                         cout << " mission3: "<< mission3.ROUTE.size() << "\n";
@@ -449,15 +455,22 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
                         // mission3 e' la prima coalizione che mi va bene
                         // devo rimuovere dal token i task della coalizione e rimandare il token
                     }
+                    else
+                    {
+                        // delete
+                    }
                 }
             }
         }
     }
     //
+    return M;
 }
 
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
+
+    c_print("Ricevo il token",yellow,P);
 
     // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
 
