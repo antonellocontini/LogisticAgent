@@ -65,20 +65,20 @@ void DistrAgent::run()
     while (ros::ok())
     {
 
-        //  cosa ho globale??? mi serve tempo velocita e posizione
-        float x, y, t;
-        getRobotPose(ID_ROBOT, x, y, t);
-        std::cout << "x: " << xPos[ID_ROBOT] << " y: " << yPos[ID_ROBOT] << " th: " << thetaPos[ID_ROBOT] << "\n"
-                  << "lastPos: x= " << lastXpose << " ,y= " << lastYpose << "\n";
+        // //  cosa ho globale??? mi serve tempo velocita e posizione
+        // float x, y, t;
+        // getRobotPose(ID_ROBOT, x, y, t);
+        // std::cout << "x: " << xPos[ID_ROBOT] << " y: " << yPos[ID_ROBOT] << " th: " << thetaPos[ID_ROBOT] << "\n"
+        //           << "lastPos: x= " << lastXpose << " ,y= " << lastYpose << "\n";
 
-        // lastXPose
-        // lastYpose
-        // dimension
-        // initial_vertex
-        // current_vertex
-        // next_vertex
-        // last_interference
-        // std::cout <<
+        // // lastXPose
+        // // lastYpose
+        // // dimension
+        // // initial_vertex
+        // // current_vertex
+        // // next_vertex
+        // // last_interference
+        // // std::cout <<
         if (goal_complete)
         {
             c_print("before OnGoal()", magenta);
@@ -251,7 +251,6 @@ uint DistrAgent::compute_id_path(std::vector<logistic_sim::Task> m)
     for (auto i = 0; i < m.size(); i++)
     {
         d = m[i].DSTS;
-        
     }
     sort(d.begin(), d.end());
     d.erase(unique(d.begin(), d.end()), d.end());
@@ -396,11 +395,12 @@ void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission m)
 logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
 {
     logistic_sim::Mission M;
-    // in coalition ho tutte le missioni cerco la combinazione che mi soddisfa e passo il token 
+    // in coalition ho tutte le missioni cerco la combinazione che mi soddisfa e passo il token
     auto size_tasks_set = token.MISSION.size();
 
     int id = 0;
     // init
+    coalition.clear();
     for (auto i = 0; i < size_tasks_set; i++)
     {
         logistic_sim::Mission m;
@@ -432,6 +432,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
                 auto dEMAND = mission1.TOT_DEMAND + mission2.TOT_DEMAND;
                 if (dEMAND <= tmp_CAPACITY)
                 {
+                    c_print("Coalizione trovata", yellow, P);
                     logistic_sim::Mission mission3;
                     mission3.ID = new_id;
                     new_id++;
@@ -446,31 +447,40 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
                     // minimizzazione
                     if ((mission3.V - mission1.V - mission2.V) < 0)
                     {
-                        cout << " mission3: "<< mission3.ROUTE.size() << "\n";
-                        for (auto i = 0; i  < mission3.ROUTE.size(); i++)
+                        // operator == TODO FIX
+                        // coalition.erase(find(coalition.begin(), coalition.end(), mission1));
+                        // coalition.erase(find(coalition.begin(), coalition.end(), mission2));
+
+                        coalition.push_back(mission3);
+
+                        c_print("[W]: mission3", yellow, P);
+                        cout << " mission3: " << mission3.ROUTE.size() << "\n";
+                        for (auto i = 0; i < mission3.ROUTE.size(); i++)
                         {
-                            cout << mission3.ROUTE[i]<< " ";
+                            cout << mission3.ROUTE[i] << " ";
                         }
                         cout << " \n";
+                        break;
                         // mission3 e' la prima coalizione che mi va bene
                         // devo rimuovere dal token i task della coalizione e rimandare il token
                     }
                     else
                     {
-                        // delete
+                        // delete mission3;
                     }
                 }
             }
         }
     }
-    //
-    return M;
+    //inserisco tutto su un vettore e poi prendo la coalizione migliore?
+    // oppure prendo la prima coalizione che mi soddisfa (tesi coalizione migliore)
+    return coalition.back();
 }
 
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
 
-    c_print("Ricevo il token",yellow,P);
+    c_print("Ricevo il token", yellow, P);
 
     // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
 
@@ -481,8 +491,9 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     logistic_sim::Token token;
     token = *msg;
 
-    logistic_sim::Mission m = coalition_formation(token);
+    // logistic_sim::Mission m = coalition_formation(token);
 
+    // cout << "missione finale dopo coalizione: "<< m.ID << m.TOT_DEMAND <<"\n";
 
     token.ID_SENDER = ID_ROBOT;
     // c_print("TEAMSIZE: ",TEAM_SIZE, yellow);
@@ -507,6 +518,11 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         if (need_task)
         {
+
+            logistic_sim::Mission m = coalition_formation(token);
+
+            cout << "missione finale dopo coalizione: " << m.ID << m.TOT_DEMAND << "\n";
+
             if (!msg->MISSION.empty())
             {
                 // prendo la prima missione

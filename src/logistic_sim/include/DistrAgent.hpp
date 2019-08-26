@@ -6,6 +6,16 @@ namespace distragent
 {
 using namespace agent;
 
+inline bool operator== (const logistic_sim::Mission& A, const logistic_sim::Mission& B)
+{
+    return A.ID == B.ID ? 1 : 0;
+}
+
+inline bool operator<(const logistic_sim::Mission& A, const logistic_sim::Mission& B)
+{
+    return A.V < B.V ? 1 : 0;
+}
+
 class DistrAgent : public Agent
 {
 protected:
