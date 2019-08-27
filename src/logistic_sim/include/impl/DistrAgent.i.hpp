@@ -3,197 +3,6 @@
 namespace distragent
 {
 
-void DistrAgent::init(int argc, char **argv)
-{
-    Agent::init(argc, argv);
-
-    // inizializzazione della tmp_CAPCACITY
-    tmp_CAPACITY = CAPACITY;
-
-    ros::NodeHandle nh;
-
-    token_pub = nh.advertise<logistic_sim::Token>("token", 1);
-
-    token_sub = nh.subscribe<logistic_sim::Token>("token", 20, boost::bind(&DistrAgent::token_callback, this, _1));
-
-    init_tw_map();
-}
-
-void DistrAgent::run()
-{
-    // get ready
-    ready();
-
-    c_print("@ Ready!", green);
-
-    // initially clear the costmap (to make sure the robot is not trapped):
-    std_srvs::Empty srv;
-    std::string mb_string;
-
-    if (ID_ROBOT > -1)
-    {
-        std::ostringstream id_string;
-        id_string << ID_ROBOT;
-        mb_string = "robot_" + id_string.str() + "/";
-    }
-    mb_string += "move_base/clear_costmaps";
-
-    if (ros::service::call(mb_string.c_str(), srv))
-    {
-        // if (ros::service::call("move_base/clear_costmaps", srv)){
-        ROS_INFO("Costmap correctly cleared before patrolling task.");
-    }
-    else
-    {
-        ROS_WARN("Was not able to clear costmap (%s) before patrolling...", mb_string.c_str());
-    }
-
-    // Asynch spinner (non-blocking)
-    ros::AsyncSpinner spinner(2); // Use n threads
-    spinner.start();
-    // ros::waitForShutdown();
-
-    /* Run Algorithm */
-
-    //  init_agent3();
-
-    // c_print("RequestTask", green);
-    // request_Task();
-
-    ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
-
-    while (ros::ok())
-    {
-
-        // //  cosa ho globale??? mi serve tempo velocita e posizione
-        // float x, y, t;
-        // getRobotPose(ID_ROBOT, x, y, t);
-        // std::cout << "x: " << xPos[ID_ROBOT] << " y: " << yPos[ID_ROBOT] << " th: " << thetaPos[ID_ROBOT] << "\n"
-        //           << "lastPos: x= " << lastXpose << " ,y= " << lastYpose << "\n";
-
-        // // lastXPose
-        // // lastYpose
-        // // dimension
-        // // initial_vertex
-        // // current_vertex
-        // // next_vertex
-        // // last_interference
-        // // std::cout <<
-        if (goal_complete)
-        {
-            c_print("before OnGoal()", magenta);
-            onGoalComplete();
-            resend_goal_count = 0;
-        }
-        else
-        {
-            if (interference)
-            {
-                do_interference_behavior();
-            }
-
-            if (ResendGoal)
-            {
-                ROS_INFO("Re-Sending goal (%d) - Vertex %d (%f,%f)", resend_goal_count, next_vertex, vertex_web[next_vertex].x,
-                         vertex_web[next_vertex].y);
-                send_resendgoal();
-                sendGoal(next_vertex);
-
-                ResendGoal = false;
-            }
-
-            processEvents();
-
-            if (end_simulation)
-            {
-                return;
-            }
-        }
-
-        loop_rate.sleep();
-
-    } // while ros.ok
-} // run()
-
-void DistrAgent::onGoalComplete()
-{
-    if (next_vertex > -1)
-    {
-        current_vertex = next_vertex;
-    }
-
-    // aggiorniamo condizioni destinazione
-    if (go_home && current_vertex == initial_vertex)
-    {
-        need_task = true;
-    }
-    else if (current_vertex == 6)
-    {
-        reached_pickup = true;
-    }
-    else if (current_vertex == current_task.DSTS[0] && reached_pickup)
-    {
-        need_task = true;
-        reached_pickup = false;
-    }
-
-    c_print("before compute_next_vertex()", yellow);
-    next_vertex = compute_next_vertex();
-
-    c_print("   @ compute_next_vertex: ", next_vertex, green);
-
-    send_goal_reached(); // Send TARGET to monitor
-
-    send_results(); // Algorithm specific function
-
-    // Send the goal to the robot (Global Map)
-    ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    // sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    sendGoal(next_vertex); // send to move_base
-
-    goal_complete = false;
-}
-
-int DistrAgent::compute_next_vertex()
-{
-    int vertex;
-
-    // alloco un vettore per il percorso
-    int path[dimension];
-    uint path_length;
-
-    if (go_home)
-    {
-        c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
-        tp_dijkstra(current_vertex, initial_vertex, path, path_length);
-    }
-    else if (!reached_pickup)
-    {
-        tp_dijkstra(current_vertex, 6, path, path_length);
-    }
-    else
-    {
-        tp_dijkstra(current_vertex, current_task.DSTS[0], path, path_length);
-    }
-
-    c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
-    for (int i = 0; i < path_length; i++)
-    {
-        c_print("\t\t", path[i], yellow);
-    }
-
-    if (path_length > 1)
-    {
-        vertex = path[1]; //il primo vertice è quello di partenza, ritorno il secondo
-    }
-    else
-    {
-        vertex = current_vertex;
-    }
-
-    return vertex;
-} // compute_next_vertex()
-
 void DistrAgent::init_tw_map()
 {
     token_weight_map.clear();
@@ -396,7 +205,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
 {
     logistic_sim::Mission M;
     // in coalition ho tutte le missioni cerco la combinazione che mi soddisfa e passo il token
-    auto size_tasks_set = token.MISSION.size();
+    auto size_tasks_set = token.TASK.size();
 
     int id = 0;
     // init
@@ -406,9 +215,9 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
         logistic_sim::Mission m;
         m.ID = id;
         id++;
-        m.MISSION.push_back(token.MISSION[i]);
-        m.TOT_DEMAND = token.MISSION[i].DEMAND;
-        uint id_path = compute_id_path(token.MISSION);
+        m.MISSION.push_back(token.TASK[i]);
+        m.TOT_DEMAND = token.TASK[i].DEMAND;
+        uint id_path = compute_id_path(token.TASK);
         compute_travell(id_path, m);
         if (coalition.empty())
         {
@@ -424,49 +233,64 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
     for (auto i = 0; i < coalition.size(); i++)
     {
         mission1 = coalition[i];
-        for (auto j = 0; j < coalition.size(); j++)
+        if (mission1.TOT_DEMAND == tmp_CAPACITY)
         {
-            mission2 = coalition[j];
-            if (mission1.ID != mission2.ID)
+            // allora la piazzo subito
+            M = mission1;
+            break; //esco e ciao
+        }
+        else if (mission1.TOT_DEMAND < tmp_CAPACITY)
+        {
+            // ciclo con altro elemento per vedere se soddisfo
+            for (auto j = 0; j < coalition.size(); j++)
             {
-                auto dEMAND = mission1.TOT_DEMAND + mission2.TOT_DEMAND;
-                if (dEMAND <= tmp_CAPACITY)
+                mission2 = coalition[j];
+                if (mission1.ID != mission2.ID)
                 {
-                    c_print("Coalizione trovata", yellow, P);
-                    logistic_sim::Mission mission3;
-                    mission3.ID = new_id;
-                    new_id++;
-                    mission3.TOT_DEMAND = dEMAND;
-                    for (auto y = 0; y < mission1.MISSION.size(); y++)
-                        mission3.MISSION.push_back(mission1.MISSION[y]);
-                    for (auto w = 0; w < mission2.MISSION.size(); w++)
-                        mission3.MISSION.push_back(mission2.MISSION[w]);
-                    uint id_path = compute_id_path(mission3.MISSION);
-                    compute_travell(id_path, mission3);
-
-                    // minimizzazione
-                    if ((mission3.V - mission1.V - mission2.V) < 0)
+                    auto dEMAND = mission1.TOT_DEMAND + mission2.TOT_DEMAND;
+                    if (dEMAND <= tmp_CAPACITY)
                     {
-                        // operator == TODO FIX
-                        // coalition.erase(find(coalition.begin(), coalition.end(), mission1));
-                        // coalition.erase(find(coalition.begin(), coalition.end(), mission2));
+                        // c_print("Coalizione trovata", yellow, P);
+                        logistic_sim::Mission mission3;
+                        mission3.ID = new_id;
+                        new_id++;
+                        mission3.TOT_DEMAND = dEMAND;
+                        for (auto y = 0; y < mission1.MISSION.size(); y++)
+                            mission3.MISSION.push_back(mission1.MISSION[y]);
+                        for (auto w = 0; w < mission2.MISSION.size(); w++)
+                            mission3.MISSION.push_back(mission2.MISSION[w]);
+                        uint id_path = compute_id_path(mission3.MISSION);
+                        compute_travell(id_path, mission3);
 
-                        coalition.push_back(mission3);
-
-                        c_print("[W]: mission3", yellow, P);
-                        cout << " mission3: " << mission3.ROUTE.size() << "\n";
-                        for (auto i = 0; i < mission3.ROUTE.size(); i++)
+                        // minimizzazione
+                        if ((mission3.V - mission1.V - mission2.V) < 0)
                         {
-                            cout << mission3.ROUTE[i] << " ";
+                            c_print("questa va da dio CANE", green,P);
+                            // eliminazione degli elemnti che compongono la missione
+                            // operator == TODO FIX
+                            // coalition.erase(find(coalition.begin(), coalition.end(), cmp_Mission(mission1, mission2)));
+                            // coalition.erase(find(coalition.begin(), coalition.end(), mission2));
+
+                            // coalition.push_back(mission3);
+
+                            c_print("[W]: mission3", yellow, P);
+                            cout << " mission3: " << mission3.ROUTE.size() << "\n";
+                            for (auto i = 0; i < mission3.ROUTE.size(); i++)
+                            {
+                                cout << mission3.ROUTE[i] << " ";
+                            }
+                            cout << " \n";
+
+                            M = mission3;
+
+                            break;
+                            // mission3 e' la prima coalizione che mi va bene
+                            // devo rimuovere dal token i task della coalizione e rimandare il token
                         }
-                        cout << " \n";
-                        break;
-                        // mission3 e' la prima coalizione che mi va bene
-                        // devo rimuovere dal token i task della coalizione e rimandare il token
-                    }
-                    else
-                    {
-                        // delete mission3;
+                        else
+                        {
+                            // delete mission3;
+                        }
                     }
                 }
             }
@@ -474,14 +298,11 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
     }
     //inserisco tutto su un vettore e poi prendo la coalizione migliore?
     // oppure prendo la prima coalizione che mi soddisfa (tesi coalizione migliore)
-    return coalition.back();
+    return M;
 }
 
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
-
-    c_print("Ricevo il token", yellow, P);
-
     // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
 
     // se non è per me termino
@@ -519,17 +340,20 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         if (need_task)
         {
 
+            c_print("##################################", magenta, P);
             logistic_sim::Mission m = coalition_formation(token);
 
             cout << "missione finale dopo coalizione: " << m.ID << m.TOT_DEMAND << "\n";
 
             if (!msg->MISSION.empty())
             {
+                // qua asegno la missione 
                 // prendo la prima missione
-                auto t = msg->MISSION.back();
-                token.MISSION.pop_back();
-                token.ASSIGNED_MISSION.push_back(t);
+                auto t = msg->TASK.back();
+                token.TASK.pop_back();
+                token.ASSIGNED_TASK.push_back(t);
                 current_task = t;
+                // qua ci metto il task che mi serve dal token io non ho il sisngolo task ma la missione composta da task
             }
             else
             {
@@ -550,7 +374,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 i != ID_ROBOT)
             {
 
-                c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
+                // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
                 //svaforisco la mia direzione
                 token_weight_map[src][dst]++;
                 //sfavorisco la direzione inversa

@@ -269,20 +269,20 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         if(need_task)
         {
-            //if(!msg->MISSION.empty())
-            if(!token.MISSION.empty())
+            //if(!msg->TASK.empty())
+            if(!token.TASK.empty())
             {
                 // prendo la prima missione
-                // auto t = msg->MISSION.back();
-                // token.MISSION.pop_back();
+                // auto t = msg->TASK.back();
+                // token.TASK.pop_back();
                 // token.ASSIGNED_MISSION.push_back(t);
 
                 // se possibile prendo un task con destinazione diversa da quelli in corso
                 // per farlo ciclo tra tutti i task disponibili finchè non ne trovo uno compatibile
                 c_print("[DEBUG]\tScelta task...", yellow);
-                auto it_m = token.MISSION.begin();
+                auto it_m = token.TASK.begin();
                 bool good = false;
-                for( ; it_m != token.MISSION.end() && !good; it_m++)
+                for( ; it_m != token.TASK.end() && !good; it_m++)
                 {
                     good = true;
                     for(auto it_dst = msg->CURR_DST.begin(); it_dst != msg->CURR_DST.end(); it_dst++)
@@ -302,16 +302,16 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     it_m--; // alla fine del ciclo precedente l'iteratore è andato oltre il task selezionato
                     t = *it_m;
                     c_print("[DEBUG]\tDST=", t.DSTS[0], yellow);
-                    token.MISSION.erase(it_m);
+                    token.TASK.erase(it_m);
                 }
                 else    // non esiste un task che non vada in conflitto, prendo l'ultimo della lista
                 {
-                    t = token.MISSION.back();
-                    token.MISSION.pop_back();
+                    t = token.TASK.back();
+                    token.TASK.pop_back();
                 }
                 
                 c_print("[DEBUG]\tTask rimosso dalla lista", yellow);
-                token.ASSIGNED_MISSION.push_back(t);
+                token.ASSIGNED_TASK.push_back(t);
                 token.CURR_DST[ID_ROBOT] = t.DSTS[0];
                 current_task = t;
                 c_print("[DEBUG]\tTask assegnato nel token", yellow);

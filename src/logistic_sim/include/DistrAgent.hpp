@@ -6,6 +6,11 @@ namespace distragent
 {
 using namespace agent;
 
+bool cmp_Mission(logistic_sim::Mission A, logistic_sim::Mission B)
+{
+    return A.ID == B.ID ? 1 : 0;
+}
+
 inline bool operator== (const logistic_sim::Mission& A, const logistic_sim::Mission& B)
 {
     return A.ID == B.ID ? 1 : 0;
