@@ -59,6 +59,12 @@ void TokenAgent::run()
 
     ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
 
+    // TEST: attesa di qualche secondo dalla partenza del precedente
+    int wait_time = 10 * ID_ROBOT;
+    c_print("[DEBUG]\tAttendo ", wait_time, " secondi...", yellow);
+    sleep(wait_time);
+    c_print("[DEBUG]\tParto");
+
     while (ros::ok())
     {
         if (goal_complete)
@@ -254,6 +260,8 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.CAPACITY.push_back(CAPACITY);
         token.CURR_VERTEX.push_back(current_vertex);
         token.NEXT_VERTEX.push_back(current_vertex);
+        // inizializzo con valore non valido(non esiste id vertice maggiore di dimension)
+        token.CURR_DST.push_back(dimension + 1);
 
         initialize = false;
     }
@@ -261,13 +269,52 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         if(need_task)
         {
-            if(!msg->MISSION.empty())
+            //if(!msg->MISSION.empty())
+            if(!token.MISSION.empty())
             {
                 // prendo la prima missione
-                auto t = msg->MISSION.back();
-                token.MISSION.pop_back();
+                // auto t = msg->MISSION.back();
+                // token.MISSION.pop_back();
+                // token.ASSIGNED_MISSION.push_back(t);
+
+                // se possibile prendo un task con destinazione diversa da quelli in corso
+                // per farlo ciclo tra tutti i task disponibili finchè non ne trovo uno compatibile
+                c_print("[DEBUG]\tScelta task...", yellow);
+                auto it_m = token.MISSION.begin();
+                bool good = false;
+                for( ; it_m != token.MISSION.end() && !good; it_m++)
+                {
+                    good = true;
+                    for(auto it_dst = msg->CURR_DST.begin(); it_dst != msg->CURR_DST.end(); it_dst++)
+                    {
+                        if(*it_dst == (*it_m).DSTS[0])
+                        {
+                            good = false;
+                        }
+                    }
+                }
+
+                c_print("[DEBUG]\tConflict-free=", good, yellow);
+                logistic_sim::Task t;
+                // ho trovato un task adeguato, lo prendo dall'iteratore
+                if(good)
+                {
+                    it_m--; // alla fine del ciclo precedente l'iteratore è andato oltre il task selezionato
+                    t = *it_m;
+                    c_print("[DEBUG]\tDST=", t.DSTS[0], yellow);
+                    token.MISSION.erase(it_m);
+                }
+                else    // non esiste un task che non vada in conflitto, prendo l'ultimo della lista
+                {
+                    t = token.MISSION.back();
+                    token.MISSION.pop_back();
+                }
+                
+                c_print("[DEBUG]\tTask rimosso dalla lista", yellow);
                 token.ASSIGNED_MISSION.push_back(t);
+                token.CURR_DST[ID_ROBOT] = t.DSTS[0];
                 current_task = t;
+                c_print("[DEBUG]\tTask assegnato nel token", yellow);
             }
             else
             {
@@ -289,7 +336,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 i != ID_ROBOT)
             {
 
-                c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
+                // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
                 //svaforisco la mia direzione
                 token_weight_map[src][dst]++;
                 //sfavorisco la direzione inversa

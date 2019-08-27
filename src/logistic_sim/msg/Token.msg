@@ -9,4 +9,6 @@ Task[]      ASSIGNED_MISSION
 uint32[]    CURR_VERTEX
 uint32[]    NEXT_VERTEX
 
+uint32[]    CURR_DST
+
 uint32[]    CAPACITY
