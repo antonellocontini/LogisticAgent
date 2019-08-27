@@ -424,7 +424,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0, self.capacity_ddm.get()) )
 
     
     def quit(self):
@@ -467,7 +467,7 @@ def main():
   if (len(sys.argv)==1):
     root = tk.Tk()
     DIP(root)
-    root.geometry("300x320+0+0")
+    root.geometry("300x360+0+0")
     root.mainloop()  
 
   elif (len(sys.argv)<13):
