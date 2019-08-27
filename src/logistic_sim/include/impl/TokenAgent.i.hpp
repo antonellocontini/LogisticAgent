@@ -371,6 +371,6 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     ros::spinOnce();
 } // token_callback()
 
-
+// ciao
 
 } //namespace tpagent
