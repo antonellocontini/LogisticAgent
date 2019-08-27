@@ -1,7 +1,7 @@
 [Config]
 map: model5
 nrobots: 2
-algorithm: TokenAgent
+algorithm: DistrAgent
 locmode: AMCL
 navmode: ros
 gwait: 0
