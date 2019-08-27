@@ -119,11 +119,13 @@ void TokenAgent::onGoalComplete()
     else if (current_vertex == 6)
     {
         reached_pickup = true;
+        sleep(2);
     }
     else if(current_vertex == current_task.DSTS[0] && reached_pickup)
     {
         need_task = true;
         reached_pickup = false;
+        sleep(2);
     }
 
     c_print("before compute_next_vertex()", yellow);
@@ -258,8 +260,21 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (msg->INIT)
     {
         token.CAPACITY.push_back(CAPACITY);
+
+        c_print("[DEBUG]\tinit_current_vertex: ", current_vertex, yellow);
+
+        // all avvio indico quale arco i robot vorrebbero attraversare
+        // serve a forzare la partenza nella stessa direzione
+        if (ID_ROBOT > 0)
+        {
+            next_vertex = token.CURR_VERTEX[ID_ROBOT - 1];
+        }
+        else
+        {
+            next_vertex = current_vertex;
+        }
         token.CURR_VERTEX.push_back(current_vertex);
-        token.NEXT_VERTEX.push_back(current_vertex);
+        token.NEXT_VERTEX.push_back(next_vertex);
         // inizializzo con valore non valido(non esiste id vertice maggiore di dimension)
         token.CURR_DST.push_back(dimension + 1);
 
