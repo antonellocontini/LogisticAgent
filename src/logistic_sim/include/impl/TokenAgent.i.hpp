@@ -258,8 +258,21 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (msg->INIT)
     {
         token.CAPACITY.push_back(CAPACITY);
+
+        c_print("[DEBUG]\tinit_current_vertex: ", current_vertex, yellow);
+
+        // all avvio indico quale arco i robot vorrebbero attraversare
+        // serve a forzare la partenza nella stessa direzione
+        if (ID_ROBOT > 0)
+        {
+            next_vertex = token.CURR_VERTEX[ID_ROBOT - 1];
+        }
+        else
+        {
+            next_vertex = current_vertex;
+        }
         token.CURR_VERTEX.push_back(current_vertex);
-        token.NEXT_VERTEX.push_back(current_vertex);
+        token.NEXT_VERTEX.push_back(next_vertex);
         // inizializzo con valore non valido(non esiste id vertice maggiore di dimension)
         token.CURR_DST.push_back(dimension + 1);
 
