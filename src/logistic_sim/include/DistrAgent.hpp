@@ -6,7 +6,12 @@ namespace logistic_sim
 {
     bool operator== (const Mission& A, const Mission& B)
     {
-        return A.ID == B.ID ? 1 : 0;
+        return A.ID == B.ID ? true : false;
+    }
+
+    bool operator== (const Task& A, const Task& B)
+    {
+        return A.ORDER == B.ORDER ? true : false;
     }
 }
 

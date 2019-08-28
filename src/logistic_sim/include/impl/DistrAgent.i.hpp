@@ -351,9 +351,13 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 // qua asegno la missione 
                 // prendo la prima missione
                 auto t = msg->TASK.back();
-                token.TASK.pop_back();
-                token.ASSIGNED_TASK.push_back(t);
-                current_task = t;
+                for(auto it = m.MISSION.begin(); it != m.MISSION.end(); it++)
+                {
+                    token.TASK.erase(find(token.TASK.begin(), token.TASK.end(), *it));
+                }
+                current_mission = m;
+                // token.ASSIGNED_TASK.push_back(t);
+                // current_task = t;
                 // qua ci metto il task che mi serve dal token io non ho il sisngolo task ma la missione composta da task
             }
             else
