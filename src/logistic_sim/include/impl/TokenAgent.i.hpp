@@ -358,10 +358,20 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 int sec_diff = ros::Time::now().sec - goal_start_time.sec;
                 sec_diff = std::max(1, sec_diff);
                 // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
-                //svaforisco la mia direzione
-                token_weight_map[src][dst]+= sec_diff;
-                //sfavorisco la direzione inversa
-                token_weight_map[dst][src]+= sec_diff*3;
+                // svaforisco la mia direzione
+                token_weight_map[src][dst] += sec_diff;
+                // sfavorisco la direzione inversa
+                token_weight_map[dst][src] += sec_diff * 3;
+                // sfavorisco tutti gli archi che entrano nella mia destinazione
+                // dovrebbe prevenire gli scontri agli incroci dove due robot
+                // arrivano da nodi diversi
+                for( int j=0; j<dimension; j++)
+                {
+                    if(j != src)
+                    {
+                        token_weight_map[j][dst] += sec_diff * 2;
+                    }
+                }
             }
         }
 
