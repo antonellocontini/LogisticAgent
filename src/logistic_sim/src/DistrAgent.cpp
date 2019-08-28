@@ -132,9 +132,9 @@ void DistrAgent::onGoalComplete()
     {
         current_mission.PICKUP = false;
     }
-    else if (go_dst() && current_vertex == current_mission.MISSION[0].DSTS[0])
+    else if (go_dst() && current_vertex == current_mission.DSTS[0])
     {
-        current_mission.MISSION.erase(current_mission.MISSION.begin());
+        current_mission.DSTS.erase(current_mission.DSTS.begin());
     }
 
     if (tmp_CAPACITY > 0)
@@ -183,7 +183,7 @@ int DistrAgent::compute_next_vertex()
     }
     else if(go_dst())
     {
-        tp_dijkstra(current_vertex, current_mission.MISSION[0].DSTS[0], path, path_length);
+        tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
     }
 
     c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
@@ -211,7 +211,7 @@ bool DistrAgent::go_src()
 
 bool DistrAgent::go_dst()
 {
-    return go_src() && !current_mission.MISSION.empty();
+    return go_src() && !current_mission.DSTS.empty();
 }
 
 int main(int argc, char *argv[])

@@ -25,7 +25,7 @@ void TaskPlanner::init(int argc, char **argv)
   missions_generator();
 
   c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
- 
+
   // aspetto che arrivino gli agenti
   sleep(10);
 
@@ -43,52 +43,27 @@ void TaskPlanner::init(int argc, char **argv)
   c_print("INIT", green);
 }
 
-void TaskPlanner::task_generator()
-{
-  uint n_item = 3;
-  uint o = 0;
-  uint n_demand = 3;
-  uint j = 0;
-  for (auto h = 0; h < 3; h++)
-  {
-    j = 0;
-    for (auto d = 1; d <= n_demand; d++)
-    {
-      // for (auto i = 0; i < n_item; i++)
-      // {
-      tasks.push_back(mkTask(d - 1, o, d, dst_vertex[j]));
-      j++;
-      // task_set.insert(mkTask(i,o,d,dst_vertex[j]));
-      o++;
-      // }
-    }
-  }
-  nTask = tasks.size();
-}
-
-
 int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
 {
-    int custo_final = 0;
-    for (int i = 1; i < route.size(); i++)
-    {
-        int anterior = route[i - 1];
-        int proximo = route[i];
+  int custo_final = 0;
+  for (int i = 1; i < route.size(); i++)
+  {
+    int anterior = route[i - 1];
+    int proximo = route[i];
 
-        for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
-        {
-            if (vertex_web[anterior].id_neigh[j] == proximo)
-            {
-                custo_final += vertex_web[anterior].cost[j];
-                break;
-            }
-        }
+    for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
+    {
+      if (vertex_web[anterior].id_neigh[j] == proximo)
+      {
+        custo_final += vertex_web[anterior].cost[j];
+        break;
+      }
     }
-    return custo_final;
+  }
+  return custo_final;
 }
 
-
-void TaskPlanner::mission_generator()
+void TaskPlanner::missions_generator()
 {
   int size = 10;
   int d = 1;
@@ -98,41 +73,38 @@ void TaskPlanner::mission_generator()
     m.PICKUP = false;
     m.ID = i;
     m.PRIORITY = 0;
-    m.ITEM.push_back(i%3);
-    swicth(i%3)
+    m.ITEM.push_back(i % 3);
+
+    switch (i % 3)
     {
-      case 0:
-      {
-        m.ROUTE = p_11;
-        break;
-      }
-      case 1:
-      {
-        m.ROUTE = p_16;
-        break;
-      }
-      case 2:
-      {
-        m.ROUTE = p_21;
-        break;
-      }
-      default
-      {
-        c_print("[DEBUG]",yellow,P);
-        break;
-      }
+    case 0:
+    {
+      copy(std::begin(p_11),std::end(p_11),back_inserter(m.ROUTE));
+      break;
     }
-    m.DSTS.push_back(dst_vertex[i%3]);
-    m.V = 0.0;
-    m.TOT_DEMAND = (i%3)+1;
+    case 1:
+    { copy(std::begin(p_16),std::end(p_16),back_inserter(m.ROUTE));
+      break;
+    }
+    case 2:
+    { copy(std::begin(p_21),std::end(p_21),back_inserter(m.ROUTE));
+      break;
+    }
+    default:
+    {
+      c_print("[DEBUG]", yellow, P);
+      break;
+    }
+    }
+    m.DSTS.push_back(dst_vertex[i % 3]);
+    m.TOT_DEMAND = (i % 3) + 1;
     m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+    m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
+    missions.push_back(m);
   }
 
-  missions.push_back(m);
-
   nTask = missions.size();
-}
-
+} // namespace taskplanner
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {

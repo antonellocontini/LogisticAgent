@@ -297,6 +297,7 @@ bool Agent::check_interference(int robot_id)
         return false;                                      // false if within 10 seconds from the last one
 
     /* Poderei usar TEAMSIZE para afinar */
+    // ID_ROBOT
     for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
         

@@ -25,7 +25,6 @@ bool cmp_Mission(logistic_sim::Mission A, logistic_sim::Mission B)
 }
 
 
-
 inline bool operator<(const logistic_sim::Mission& A, const logistic_sim::Mission& B)
 {
     return A.V < B.V ? 1 : 0;
@@ -57,7 +56,6 @@ protected:
     logistic_sim::Task current_task;
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
-    std::vector<logistic_sim::Mission> coalition;
 
 public:
 
@@ -66,10 +64,10 @@ public:
     virtual void onGoalComplete();
     virtual int compute_next_vertex();
     //
-    uint compute_id_path(std::vector<logistic_sim::Task> m);
-    void compute_travell(uint id_path, logistic_sim::Mission m);
+    uint compute_id_path(logistic_sim::Mission &m);
+    void compute_travell(uint id_path, logistic_sim::Mission &m);
     int compute_cost_of_route(std::vector<uint> r);
-    logistic_sim::Mission coalition_formation(logistic_sim::Token token);
+    logistic_sim::Mission coalition_formation(logistic_sim::Token &token);
     //
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();

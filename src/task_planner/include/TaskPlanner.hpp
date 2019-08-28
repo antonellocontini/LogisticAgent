@@ -57,8 +57,8 @@ public:
   vector<logistic_sim::Mission> missions;
 
 
-  int compute_cost_of_route(std::vector<uint> route) void task_generator();
-  void mission_generator();
+  int compute_cost_of_route(std::vector<uint> route);
+  void missions_generator();
 
  
   void init(int argc, char **argv);
