@@ -16,6 +16,8 @@ namespace tokenagent
             logistic_sim::Task current_task;
             std::vector< std::vector<uint> > token_weight_map;
 
+            ros::Time goal_start_time;
+
         public:
             virtual void init(int argc, char **argv);
             virtual void run();

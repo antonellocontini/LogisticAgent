@@ -142,6 +142,9 @@ void TokenAgent::onGoalComplete()
     // sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);
     sendGoal(next_vertex); // send to move_base
 
+    // setto lo start_time al tempo attuale
+    goal_start_time = ros::Time::now();
+
     goal_complete = false;
 }
 
@@ -351,11 +354,14 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 i != ID_ROBOT)
             {
 
+                // la penalità dipende da quanto tempo sono sull'arco
+                int sec_diff = ros::Time::now().sec - goal_start_time.sec;
+                sec_diff = std::max(1, sec_diff);
                 // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
                 //svaforisco la mia direzione
-                token_weight_map[src][dst]++;
+                token_weight_map[src][dst]+= sec_diff;
                 //sfavorisco la direzione inversa
-                token_weight_map[dst][src]+=3;
+                token_weight_map[dst][src]+= sec_diff*3;
             }
         }
 
