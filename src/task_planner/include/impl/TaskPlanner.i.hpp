@@ -76,6 +76,11 @@ void TaskPlanner::task_generator()
   nTask = tasks.size();
 }
 
+void TaskPlanner::mission_generator()
+{
+
+}
+
 
 /* void TaskPlanner::compute_CF()
 {

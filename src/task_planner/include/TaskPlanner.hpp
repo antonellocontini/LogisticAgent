@@ -65,12 +65,14 @@ public:
   //----------------------------------------------------------------------------
 
   vector<logistic_sim::Task> tasks;
+  vector<logistic_sim::Mission> missions;
 
   bool *init_agent;
   ProcessAgent *pa;
 
 
   void task_generator();
+  void mission_generator();
 
 
   // void compute_CF();
