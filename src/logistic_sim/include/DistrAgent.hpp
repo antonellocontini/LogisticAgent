@@ -2,6 +2,14 @@
 #pragma once
 #include "logistic_sim/Token.h"
 
+namespace logistic_sim
+{
+    bool operator== (const Mission& A, const Mission& B)
+    {
+        return A.ID == B.ID ? 1 : 0;
+    }
+}
+
 namespace distragent
 {
 using namespace agent;
@@ -11,10 +19,7 @@ bool cmp_Mission(logistic_sim::Mission A, logistic_sim::Mission B)
     return A.ID == B.ID ? 1 : 0;
 }
 
-inline bool operator== (const logistic_sim::Mission& A, const logistic_sim::Mission& B)
-{
-    return A.ID == B.ID ? 1 : 0;
-}
+
 
 inline bool operator<(const logistic_sim::Mission& A, const logistic_sim::Mission& B)
 {

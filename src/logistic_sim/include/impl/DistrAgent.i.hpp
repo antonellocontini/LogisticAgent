@@ -269,7 +269,8 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token token)
                             // eliminazione degli elemnti che compongono la missione
                             // operator == TODO FIX
                             // coalition.erase(find(coalition.begin(), coalition.end(), cmp_Mission(mission1, mission2)));
-                            // coalition.erase(find(coalition.begin(), coalition.end(), mission2));
+                            coalition.erase(find(coalition.begin(), coalition.end(), mission1));
+                            coalition.erase(find(coalition.begin(), coalition.end(), mission2));
 
                             // coalition.push_back(mission3);
 
