@@ -3,9 +3,6 @@ uint32      ID_SENDER
 uint32      ID_RECEIVER
 bool        INIT
 
-Task[]      TASK
-Task[]      ASSIGNED_TASK
-
 Mission[]   MISSION
 Mission[]   ASSIGNED_MISSION
 

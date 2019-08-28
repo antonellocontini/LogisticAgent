@@ -18,10 +18,8 @@
 #include <std_msgs/Int16MultiArray.h>
 #include <std_msgs/Bool.h>
 
-#include <logistic_sim/TaskRequest.h>
-#include <logistic_sim/Task.h>
 #include <logistic_sim/Token.h>
-#include <task_planner/Task.h>
+#include <logistic_sim/Mission.h>
 
 #include "struct_task.hpp"
 #include "struct_vertex.hpp"
@@ -29,13 +27,13 @@
 #include "get_graph.hpp"
 #include "color_cout.hpp"
 
-
-namespace taskplanner {
-
+namespace taskplanner
+{
 
 const std::string PS_path = ros::package::getPath("logistic_sim");
 
-class TaskPlanner {
+class TaskPlanner
+{
 public:
   TaskPlanner(ros::NodeHandle &nh_);
   ~TaskPlanner(){};
@@ -53,41 +51,23 @@ public:
   uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
   uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
   uint p_21[16] = {6, 7, 9, 12, 14, 17, 19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
-
-  uint p_11_16[14] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 15, 13, 10, 8, 5};
-  uint p_11_21[18] = {6,  7,  9,  12, 11, 12, 14, 17, 19,
-                      22, 21, 20, 18, 15, 13, 10, 8,  5};
-  uint p_16_21[18] = {6,  7,  9,  12, 14, 17, 16, 17,19, 22,
-                      21, 20, 18, 15, 13, 10, 8,  5};
-
-  uint p_11_16_21[20] = {6,  7,  9,  12, 11, 12, 14, 17, 16, 17,
-                         19, 22, 21, 20, 18, 15, 13, 10, 8,  5};
   //----------------------------------------------------------------------------
 
-  vector<logistic_sim::Task> tasks;
+
   vector<logistic_sim::Mission> missions;
 
-  bool *init_agent;
-  ProcessAgent *pa;
 
-
-  void task_generator();
+  int compute_cost_of_route(std::vector<uint> route) void task_generator();
   void mission_generator();
 
-
-  // void compute_CF();
-
+ 
   void init(int argc, char **argv);
   void token_Callback(const logistic_sim::TokenConstPtr &msg);
-  void task_Callback(const logistic_sim::TaskRequestConstPtr &msg);
 
 private:
   // per l'inizializzazione e il token dei task
   ros::Subscriber sub_token;
-  ros::Publisher  pub_token;
-
-  ros::Subscriber sub_task; // quando un robot vuole un task
-  ros::Publisher  pub_task; // pubblicazione dell'array (pop dal vettore di tasks)
+  ros::Publisher pub_token;
 };
 
 } // namespace taskplanner

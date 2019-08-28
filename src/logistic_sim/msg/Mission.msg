@@ -1,8 +1,10 @@
 Header      header
+bool        PICKUP
 uint32      ID
+uint32      PRIORITY
+uint32[]    ITEM
+uint32[]    ROUTE
+uint32[]    DSTS
+float64     V
 uint32      TOT_DEMAND
 uint32      PATH_DISTANCE
-Task[]      MISSION
-uint32[]    ROUTE
-float64     V
-bool        PICKUP

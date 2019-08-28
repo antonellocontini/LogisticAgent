@@ -6,14 +6,8 @@ namespace taskplanner
 TaskPlanner::TaskPlanner(ros::NodeHandle &nh_)
 {
   sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_Callback, this);
-  sub_task = nh_.subscribe("task", 10, &TaskPlanner::task_Callback, this);
-
-  pub_task = nh_.advertise<task_planner::Task>("answer", 10);
   pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
 }
-
-
-
 
 void TaskPlanner::init(int argc, char **argv)
 {
@@ -28,13 +22,10 @@ void TaskPlanner::init(int argc, char **argv)
   printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
   TEAM_SIZE = atoi(argv[3]);
 
-  task_generator();
+  missions_generator();
 
   c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
-  init_agent = new bool[TEAM_SIZE]();
-  //                           ^ figo!
-  pa = new ProcessAgent[TEAM_SIZE];
-
+ 
   // aspetto che arrivino gli agenti
   sleep(10);
 
@@ -52,7 +43,6 @@ void TaskPlanner::init(int argc, char **argv)
   c_print("INIT", green);
 }
 
-
 void TaskPlanner::task_generator()
 {
   uint n_item = 3;
@@ -66,145 +56,109 @@ void TaskPlanner::task_generator()
     {
       // for (auto i = 0; i < n_item; i++)
       // {
-        tasks.push_back(mkTask(d-1, o, d, dst_vertex[j]));
-        j++;
-        // task_set.insert(mkTask(i,o,d,dst_vertex[j]));
-        o++;
+      tasks.push_back(mkTask(d - 1, o, d, dst_vertex[j]));
+      j++;
+      // task_set.insert(mkTask(i,o,d,dst_vertex[j]));
+      o++;
       // }
     }
   }
   nTask = tasks.size();
 }
 
+
+int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
+{
+    int custo_final = 0;
+    for (int i = 1; i < route.size(); i++)
+    {
+        int anterior = route[i - 1];
+        int proximo = route[i];
+
+        for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
+        {
+            if (vertex_web[anterior].id_neigh[j] == proximo)
+            {
+                custo_final += vertex_web[anterior].cost[j];
+                break;
+            }
+        }
+    }
+    return custo_final;
+}
+
+
 void TaskPlanner::mission_generator()
 {
-
-}
-
-
-/* void TaskPlanner::compute_CF()
-{
-  auto max_el = *std::max_element(pa, pa + TEAM_SIZE);
-  cout << "elemento massimo " << max_el.CAPACITY << "\n";
-
-  int id_pt = 0;
-  for (auto i = 0; i < tasks.size(); i++)
+  int size = 10;
+  int d = 1;
+  for (auto i = 0; i < size; i++)
   {
-    ProcessTask pt;
-    pt.id = id_pt;
-    id_pt++;
-    pt.mission.push_back(tasks[i]);
-    pt.tot_demand = tasks[i].demand;
-    // uint id_path = compute_cycle_dst(pt.mission);
-    // compute_route(id_path, &pt);
-    // v_pt.push_back(pt);
-  }
-
-  ProcessTask el;
-  ProcessTask el2;
-  auto t = v_pt.size();
-  for (auto k = 0; k < v_pt.size(); k++)
-  {
-    el = v_pt[k];
-    for (auto q = 0; q < v_pt.size(); q++)
+    logistic_sim::Mission m;
+    m.PICKUP = false;
+    m.ID = i;
+    m.PRIORITY = 0;
+    m.ITEM.push_back(i%3);
+    swicth(i%3)
     {
-      el2 = v_pt[q];
-      if (el.id != el2.id)
+      case 0:
       {
-        auto tmp_d = el.tot_demand + el2.tot_demand;
-        if (tmp_d <= max_el.CAPACITY)
-        {
-          ProcessTask n_pt;
-          n_pt.id = t;
-          t++;
-          //                    ^ prende la taglia piu uno: possibili id uguali! ma non importante.
-          n_pt.tot_demand = tmp_d;
-          for (auto t = 0; t < el.mission.size(); t++)
-            n_pt.mission.push_back(el.mission[t]);
-          for (auto y = 0; y < el2.mission.size(); y++)
-            n_pt.mission.push_back(el2.mission[y]);
-          uint id_path = compute_cycle_dst(n_pt.mission);
-          compute_route(id_path, &n_pt);
-
-          // minimization
-          if ((n_pt.V - el.V - el2.V) < 0)  // con < di zero allora accoppia
-          {
-            cout << "i: " << el.id << " ed: " << el2.id << "\n";
-            v_pt.erase(find(v_pt.begin(), v_pt.end(), el));
-            v_pt.erase(find(v_pt.begin(), v_pt.end(), el2));
-            v_pt.push_back(n_pt);
-            // pq_pt.push(n_pt);
-            break;
-          }
-          else
-          {
-            delete &n_pt;
-          }
-        }
+        m.ROUTE = p_11;
+        break;
+      }
+      case 1:
+      {
+        m.ROUTE = p_16;
+        break;
+      }
+      case 2:
+      {
+        m.ROUTE = p_21;
+        break;
+      }
+      default
+      {
+        c_print("[DEBUG]",yellow,P);
+        break;
       }
     }
-
-    // auto ele = pq_pt.top();
-
-    // for (auto i = 0; i < ele.mission.size(); i++)
-    // {
-    // //   // 
-    //   v_pt.erase(find(v_pt.begin(), v_pt.end(), ele.mission[i]));
-    //   // v_pt.erase(find(v_pt.begin(), v_pt.end(), el2));
-      
-    // }
-
-    // v_pt.push_back(ele);
-
-    // pq_pt.clear();
-
-    // pq_pt = priority_queue<ProcessTask> ();
-    // break;
+    m.DSTS.push_back(dst_vertex[i%3]);
+    m.V = 0.0;
+    m.TOT_DEMAND = (i%3)+1;
+    m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
   }
 
-  // sort(v_pt.begin(), v_pt.end(), cmp_PT);
+  missions.push_back(m);
 
-  c_print("soluzione", red);
-
-  for (auto j = 0; j < v_pt.size(); j++)
-  {
-    cout << v_pt[j] << " ";
-  }
-  cout << "\n";
-} */
-
-
-void TaskPlanner::task_Callback(const logistic_sim::TaskRequestConstPtr &tr)
-{
- 
+  nTask = missions.size();
 }
+
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
-  c_print(msg->ID_SENDER," " , msg->ID_RECEIVER, green);
+  c_print(msg->ID_SENDER, " ", msg->ID_RECEIVER, green);
 
-   if(msg->ID_RECEIVER != TASK_PLANNER_ID)
-      return;
+  if (msg->ID_RECEIVER != TASK_PLANNER_ID)
+    return;
 
-    logistic_sim::Token token;
-    token = *msg;
-    token.ID_SENDER = TASK_PLANNER_ID;
-    token.ID_RECEIVER = 0;
-    if (msg->INIT)
-    {
-      CAPACITY = msg->CAPACITY;
-      token.INIT = false;
-      // inserire task
-      token.TASK = tasks;
-    }
-    else
-    {
-      // se devo inserire altri task e monitor
-    }
-    
-    pub_token.publish(token);
-    ros::spinOnce();
+  logistic_sim::Token token;
+  token = *msg;
+  token.ID_SENDER = TASK_PLANNER_ID;
+  token.ID_RECEIVER = 0;
+  if (msg->INIT)
+  {
+    CAPACITY = msg->CAPACITY;
+    token.INIT = false;
+    // inserire task
+    token.MISSION = missions;
+  }
+  else
+  {
+    // se devo inserire altri task e monitor
+  }
+
+  pub_token.publish(token);
+  ros::spinOnce();
 }
 
-
-}  // namespace taskplanner
+} // namespace taskplanner
