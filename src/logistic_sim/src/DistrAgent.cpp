@@ -121,20 +121,31 @@ void DistrAgent::onGoalComplete()
         current_vertex = next_vertex;
     }
 
+    c_print("[DEBUG]\tgo_src(): ", go_src(), "\tgo_dst(): ", go_dst(), yellow);
+    c_print("\t\tcurrent_vertex: ", current_vertex, yellow);
     // aggiorniamo condizioni destinazione
     if (go_home && current_vertex == initial_vertex)
     {
         need_task = true;
     }
-    else if (current_vertex == 6)
+    else if (go_src() && current_vertex == 6)
     {
-        reached_pickup = true;
+        current_mission.PICKUP = false;
     }
-    else if (current_vertex == current_task.DSTS[0] && reached_pickup)
+    else if (go_dst() && current_vertex == current_mission.MISSION[0].DSTS[0])
+    {
+        current_mission.MISSION.erase(current_mission.MISSION.begin());
+    }
+
+    if (tmp_CAPACITY > 0)
     {
         need_task = true;
-        reached_pickup = false;
     }
+    else
+    {
+        need_task = false;
+    }
+    
 
     c_print("before compute_next_vertex()", yellow);
     next_vertex = compute_next_vertex();
@@ -166,13 +177,13 @@ int DistrAgent::compute_next_vertex()
         c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
         tp_dijkstra(current_vertex, initial_vertex, path, path_length);
     }
-    else if (!reached_pickup)
+    else if(go_src())
     {
         tp_dijkstra(current_vertex, 6, path, path_length);
     }
-    else
+    else if(go_dst())
     {
-        tp_dijkstra(current_vertex, current_task.DSTS[0], path, path_length);
+        tp_dijkstra(current_vertex, current_mission.MISSION[0].DSTS[0], path, path_length);
     }
 
     c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
@@ -193,6 +204,15 @@ int DistrAgent::compute_next_vertex()
     return vertex;
 } // compute_next_vertex()
 
+bool DistrAgent::go_src()
+{
+    return current_mission.PICKUP;
+}
+
+bool DistrAgent::go_dst()
+{
+    return go_src() && !current_mission.MISSION.empty();
+}
 
 int main(int argc, char *argv[])
 {

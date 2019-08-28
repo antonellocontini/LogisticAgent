@@ -346,24 +346,19 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
             cout << "missione finale dopo coalizione: " << m.ID << m.TOT_DEMAND << "\n";
 
-            if (!msg->MISSION.empty())
+
+            // qua asegno la missione 
+            // prendo la prima missione
+            for(auto it = m.MISSION.begin(); it != m.MISSION.end(); it++)
             {
-                // qua asegno la missione 
-                // prendo la prima missione
-                auto t = msg->TASK.back();
-                for(auto it = m.MISSION.begin(); it != m.MISSION.end(); it++)
-                {
-                    token.TASK.erase(find(token.TASK.begin(), token.TASK.end(), *it));
-                }
-                current_mission = m;
-                // token.ASSIGNED_TASK.push_back(t);
-                // current_task = t;
-                // qua ci metto il task che mi serve dal token io non ho il sisngolo task ma la missione composta da task
+                token.TASK.erase(find(token.TASK.begin(), token.TASK.end(), *it));
+                current_mission.MISSION.push_back(*it);
             }
-            else
-            {
-                go_home = true;
-            }
+            current_mission.PICKUP = true;
+            // current_mission = m;
+            // qua ci metto il task che mi serve dal token io non ho il sisngolo task ma la missione composta da task
+
+
             need_task = false;
             goal_complete = true;
         }

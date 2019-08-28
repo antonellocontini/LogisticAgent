@@ -74,6 +74,9 @@ public:
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();
     void token_callback(const logistic_sim::TokenConstPtr &msg);
+
+    virtual bool go_src();
+    virtual bool go_dst();
 };
 } // namespace distragent
 
