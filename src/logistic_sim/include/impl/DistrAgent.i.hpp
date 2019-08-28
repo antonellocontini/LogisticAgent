@@ -204,7 +204,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 {
     logistic_sim::Mission m;
     // in coalition ho tutte le missioni cerco la combinazione che mi soddisfa e passo il token
-    int id = token.MISSION.size();
+    static int id = 500;
     // init
     for (auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
     {
@@ -222,8 +222,30 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                 {
                     m.ID = id;
                     m.DSTS.clear();
+
                     copy((*it).DSTS.begin(), (*it).DSTS.end(), back_inserter(m.DSTS));
-                    copy((*jt).DSTS.begin(), (*jt).DSTS.end(), back_inserter(m.DSTS));
+                    // copy((*jt).DSTS.begin(), (*jt).DSTS.end(), back_inserter(m.DSTS));
+
+                    copy((*it).DEMANDS.begin(), (*it).DEMANDS.end(), back_inserter(m.DEMANDS));
+                    // copy((*jt).DEMANDS.begin(), (*jt).DEMANDS.end(), back_inserter(m.DEMANDS));
+
+                    for(int zt = 0; zt != (*jt).DSTS.size(); zt++)
+                    {
+                        for(int xt = 0; xt < m.DSTS.size(); xt++)
+                        {
+                            if((*jt).DSTS[zt] == m.DSTS[xt])
+                            {
+                                m.DEMANDS[xt] += (*jt).DEMANDS[zt];
+                            }
+                            else
+                            {
+                                m.DSTS.push_back((*jt).DSTS[zt]);
+                                m.DEMANDS.push_back((*jt).DEMANDS[zt]);
+                            }
+                        }
+                    }
+
+                    m.TOT_DEMAND = std::accumulate(m.DEMANDS.begin(), m.DEMANDS.end(), 0);
 
                     auto id_path = compute_id_path(m);
                     compute_travell(id_path, m);
@@ -286,13 +308,23 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         if (need_task)
         {
 
+            c_print("[DEBUG]\tsize before coalition: ", token.MISSION.size(), "\tcapacity: ", tmp_CAPACITY, yellow);
             c_print("##################################", magenta, P);
             current_mission = coalition_formation(token);
+            c_print("[DEBUG]\tsize after coalition: ", token.MISSION.size(), yellow);
 
-            current_mission.PICKUP = true;
+            if(current_mission.ID != 66)
+            {
+                current_mission.PICKUP = true;
 
-            need_task = false;
-            goal_complete = true;
+                need_task = false;
+                goal_complete = true;
+            }
+            else
+            {
+                c_print("[WARN]\tNon posso prendere task, capacity: ", tmp_CAPACITY, red);
+            }
+            
         }
 
         init_tw_map();

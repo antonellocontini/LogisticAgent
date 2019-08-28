@@ -131,20 +131,33 @@ void DistrAgent::onGoalComplete()
     else if (go_src() && current_vertex == 6)
     {
         current_mission.PICKUP = false;
+        tmp_CAPACITY -= current_mission.TOT_DEMAND;
     }
     else if (go_dst() && current_vertex == current_mission.DSTS[0])
     {
+        c_print("Capacity before unloading: ", tmp_CAPACITY, red);
+        uint d = current_mission.DEMANDS[0];
         current_mission.DSTS.erase(current_mission.DSTS.begin());
+        current_mission.DEMANDS.erase(current_mission.DEMANDS.begin());
+        current_mission.TOT_DEMAND -= d;
+        tmp_CAPACITY += d;
+        if(current_mission.DSTS.empty())
+        {
+            need_task = true;
+        }
+
+        c_print("d: ", d, red);
+        c_print("Current capacity: ", tmp_CAPACITY, red);
     }
 
-    if (tmp_CAPACITY > 0)
-    {
-        need_task = true;
-    }
-    else
-    {
-        need_task = false;
-    }
+    // if (tmp_CAPACITY > 0)
+    // {
+    //     need_task = true;
+    // }
+    // else
+    // {
+    //     need_task = false;
+    // }
     
 
     c_print("before compute_next_vertex()", yellow);
@@ -211,7 +224,7 @@ bool DistrAgent::go_src()
 
 bool DistrAgent::go_dst()
 {
-    return go_src() && !current_mission.DSTS.empty();
+    return !go_src() && !current_mission.DSTS.empty();
 }
 
 int main(int argc, char *argv[])
