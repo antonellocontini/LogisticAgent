@@ -190,7 +190,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
       CAPACITY = msg->CAPACITY;
       token.INIT = false;
       // inserire task
-      token.MISSION = tasks;
+      token.TASK = tasks;
     }
     else
     {
