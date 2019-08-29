@@ -66,9 +66,13 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
 void TaskPlanner::missions_generator()
 {
   int size = 10;
+  int size_2 = 3;
   int d = 1;
   for (auto i = 0; i < size; i++)
   {
+    for (auto j = 0; j < size_2; j++)
+    {
+
     logistic_sim::Mission m;
     m.PICKUP = false;
     m.ID = i;
@@ -102,6 +106,9 @@ void TaskPlanner::missions_generator()
     m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
     m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     missions.push_back(m);
+
+    std::cout <<"\tid: "<< m.ID <<"\tTOT_D: "<< m.TOT_DEMAND<< "\tdst: " << m.DSTS[0] << "\tD:" << m.DEMANDS[0] << "\n";
+    }
   }
 
   nTask = missions.size();

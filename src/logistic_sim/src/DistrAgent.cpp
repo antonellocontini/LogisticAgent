@@ -54,12 +54,13 @@ void DistrAgent::run()
 
     /* Run Algorithm */
 
-    //  init_agent3();
-
-    // c_print("RequestTask", green);
-    // request_Task();
-
     ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
+
+    // TEST: attesa di qualche secondo dalla partenza del precedente
+    int wait_time = 10 * ID_ROBOT;
+    c_print("[DEBUG]\tAttendo ", wait_time, " secondi...", yellow);
+    sleep(wait_time);
+    c_print("[DEBUG]\tParto");
 
     while (ros::ok())
     {
@@ -123,7 +124,7 @@ void DistrAgent::onGoalComplete()
 
     c_print("[DEBUG]\tgo_src(): ", go_src(), "\tgo_dst(): ", go_dst(), yellow);
     c_print("\t\tcurrent_vertex: ", current_vertex, yellow);
-    for(auto it = current_mission.DSTS.begin(); it != current_mission.DSTS.end(); it++)
+    for (auto it = current_mission.DSTS.begin(); it != current_mission.DSTS.end(); it++)
     {
         c_print("\t\t\tDSTS ", (*it), magenta, P);
     }
@@ -145,7 +146,7 @@ void DistrAgent::onGoalComplete()
         current_mission.DEMANDS.erase(current_mission.DEMANDS.begin());
         current_mission.TOT_DEMAND -= d;
         tmp_CAPACITY += d;
-        if(current_mission.DSTS.empty())
+        if (current_mission.DSTS.empty())
         {
             need_task = true;
         }
@@ -162,7 +163,6 @@ void DistrAgent::onGoalComplete()
     // {
     //     need_task = false;
     // }
-    
 
     c_print("before compute_next_vertex()", yellow);
     next_vertex = compute_next_vertex();
@@ -194,11 +194,11 @@ int DistrAgent::compute_next_vertex()
         c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
         tp_dijkstra(current_vertex, initial_vertex, path, path_length);
     }
-    else if(go_src())
+    else if (go_src())
     {
         tp_dijkstra(current_vertex, 6, path, path_length);
     }
-    else if(go_dst())
+    else if (go_dst())
     {
         tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
     }
@@ -231,11 +231,13 @@ bool DistrAgent::go_dst()
     return !go_src() && !current_mission.DSTS.empty();
 }
 
+// -----------------------------------------------------------------------------
+
 int main(int argc, char *argv[])
 {
     distragent::DistrAgent TPA;
     TPA.init(argc, argv);
-    c_print("@ Inizializzazione finita!",green);
+    c_print("@ Inizializzazione finita!", green);
     sleep(3);
     TPA.run();
     return 0;

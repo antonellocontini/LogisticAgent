@@ -1,5 +1,3 @@
-#pragma once
-
 namespace distragent
 {
 
@@ -56,7 +54,6 @@ uint DistrAgent::compute_id_path(logistic_sim::Mission &m)
 {
     uint res = 0;
     std::vector<uint> d;
-    d.clear();
 
     d = m.DSTS;
 
@@ -203,9 +200,9 @@ void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission &m)
 logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token)
 {
     std::vector<t_coalition> coalitions;
-    t_coalition best_coalition; //la migliore finore 
+    t_coalition best_coalition; //la migliore finore
     static int id = 500;
-    for(auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
+    for (auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
     {
         t_coalition temp;
         temp.second = *it;
@@ -227,7 +224,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                 if (tmp_DEMAND <= tmp_CAPACITY)
                 {
                     c_print("sono dentro", yellow, P);
-                    logistic_sim::Mission m;    // possibile coalizione
+                    logistic_sim::Mission m; // possibile coalizione
                     m.ID = id++;
 
                     copy(c1.second.DSTS.begin(), c1.second.DSTS.end(), back_inserter(m.DSTS));
@@ -236,7 +233,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                     copy(c1.second.DEMANDS.begin(), c1.second.DEMANDS.end(), back_inserter(m.DEMANDS));
                     // copy((*jt).DEMANDS.begin(), (*jt).DEMANDS.end(), back_inserter(m.DEMANDS));
 
-                    logistic_sim::Mission &m2 = c2.second;    // seconda missione da unire a m
+                    logistic_sim::Mission &m2 = c2.second; // seconda missione da unire a m
                     for (int zt = 0; zt < m2.DSTS.size(); zt++)
                     {
                         bool found = false;
@@ -254,23 +251,22 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                             m.DSTS.push_back(m2.DSTS[zt]);
                             m.DEMANDS.push_back(m2.DEMANDS[zt]);
                         }
-
                     }
 
                     // stampe debug
                     logistic_sim::Mission &m1 = c1.second;
                     c_print("M1 ID ", m1.ID, red, P);
-                    for(int i=0; i<m1.DSTS.size(); i++)
+                    for (int i = 0; i < m1.DSTS.size(); i++)
                     {
                         c_print("M1 DSTS ", m1.DSTS[i], "\tDEMANDS ", m1.DEMANDS[i], yellow, P);
                     }
                     c_print("M2 ID ", m2.ID, red, P);
-                    for(int i=0; i<m2.DSTS.size(); i++)
+                    for (int i = 0; i < m2.DSTS.size(); i++)
                     {
                         c_print("M2 DSTS ", m2.DSTS[i], "\tDEMANDS ", m2.DEMANDS[i], yellow, P);
                     }
                     c_print("M_TOT ID ", m.ID, red, P);
-                    for(int i=0; i<m.DSTS.size(); i++)
+                    for (int i = 0; i < m.DSTS.size(); i++)
                     {
                         c_print("M_TOT DSTS ", m.DSTS[i], "\tDEMANDS ", m.DEMANDS[i], yellow, P);
                     }
@@ -287,17 +283,17 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                     double second_V = c2.second.V;
                     double res = (coal_V - (first_V + second_V));
                     c_print("coal_V ", coal_V, "\tfirst_V ", first_V, "\tsecond_V", second_V, yellow, P);
-                    
+
                     c_print("before", red, P);
-                    for(int j=0; j<coalitions.size(); j++)
+                    for (int j = 0; j < coalitions.size(); j++)
                     {
                         logistic_sim::Mission &temp_m = coalitions[j].second;
-                        for(int i=0; i<temp_m.DSTS.size(); i++)
+                        for (int i = 0; i < temp_m.DSTS.size(); i++)
                         {
                             c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
                         }
                     }
-                    
+
                     if (res < 0)
                     {
                         t_coalition tmp_coalition;
@@ -308,18 +304,16 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                         coalitions.erase(find(coalitions.begin(), coalitions.end(), c1));
                         coalitions.erase(find(coalitions.begin(), coalitions.end(), c2));
                         c_print("after", red, P);
-                        for(int j=0; j<coalitions.size(); j++)
+                        for (int j = 0; j < coalitions.size(); j++)
                         {
                             logistic_sim::Mission &temp_m = coalitions[j].second;
-                            for(int i=0; i<temp_m.DSTS.size(); i++)
+                            for (int i = 0; i < temp_m.DSTS.size(); i++)
                             {
                                 c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
                             }
                         }
                         break;
                     }
-                  
-
                 }
                 else
                 {
@@ -328,7 +322,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
             }
             else
             {
-             c_print("siamo uguali",yellow,P);
+                c_print("siamo uguali", yellow, P);
             }
 
             c_print("\n\n", P);
@@ -348,8 +342,8 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         }
     }
 
-    // aggirnamento del token 
-    for (auto i = 0 ; i < best_coalition.first.size(); i++)
+    // aggirnamento del token
+    for (auto i = 0; i < best_coalition.first.size(); i++)
     {
         token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), best_coalition.first[i]));
     }
@@ -395,7 +389,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         if (need_task)
         {
-            if(token.MISSION.size() == 0)
+            if (token.MISSION.size() == 0)
             {
                 go_home = true;
                 need_task = false;
@@ -419,7 +413,6 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     c_print("[WARN]\tNon posso prendere task, capacity: ", tmp_CAPACITY, red);
                 }
             }
-            
         }
 
         init_tw_map();

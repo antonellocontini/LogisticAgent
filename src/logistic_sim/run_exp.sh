@@ -17,7 +17,7 @@
 # SPEEDUP: simulator speedup (if Custom Stage is used)
 
 MAP=model5
-NROBOTS=1
+NROBOTS=2
 INITPOS=default
 ALG=DistrAgent
 LOC=AMCL

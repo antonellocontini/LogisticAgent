@@ -10,8 +10,7 @@ void TokenAgent::init(int argc, char **argv)
 
     token_pub = nh.advertise<logistic_sim::Token>("token", 1);
 
-    token_sub = nh.subscribe<logistic_sim::Token>("token", 20,
-                                                    boost::bind(&TokenAgent::token_callback, this, _1));
+    token_sub = nh.subscribe<logistic_sim::Token>("token", 20, boost::bind(&TokenAgent::token_callback, this, _1));
 
     init_tw_map();
 }

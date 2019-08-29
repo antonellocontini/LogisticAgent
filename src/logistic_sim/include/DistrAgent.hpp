@@ -1,35 +1,31 @@
-#include "Agent.hpp"
 #pragma once
+
+#include "Agent.hpp"
 #include "logistic_sim/Token.h"
+
+using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 
 namespace logistic_sim
 {
-    bool operator== (const Mission& A, const Mission& B)
+    inline bool operator== (const Mission& A, const Mission& B)
     {
         return A.ID == B.ID ? true : false;
     }
 }
 
-namespace distragent
-{
-using namespace agent;
-using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
-
-bool operator==(const t_coalition &A, const t_coalition &B)
+inline bool operator==(const t_coalition &A, const t_coalition &B)
 {
     return A.second == B.second;
 }
-
-bool cmp_Mission(logistic_sim::Mission A, logistic_sim::Mission B)
-{
-    return A.ID == B.ID ? 1 : 0;
-}
-
 
 inline bool operator<(const logistic_sim::Mission& A, const logistic_sim::Mission& B)
 {
     return A.V < B.V ? 1 : 0;
 }
+
+namespace distragent
+{
+using namespace agent;
 
 class DistrAgent : public Agent
 {
@@ -56,9 +52,7 @@ protected:
     
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
-
-    // std::vector<t_coalition> coalitions;
- 
+     
 public:
 
     virtual void init(int argc, char **argv);
