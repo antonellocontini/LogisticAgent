@@ -15,6 +15,11 @@ namespace distragent
 using namespace agent;
 using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 
+bool operator==(const t_coalition &A, const t_coalition &B)
+{
+    return A.second == B.second;
+}
+
 bool cmp_Mission(logistic_sim::Mission A, logistic_sim::Mission B)
 {
     return A.ID == B.ID ? 1 : 0;

@@ -123,6 +123,10 @@ void DistrAgent::onGoalComplete()
 
     c_print("[DEBUG]\tgo_src(): ", go_src(), "\tgo_dst(): ", go_dst(), yellow);
     c_print("\t\tcurrent_vertex: ", current_vertex, yellow);
+    for(auto it = current_mission.DSTS.begin(); it != current_mission.DSTS.end(); it++)
+    {
+        c_print("\t\t\tDSTS ", (*it), magenta, P);
+    }
     // aggiorniamo condizioni destinazione
     if (go_home && current_vertex == initial_vertex)
     {

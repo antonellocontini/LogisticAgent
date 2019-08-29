@@ -1,6 +1,6 @@
 [Config]
 map: model5
-nrobots: 2
+nrobots: 1
 algorithm: DistrAgent
 locmode: AMCL
 navmode: ros
