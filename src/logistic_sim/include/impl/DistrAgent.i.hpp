@@ -202,71 +202,136 @@ void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission &m)
 // mi basta la prima coalizione buona e poi posso uscire dal ciclo
 logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token)
 {
-    logistic_sim::Mission m;
-    // in coalition ho tutte le missioni cerco la combinazione che mi soddisfa e passo il token
+    std::vector<t_coalition> coalitions;
+    t_coalition best_coalition; //la migliore finore 
     static int id = 500;
-    // init
-    for (auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
+    for(auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
     {
-        if ((*it).TOT_DEMAND == tmp_CAPACITY)
+        t_coalition temp;
+        temp.second = *it;
+        temp.first.push_back(*it);
+        coalitions.push_back(temp);
+    }
+
+    int count = 1;
+    for (auto it = coalitions.begin(); it != coalitions.end(); it++)
+    {
+        for (auto jt = coalitions.begin(); jt != coalitions.end(); jt++)
         {
-            token.MISSION.erase(it);
-            return *it;
-        }
-        for (auto jt = token.MISSION.begin(); jt != token.MISSION.end(); jt++)
-        {
-            if (!(*it == *jt))
+            c_print("iterazione n ", count, yellow, P);
+            if (!((*it).second == (*jt).second))
             {
-                auto tmp_DEMAND = (*it).TOT_DEMAND + (*jt).TOT_DEMAND;
+                auto tmp_DEMAND = (*it).second.TOT_DEMAND + (*jt).second.TOT_DEMAND;
                 if (tmp_DEMAND <= tmp_CAPACITY)
                 {
-                    m.ID = id;
-                    m.DSTS.clear();
+                    c_print("sono dentro", yellow, P);
+                    logistic_sim::Mission m;    // possibile coalizione
+                    m.ID = id++;
 
-                    copy((*it).DSTS.begin(), (*it).DSTS.end(), back_inserter(m.DSTS));
+                    copy((*it).second.DSTS.begin(), (*it).second.DSTS.end(), back_inserter(m.DSTS));
                     // copy((*jt).DSTS.begin(), (*jt).DSTS.end(), back_inserter(m.DSTS));
 
-                    copy((*it).DEMANDS.begin(), (*it).DEMANDS.end(), back_inserter(m.DEMANDS));
+                    copy((*it).second.DEMANDS.begin(), (*it).second.DEMANDS.end(), back_inserter(m.DEMANDS));
                     // copy((*jt).DEMANDS.begin(), (*jt).DEMANDS.end(), back_inserter(m.DEMANDS));
 
-                    for(int zt = 0; zt != (*jt).DSTS.size(); zt++)
+                    logistic_sim::Mission &m2 = (*jt).second;    // seconda missione da unire a m
+                    for (int zt = 0; zt < m2.DSTS.size(); zt++)
                     {
-                        for(int xt = 0; xt < m.DSTS.size(); xt++)
+                        bool found = false;
+                        for (int xt = 0; xt < m.DSTS.size() && !found; xt++)
                         {
-                            if((*jt).DSTS[zt] == m.DSTS[xt])
+                            if (m2.DSTS[zt] == m.DSTS[xt])
                             {
-                                m.DEMANDS[xt] += (*jt).DEMANDS[zt];
-                            }
-                            else
-                            {
-                                m.DSTS.push_back((*jt).DSTS[zt]);
-                                m.DEMANDS.push_back((*jt).DEMANDS[zt]);
+                                m.DEMANDS[xt] += m2.DEMANDS[zt];
+                                found = true;
                             }
                         }
+
+                        if (!found)
+                        {
+                            m.DSTS.push_back(m2.DSTS[zt]);
+                            m.DEMANDS.push_back(m2.DEMANDS[zt]);
+                        }
+
+                    }
+
+                    // stampe debug
+                    logistic_sim::Mission &m1 = (*it).second;
+                    c_print("M1 ID ", m1.ID, red, P);
+                    for(int i=0; i<m1.DSTS.size(); i++)
+                    {
+                        c_print("M1 DSTS ", m1.DSTS[i], "\tDEMANDS ", m1.DEMANDS[i], yellow, P);
+                    }
+                    c_print("M2 ID ", m2.ID, red, P);
+                    for(int i=0; i<m2.DSTS.size(); i++)
+                    {
+                        c_print("M2 DSTS ", m2.DSTS[i], "\tDEMANDS ", m2.DEMANDS[i], yellow, P);
+                    }
+                    c_print("M_TOT ID ", m.ID, red, P);
+                    for(int i=0; i<m.DSTS.size(); i++)
+                    {
+                        c_print("M_TOT DSTS ", m.DSTS[i], "\tDEMANDS ", m.DEMANDS[i], yellow, P);
                     }
 
                     m.TOT_DEMAND = std::accumulate(m.DEMANDS.begin(), m.DEMANDS.end(), 0);
+                    c_print("capacita: m1 ", (*it).second.TOT_DEMAND, " m2 ", m2.TOT_DEMAND, " totale ", m.TOT_DEMAND, yellow, P);
 
                     auto id_path = compute_id_path(m);
+
                     compute_travell(id_path, m);
 
-                    if ((m.V - ((*it).V - (*jt).V)) < 0)
+                    double coal_V = m.V;
+                    double first_V = (*it).second.V;
+                    double second_V = (*jt).second.V;
+                    double res = (coal_V - (first_V + second_V));
+                    c_print("coal_V ", coal_V, "\tfirst_V ", first_V, "\tsecond_V", second_V, yellow, P);
+                    if (res < 0)
                     {
-                        // la missione
-                        token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), *it));
-                        token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), *jt));
-
-                        return m;
+                        t_coalition tmp_coalition;
+                        tmp_coalition.first.insert(tmp_coalition.first.end(), (*it).first.begin(), (*it).first.end());
+                        tmp_coalition.first.insert(tmp_coalition.first.end(), (*jt).first.begin(), (*jt).first.end());
+                        tmp_coalition.second = m;
+                        coalitions.push_back(tmp_coalition);
+                        coalitions.erase(it);
+                        coalitions.erase(jt);
+                        break;
                     }
 
-                    id++;
+                }
+                else
+                {
+                    c_print("la capacita e' troppo alta", tmp_DEMAND, yellow, P);
                 }
             }
+            else
+            {
+             c_print("siamo uguali",yellow,P);
+            }
+
+            c_print("\n\n", P);
+            count++;
         }
     }
 
-    m.ID = 66;
-    return m;
+    c_print("size della colaitions: ", coalitions.size(), green);
+
+    best_coalition = *coalitions.begin();
+
+    for (auto it = coalitions.begin(); it != coalitions.end(); it++)
+    {
+        if ((*it).second.V < best_coalition.second.V)
+        {
+            best_coalition = (*it);
+        }
+    }
+
+    // aggirnamento del token 
+    for (auto i = 0 ; i < best_coalition.first.size(); i++)
+    {
+        token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), best_coalition.first[i]));
+    }
+
+    return best_coalition.second;
 }
 
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -313,7 +378,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             current_mission = coalition_formation(token);
             c_print("[DEBUG]\tsize after coalition: ", token.MISSION.size(), yellow);
 
-            if(current_mission.ID != 66)
+            if (current_mission.ID != 66)
             {
                 current_mission.PICKUP = true;
 
@@ -324,7 +389,6 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             {
                 c_print("[WARN]\tNon posso prendere task, capacity: ", tmp_CAPACITY, red);
             }
-            
         }
 
         init_tw_map();

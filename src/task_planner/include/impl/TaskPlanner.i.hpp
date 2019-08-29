@@ -105,6 +105,12 @@ void TaskPlanner::missions_generator()
   }
 
   nTask = missions.size();
+
+  for (auto i = 0 ; i < missions.size(); i++)
+  {
+    cout <<missions[i].TOT_DEMAND <<" \n";
+  }
+
 } // namespace taskplanner
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)

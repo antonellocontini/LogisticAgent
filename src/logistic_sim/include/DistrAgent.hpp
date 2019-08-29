@@ -18,6 +18,7 @@ namespace logistic_sim
 namespace distragent
 {
 using namespace agent;
+using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 
 bool cmp_Mission(logistic_sim::Mission A, logistic_sim::Mission B)
 {
@@ -57,6 +58,8 @@ protected:
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
 
+    // std::vector<t_coalition> coalitions;
+ 
 public:
 
     virtual void init(int argc, char **argv);
