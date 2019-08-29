@@ -65,20 +65,20 @@ void DistrAgent::run()
     while (ros::ok())
     {
 
-        // //  cosa ho globale??? mi serve tempo velocita e posizione
+        //  cosa ho globale??? mi serve tempo velocita e posizione
         // float x, y, t;
         // getRobotPose(ID_ROBOT, x, y, t);
         // std::cout << "x: " << xPos[ID_ROBOT] << " y: " << yPos[ID_ROBOT] << " th: " << thetaPos[ID_ROBOT] << "\n"
         //           << "lastPos: x= " << lastXpose << " ,y= " << lastYpose << "\n";
 
-        // // lastXPose
-        // // lastYpose
-        // // dimension
-        // // initial_vertex
-        // // current_vertex
-        // // next_vertex
-        // // last_interference
-        // // std::cout <<
+        // lastXPose
+        // lastYpose
+        // dimension
+        // initial_vertex
+        // current_vertex
+        // next_vertex
+        // last_interference
+        // std::cout <<
         if (goal_complete)
         {
             c_print("before OnGoal()", magenta);
