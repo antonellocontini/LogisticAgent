@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 #include <sstream>
-#include "logistic_sim/Task.h"
 
 using uint = unsigned int;
 
@@ -13,17 +12,6 @@ struct Task
   uint demand;
   uint dst;
 };
-
-// costruttore
-inline logistic_sim::Task mkTask(uint item, uint id, uint demand, uint dst)
-{
-  logistic_sim::Task t;
-  t.ITEM = item;
-  t.ORDER = id;
-  t.DEMAND = demand;
-  t.DSTS.push_back(dst);
-  return t;
-}
 
 // stampa
 std::ostream &operator<<(std::ostream &os, const Task &t)

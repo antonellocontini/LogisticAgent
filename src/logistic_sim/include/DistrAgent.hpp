@@ -8,11 +8,6 @@ namespace logistic_sim
     {
         return A.ID == B.ID ? true : false;
     }
-
-    bool operator== (const Task& A, const Task& B)
-    {
-        return A.ORDER == B.ORDER ? true : false;
-    }
 }
 
 namespace distragent
@@ -54,7 +49,6 @@ protected:
     uint p_11_16_21[20] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 17,
                            19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
     
-    logistic_sim::Task current_task;
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
 

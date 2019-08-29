@@ -11,7 +11,7 @@
 #include "Agent.hpp"
 #include "config.hpp"
 #include <task_planner/Task.h>
-#include <logistic_sim/Task.h>
+
 
 // LogicAgent Centralizzato contatta il TaskPlanner 
 

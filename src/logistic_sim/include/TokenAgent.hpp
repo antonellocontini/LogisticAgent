@@ -13,7 +13,7 @@ namespace tokenagent
 
             bool need_task = true;
             bool reached_pickup = false, go_home = false;
-            logistic_sim::Task current_task;
+           
             logistic_sim::Mission current_mission;
             std::vector< std::vector<uint> > token_weight_map;
 

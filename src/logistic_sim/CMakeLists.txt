@@ -120,14 +120,14 @@ add_library(Agent
   src/config.cpp
 )
 
-# add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 
 # Declare a cpp library
 add_library(SSIPatrolAgent
   src/SSIPatrolAgent.cpp
 )
 
-# add_dependencies(SSIPatrolAgent ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(SSIPatrolAgent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 ########################################################################################################################
 
 # add_dependencies(Agent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})

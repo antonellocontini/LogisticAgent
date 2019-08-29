@@ -121,7 +121,7 @@ void TokenAgent::onGoalComplete()
         reached_pickup = true;
         sleep(2);
     }
-    else if(current_vertex == current_task.DSTS[0] && reached_pickup)
+    else if(current_vertex == current_mission.DSTS[0] && reached_pickup)
     {
         need_task = true;
         reached_pickup = false;
@@ -168,7 +168,7 @@ int TokenAgent::compute_next_vertex()
     }
     else
     {
-        tp_dijkstra(current_vertex, current_task.DSTS[0], path, path_length);
+        tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
     }
 
     c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
