@@ -28,12 +28,17 @@ bool tokenagent::TokenAgent::check_interference_token(const logistic_sim::Token 
             double other_y_dst = vertex_web[token.CURR_DST[i]].y;
             double other_distance = (xPos[i] - x_dst) * (xPos[i] - x_dst) + (yPos[i] - y_dst) * (yPos[i] - y_dst);
             double my_distance = (xPos[ID_ROBOT] - other_x_dst) * (xPos[ID_ROBOT] - other_x_dst) + (yPos[ID_ROBOT] - other_y_dst) * (yPos[ID_ROBOT] - other_y_dst);
-            c_print("my_distance ", my_distance, "\tother_distance ", other_distance);
+            // c_print("my_distance ", my_distance, "\tother_distance ", other_distance, yellow);
+            last_interference = ros::Time::now().toSec();
             if (my_distance > other_distance)
             {
-                last_interference = ros::Time::now().toSec();
                 return true;
             }
+            else
+            {
+                c_print("Robot ", i, " dovrebbe essere in interferenza", red);
+            }
+            
         }
     }
     return false;
