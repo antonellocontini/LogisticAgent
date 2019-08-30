@@ -29,6 +29,8 @@ namespace tokenagent
             virtual void run();
             virtual void onGoalComplete();
             virtual int compute_next_vertex();
+            bool check_interference_token(const logistic_sim::Token &token);
+            void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback) override;
 
             void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
             void init_tw_map();

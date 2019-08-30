@@ -158,14 +158,14 @@ public:
   void sendGoal(int next_vertex);
   void cancelGoal();
   
-  void goalDoneCallback(const actionlib::SimpleClientGoalState &state,
+  virtual void goalDoneCallback(const actionlib::SimpleClientGoalState &state,
                         const move_base_msgs::MoveBaseResultConstPtr &result);
-  void goalActiveCallback();
-  void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
+  virtual void goalActiveCallback();
+  virtual void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
 
   void send_goal_reached();
   void send_task_reached();
-  bool check_interference(int ID_ROBOT);
+  virtual bool check_interference(int ID_ROBOT);
   void do_interference_behavior();
   void backup();
 
