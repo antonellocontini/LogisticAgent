@@ -12,7 +12,11 @@ namespace tokenagent
             ros::Subscriber token_sub;
 
             bool need_task = true;
-            bool reached_pickup = false, go_home = false;
+            bool reached_pickup = false;
+            bool go_home = false;
+            bool init_wait_done = false;
+
+            uint init_next_vertex;
            
             logistic_sim::Mission current_mission;
             std::vector< std::vector<uint> > token_weight_map;
