@@ -368,7 +368,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 // svaforisco la mia direzione
                 token_weight_map[src][dst] += sec_diff;
                 // sfavorisco la direzione inversa
-                token_weight_map[dst][src] += sec_diff * 3;
+                token_weight_map[dst][src] += sec_diff * 4;
                 // sfavorisco tutti gli archi che entrano nella mia destinazione
                 // dovrebbe prevenire gli scontri agli incroci dove due robot
                 // arrivano da nodi diversi
@@ -376,7 +376,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 {
                     if(j != src)
                     {
-                        token_weight_map[j][dst] += sec_diff * 2;
+                        token_weight_map[j][dst] += sec_diff * 3;
                     }
                 }
             }
@@ -398,7 +398,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
         
 
-    usleep(200000);
+    usleep(30000);
     token_pub.publish(token);
     ros::spinOnce();
 } // token_callback()
