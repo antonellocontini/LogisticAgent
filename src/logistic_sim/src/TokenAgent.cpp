@@ -42,7 +42,7 @@ bool tokenagent::TokenAgent::check_interference_token(const logistic_sim::Token 
 // la lasciamo vuota
 void tokenagent::TokenAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback)
 {
-
+    send_positions();  
 }
 
 

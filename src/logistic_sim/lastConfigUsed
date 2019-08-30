@@ -1,9 +1,9 @@
 [Config]
 map: model5
-nrobots: 2
-algorithm: DistrAgent
+nrobots: 4
+algorithm: TokenAgent
 locmode: AMCL
 navmode: ros
 gwait: 0
-capacity: 3
+capacity: 5
 term: xterm

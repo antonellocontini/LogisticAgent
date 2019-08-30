@@ -396,7 +396,13 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         }
 
         // controllo interferenza
+
+
+
         interference = check_interference_token(token);
+
+        if (interference)
+        c_print("Robot in interferenza: ",ID_ROBOT,red,P);
     }
 
         
