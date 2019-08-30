@@ -34,10 +34,6 @@ bool tokenagent::TokenAgent::check_interference_token(const logistic_sim::Token 
             {
                 return true;
             }
-            else
-            {
-                c_print("Robot ", i, " dovrebbe essere in interferenza", red);
-            }
             
         }
     }

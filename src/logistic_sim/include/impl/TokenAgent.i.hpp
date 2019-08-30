@@ -60,9 +60,9 @@ void TokenAgent::run()
 
     // TEST: attesa di qualche secondo dalla partenza del precedente
     int wait_time = 13 * ID_ROBOT;
-    c_print("[DEBUG]\tAttendo ", wait_time, " secondi...", yellow);
+    c_print("[DEBUG]\tAttendo ", wait_time, " secondi...", yellow, P);
     sleep(wait_time);
-    c_print("[DEBUG]\tParto");
+    c_print("[DEBUG]\tParto", P);
     init_wait_done = true;
 
     while (ros::ok())
@@ -77,7 +77,18 @@ void TokenAgent::run()
         {
             if (interference)
             {
-                do_interference_behavior();
+                // do_interference_behavior();
+                // invece di eseguire il comportamento di interferenza
+                // provo a dire al robot di andare al vertice da dove è arrivato
+                uint temp = next_vertex;
+                next_vertex = current_vertex;
+                current_vertex = temp;
+                // se non setto interference a false questo ramo viene eseguito un paio
+                // di volte poichè il token deve completare il giro prima che la variabile
+                // interference venga calcolata
+                interference = false;
+                sendGoal(next_vertex);
+                c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, vado in ", next_vertex, red, P);
             }
 
             if (ResendGoal)
@@ -159,7 +170,7 @@ int TokenAgent::compute_next_vertex()
 
     if(go_home)
     {
-        c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
+        c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow, P);
         tp_dijkstra(current_vertex, initial_vertex, path, path_length);
     }
     else if (!reached_pickup)
@@ -171,10 +182,10 @@ int TokenAgent::compute_next_vertex()
         tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
     }
 
-    c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
+    c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow, P);
     for(int i=0; i<path_length; i++)
     {
-        c_print("\t\t", path[i], yellow);
+        c_print("\t\t", path[i], yellow, P);
     }
 
     if (path_length > 1)
@@ -265,7 +276,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         token.CAPACITY.push_back(CAPACITY);
 
-        c_print("[DEBUG]\tinit_current_vertex: ", current_vertex, yellow);
+        c_print("[DEBUG]\tinit_current_vertex: ", current_vertex, yellow, P);
 
         // all avvio indico quale arco i robot vorrebbero attraversare
         // serve a forzare la partenza nella stessa direzione
@@ -299,7 +310,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
                 // se possibile prendo un task con destinazione diversa da quelli in corso
                 // per farlo ciclo tra tutti i task disponibili finchè non ne trovo uno compatibile
-                c_print("[DEBUG]\tScelta task...", yellow);
+                c_print("[DEBUG]\tScelta task...", yellow, P);
                 auto it_m = token.MISSION.begin();
                 bool good = false;
                 for( ; it_m != token.MISSION.end() && !good; it_m++)
@@ -314,14 +325,14 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     }
                 }
 
-                c_print("[DEBUG]\tConflict-free=", good, yellow);
+                c_print("[DEBUG]\tConflict-free=", good, yellow, P);
                 logistic_sim::Mission t;
                 // ho trovato un task adeguato, lo prendo dall'iteratore
                 if(good)
                 {
                     it_m--; // alla fine del ciclo precedente l'iteratore è andato oltre il task selezionato
                     t = *it_m;
-                    c_print("[DEBUG]\tDST=", t.DSTS[0], yellow);
+                    c_print("[DEBUG]\tDST=", t.DSTS[0], yellow, P);
                     token.MISSION.erase(it_m);
                 }
                 else    // non esiste un task che non vada in conflitto, prendo l'ultimo della lista
@@ -330,11 +341,11 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     token.MISSION.pop_back();
                 }
                 
-                c_print("[DEBUG]\tTask rimosso dalla lista", yellow);
+                c_print("[DEBUG]\tTask rimosso dalla lista", yellow, P);
                 token.ASSIGNED_MISSION.push_back(t);
                 token.CURR_DST[ID_ROBOT] = t.DSTS[0];
                 current_mission = t;
-                c_print("[DEBUG]\tTask assegnato nel token", yellow);
+                c_print("[DEBUG]\tTask assegnato nel token", yellow, P);
 
                 if(token.MISSION.size() == m_size)
                 {
