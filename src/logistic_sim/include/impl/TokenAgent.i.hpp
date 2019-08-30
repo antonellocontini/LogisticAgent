@@ -59,7 +59,7 @@ void TokenAgent::run()
     ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
 
     // TEST: attesa di qualche secondo dalla partenza del precedente
-    int wait_time = 10 * ID_ROBOT;
+    int wait_time = 13 * ID_ROBOT;
     c_print("[DEBUG]\tAttendo ", wait_time, " secondi...", yellow);
     sleep(wait_time);
     c_print("[DEBUG]\tParto");
