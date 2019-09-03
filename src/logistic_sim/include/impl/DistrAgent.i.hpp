@@ -351,6 +351,45 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     return best_coalition.second;
 }
 
+bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
+{
+    int i;
+    double dist_quad;
+
+    if (ros::Time::now().toSec() - last_interference < 10) // seconds
+        return false;                                      // false if within 10 seconds from the last one
+
+    /* Poderei usar TEAMSIZE para afinar */
+    // ID_ROBOT
+    for (i = 0; i < TEAM_SIZE; i++)
+    { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
+        
+        if( i == ID_ROBOT)
+            continue;
+
+        dist_quad = (xPos[i] - xPos[ID_ROBOT]) * (xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT]) * (yPos[i] - yPos[ID_ROBOT]);
+
+        if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
+        { //robots are ... meter or less apart
+            //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
+            double x_dst = vertex_web[current_mission.DSTS[0]].x;
+            double y_dst = vertex_web[current_mission.DSTS[0]].y;
+            double other_x_dst = vertex_web[token.CURR_DST[i]].x;
+            double other_y_dst = vertex_web[token.CURR_DST[i]].y;
+            double other_distance = (xPos[i] - x_dst) * (xPos[i] - x_dst) + (yPos[i] - y_dst) * (yPos[i] - y_dst);
+            double my_distance = (xPos[ID_ROBOT] - other_x_dst) * (xPos[ID_ROBOT] - other_x_dst) + (yPos[ID_ROBOT] - other_y_dst) * (yPos[ID_ROBOT] - other_y_dst);
+            // c_print("my_distance ", my_distance, "\tother_distance ", other_distance, yellow);
+            last_interference = ros::Time::now().toSec();
+            if (my_distance > other_distance)
+            {
+                return true;
+            }
+            
+        }
+    }
+    return false;
+}
+
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
     // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
@@ -440,6 +479,11 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // metto nel token quale arco sto occupando
         token.CURR_VERTEX[ID_ROBOT] = current_vertex;
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+
+        interference = check_interference_token(token);
+
+        if (interference)
+        c_print("Robot in interferenza: ",ID_ROBOT,red,P);
     }
 
     usleep(30000);
