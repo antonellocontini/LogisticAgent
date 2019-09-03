@@ -12,3 +12,4 @@ uint32[]    NEXT_VERTEX
 uint32[]    CURR_DST
 
 uint32[]    CAPACITY
+uint32[]    INIT_POS

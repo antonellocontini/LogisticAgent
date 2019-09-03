@@ -382,6 +382,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.CAPACITY.push_back(CAPACITY);
         token.CURR_VERTEX.push_back(current_vertex);
         token.NEXT_VERTEX.push_back(current_vertex);
+        token.INIT_POS.push_back(initial_vertex);
 
         initialize = false;
     }
@@ -392,6 +393,8 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             if (token.MISSION.size() == 0)
             {
                 go_home = true;
+                initial_vertex = token.INIT_POS.back();
+                token.INIT_POS.pop_back();
                 need_task = false;
             }
             else
@@ -439,7 +442,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
     }
 
-    usleep(200000);
+    usleep(30000);
     token_pub.publish(token);
     ros::spinOnce();
 } // token_callback()

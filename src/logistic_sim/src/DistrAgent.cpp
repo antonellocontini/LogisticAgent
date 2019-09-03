@@ -89,7 +89,19 @@ void DistrAgent::run()
         {
             if (interference)
             {
-                do_interference_behavior();
+                //do_interference_behavior();
+                // do_interference_behavior();
+                // invece di eseguire il comportamento di interferenza
+                // provo a dire al robot di andare al vertice da dove è arrivato
+                uint temp = next_vertex;
+                next_vertex = current_vertex;
+                current_vertex = temp;
+                // se non setto interference a false questo ramo viene eseguito un paio
+                // di volte poichè il token deve completare il giro prima che la variabile
+                // interference venga calcolata
+                interference = false;
+                sendGoal(next_vertex);
+                c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, vado in ", next_vertex, red, P);
             }
 
             if (ResendGoal)
