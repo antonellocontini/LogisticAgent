@@ -367,6 +367,8 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         logistic_sim::Mission safe_mission;
         safe_mission.ID = 123;
         safe_mission.DSTS.push_back(26); //indice del nodo_safe
+        safe_mission.DEMANDS.push_back(0); //fittizia
+        safe_mission.TOT_DEMAND = 0;
         safe_mission.PICKUP = false;
         best_coalition.second = safe_mission; //aggiorno la current
         best_coalition.first.clear();
