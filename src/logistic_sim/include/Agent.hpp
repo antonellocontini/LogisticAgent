@@ -52,6 +52,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <queue>
 
 #include "algorithms.hpp" // <<< ALGO
 #include "get_graph.hpp"

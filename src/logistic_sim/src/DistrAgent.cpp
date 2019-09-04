@@ -79,47 +79,45 @@ void DistrAgent::run()
         // next_vertex
         // last_interference
         // std::cout <<
-        if (goal_complete)
+        // if (goal_complete)
+        // {
+        //     c_print("before OnGoal()", magenta);
+        //     onGoalComplete();
+        //     resend_goal_count = 0;
+        // }
+
+        if (interference)
         {
-            c_print("before OnGoal()", magenta);
-            onGoalComplete();
-            resend_goal_count = 0;
+            //do_interference_behavior();
+            // do_interference_behavior();
+            // invece di eseguire il comportamento di interferenza
+            // provo a dire al robot di andare al vertice da dove è arrivato
+            uint temp = next_vertex;
+            next_vertex = current_vertex;
+            current_vertex = temp;
+            // se non setto interference a false questo ramo viene eseguito un paio
+            // di volte poichè il token deve completare il giro prima che la variabile
+            // interference venga calcolata
+            interference = false;
+            sendGoal(next_vertex);
+            c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, vado in ", next_vertex, red, P);
         }
-        else
+
+        if (ResendGoal)
         {
-            if (interference)
-            {
-                //do_interference_behavior();
-                // do_interference_behavior();
-                // invece di eseguire il comportamento di interferenza
-                // provo a dire al robot di andare al vertice da dove è arrivato
-                uint temp = next_vertex;
-                next_vertex = current_vertex;
-                current_vertex = temp;
-                // se non setto interference a false questo ramo viene eseguito un paio
-                // di volte poichè il token deve completare il giro prima che la variabile
-                // interference venga calcolata
-                interference = false;
-                sendGoal(next_vertex);
-                c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, vado in ", next_vertex, red, P);
-            }
+            ROS_INFO("Re-Sending goal (%d) - Vertex %d (%f,%f)", resend_goal_count, next_vertex, vertex_web[next_vertex].x,
+                     vertex_web[next_vertex].y);
+            send_resendgoal();
+            sendGoal(next_vertex);
 
-            if (ResendGoal)
-            {
-                ROS_INFO("Re-Sending goal (%d) - Vertex %d (%f,%f)", resend_goal_count, next_vertex, vertex_web[next_vertex].x,
-                         vertex_web[next_vertex].y);
-                send_resendgoal();
-                sendGoal(next_vertex);
+            ResendGoal = false;
+        }
 
-                ResendGoal = false;
-            }
+        processEvents();
 
-            processEvents();
-
-            if (end_simulation)
-            {
-                return;
-            }
+        if (end_simulation)
+        {
+            return;
         }
 
         loop_rate.sleep();

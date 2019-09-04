@@ -332,16 +332,47 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 
     c_print("size della colaitions: ", coalitions.size(), green);
 
-    best_coalition = *coalitions.begin();
+    std::sort(coalitions.begin(), coalitions.end());
 
-    for (auto it = coalitions.begin(); it != coalitions.end(); it++)
+    auto coit = coalitions.begin();
+    for (; coit != coalitions.end(); coit++)
     {
-        if ((*it).second.V < best_coalition.second.V)
+        best_coalition = *coit;
+
+        auto dst_cm = best_coalition.second.DSTS.begin();
+        for (auto i = 0; i < token.CURR_DST.size() && dst_cm != best_coalition.second.DSTS.end(); i++)
         {
-            best_coalition = (*it);
+            if (*dst_cm == token.CURR_DST[i] && i != ID_ROBOT)
+            {
+                dst_cm++;
+                i = -1;
+            }
+        }
+
+        if (dst_cm != best_coalition.second.DSTS.end())
+        {
+            auto temp = *dst_cm;
+            best_coalition.second.DSTS.erase(dst_cm);
+            best_coalition.second.DSTS.insert(best_coalition.second.DSTS.begin(), temp);
+            best_coalition.second.PICKUP = true;
+            need_task = false;
+            goal_complete = true;
+            break;
         }
     }
 
+    if (coit == coalitions.end())
+    {
+        c_print("Robot ", ID_ROBOT, " Vado in safe", red);
+        logistic_sim::Mission safe_mission;
+        safe_mission.ID = 123;
+        safe_mission.DSTS.push_back(26); //indice del nodo_safe
+        safe_mission.PICKUP = false;
+        best_coalition.second = safe_mission; //aggiorno la current
+        best_coalition.first.clear();
+        need_task = false;
+        goal_complete = true;
+    }
     // aggirnamento del token
     for (auto i = 0; i < best_coalition.first.size(); i++)
     {
@@ -363,8 +394,8 @@ bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
     // ID_ROBOT
     for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
-        
-        if( i == ID_ROBOT)
+
+        if (i == ID_ROBOT)
             continue;
 
         dist_quad = (xPos[i] - xPos[ID_ROBOT]) * (xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT]) * (yPos[i] - yPos[ID_ROBOT]);
@@ -384,7 +415,6 @@ bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
             {
                 return true;
             }
-            
         }
     }
     return false;
@@ -421,39 +451,28 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.CAPACITY.push_back(CAPACITY);
         token.CURR_VERTEX.push_back(current_vertex);
         token.NEXT_VERTEX.push_back(current_vertex);
-        token.INIT_POS.push_back(initial_vertex);
-
+        // solo INIT
+        token.CURR_DST.push_back(dimension + 1);
+        token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
         initialize = false;
     }
     else
     {
         if (need_task)
         {
-            if (token.MISSION.size() == 0)
+            if (!token.MISSION.empty())
+            {
+                c_print("[DEBUG]\tsize before coalition: ", token.MISSION.size(), "\tcapacity: ", tmp_CAPACITY, yellow);
+
+                current_mission = coalition_formation(token);
+                c_print("[DEBUG]\tsize after oalition: ", token.MISSION.size(), yellow);
+            }
+            else
             {
                 go_home = true;
                 initial_vertex = token.INIT_POS.back();
                 token.INIT_POS.pop_back();
                 need_task = false;
-            }
-            else
-            {
-                c_print("[DEBUG]\tsize before coalition: ", token.MISSION.size(), "\tcapacity: ", tmp_CAPACITY, yellow);
-                c_print("##################################", magenta, P);
-                current_mission = coalition_formation(token);
-                c_print("[DEBUG]\tsize after coalition: ", token.MISSION.size(), yellow);
-
-                if (current_mission.ID != 66)
-                {
-                    current_mission.PICKUP = true;
-
-                    need_task = false;
-                    goal_complete = true;
-                }
-                else
-                {
-                    c_print("[WARN]\tNon posso prendere task, capacity: ", tmp_CAPACITY, red);
-                }
             }
         }
 
@@ -479,11 +498,19 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // metto nel token quale arco sto occupando
         token.CURR_VERTEX[ID_ROBOT] = current_vertex;
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+        token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
 
         interference = check_interference_token(token);
 
         if (interference)
-        c_print("Robot in interferenza: ",ID_ROBOT,red,P);
+            c_print("Robot in interferenza: ", ID_ROBOT, red, P);
+
+        if (goal_complete)
+        {
+            c_print("before OnGoal()", magenta);
+            onGoalComplete();
+            resend_goal_count = 0;
+        }
     }
 
     usleep(30000);
