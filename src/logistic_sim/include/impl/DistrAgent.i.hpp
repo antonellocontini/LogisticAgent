@@ -42,7 +42,7 @@ void DistrAgent::tp_dijkstra(uint source, uint destination, int *shortest_path, 
         {
             uint from = web_copy[i].id;
             uint to = web_copy[i].id_neigh[j];
-            web_copy[i].cost[j] += PENALTY * token_weight_map[from][to];
+            web_copy[i].cost[j] *= token_weight_map[from][to];
         }
     }
 
@@ -196,7 +196,6 @@ void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission &m)
     }
 }
 
-// mi basta la prima coalizione buona e poi posso uscire dal ciclo
 logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token)
 {
     std::vector<t_coalition> coalitions;
@@ -364,14 +363,15 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     if (coit == coalitions.end())
     {
         c_print("Robot ", ID_ROBOT, " Vado in safe", red);
-        logistic_sim::Mission safe_mission;
-        safe_mission.ID = 123;
-        safe_mission.DSTS.push_back(26); //indice del nodo_safe
-        safe_mission.DEMANDS.push_back(0); //fittizia
-        safe_mission.TOT_DEMAND = 0;
-        safe_mission.PICKUP = false;
-        best_coalition.second = safe_mission; //aggiorno la current
-        best_coalition.first.clear();
+        // logistic_sim::Mission safe_mission;
+        // safe_mission.ID = 123;
+        // safe_mission.DSTS.push_back(26); //indice del nodo_safe
+        // safe_mission.DEMANDS.push_back(0); //fittizia
+        // safe_mission.TOT_DEMAND = 0;
+        // safe_mission.PICKUP = false;
+        // best_coalition.second = safe_mission; //aggiorno la current
+        // best_coalition.first.clear();
+        best_coalition = coalitions.front();
         need_task = false;
         goal_complete = true;
     }
@@ -488,12 +488,25 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 src >= 0 && src < dimension &&
                 i != ID_ROBOT)
             {
-
+                // la penalità dipende da quanto tempo sono sull'arco
+                int sec_diff = ros::Time::now().sec - goal_start_time.sec;
+                sec_diff = std::max(1, sec_diff);
                 // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
-                //svaforisco la mia direzione
-                token_weight_map[src][dst]++;
-                //sfavorisco la direzione inversa
-                token_weight_map[dst][src] += 3;
+                // svaforisco la mia direzione
+                token_weight_map[src][dst] += sec_diff;
+                // sfavorisco la direzione inversa
+                token_weight_map[dst][src] += sec_diff * 3;
+                // sfavorisco tutti gli archi che entrano nella mia destinazione
+                // dovrebbe prevenire gli scontri agli incroci dove due robot
+                // arrivano da nodi diversi
+                for( int j=0; j<dimension; j++)
+                {
+                    if(j != src)
+                    {
+                        token_weight_map[j][dst] += sec_diff * 2;
+                    }
+                }
+             
             }
         }
 

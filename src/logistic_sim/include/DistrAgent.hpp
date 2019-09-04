@@ -17,7 +17,7 @@ inline bool operator<(const logistic_sim::Mission &A, const logistic_sim::Missio
     return A.V < B.V ? 1 : 0;
 }
 
-}
+} // namespace logistic_sim
 inline bool operator==(const t_coalition &A, const t_coalition &B)
 {
     return A.first.front() == B.first.front() && A.second.ID == B.second.ID ? 1 : 0;
@@ -27,7 +27,6 @@ inline bool operator<(const t_coalition &A, const t_coalition &B)
 {
     return A.second.V < B.second.V ? 1 : 0;
 }
-
 
 namespace distragent
 {
@@ -42,6 +41,10 @@ protected:
     bool need_task = true;
     bool reached_pickup, go_home = false;
     uint tmp_CAPACITY = 0;
+
+    bool init_wait_done = false;
+
+    uint init_next_vertex;
 
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
@@ -58,6 +61,8 @@ protected:
 
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
+
+    ros::Time goal_start_time;
 
 public:
     virtual void init(int argc, char **argv);

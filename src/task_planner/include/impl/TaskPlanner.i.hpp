@@ -68,6 +68,8 @@ void TaskPlanner::missions_generator()
   int size = 10;
   int size_2 = 3;
   int d = 1;
+
+  static int id = 0;
   for (auto i = 0; i < size; i++)
   {
     for (auto j = 0; j < size_2; j++)
@@ -75,7 +77,8 @@ void TaskPlanner::missions_generator()
 
     logistic_sim::Mission m;
     m.PICKUP = false;
-    m.ID = i;
+    m.ID = id;
+    id++;
     m.PRIORITY = 0;
     m.ITEM.push_back(i % 3);
 
@@ -101,8 +104,8 @@ void TaskPlanner::missions_generator()
     }
     }
     m.DSTS.push_back(dst_vertex[i % 3]);
-    m.TOT_DEMAND = (i % 3) + 1;
-    m.DEMANDS.push_back((i % 3) + 1);
+    m.TOT_DEMAND = (j % 3) + 1;
+    m.DEMANDS.push_back((j % 3) + 1);
     m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
     m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
     missions.push_back(m);
