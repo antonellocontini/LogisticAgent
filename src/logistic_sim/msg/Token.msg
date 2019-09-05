@@ -13,3 +13,5 @@ uint32[]    CURR_DST
 
 uint32[]    CAPACITY
 uint32[]    INIT_POS
+time[]      MISSION_START_TIME
+float32[]   MISSION_CURRENT_DISTANCE
