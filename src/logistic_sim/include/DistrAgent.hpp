@@ -84,7 +84,7 @@ public:
     //
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();
-    bool check_interference_token(const logistic_sim::Token &token);
+    bool check_interference_token(logistic_sim::Token &token);
     void token_callback(const logistic_sim::TokenConstPtr &msg);
 
     virtual bool go_src();

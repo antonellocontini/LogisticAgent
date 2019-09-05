@@ -216,13 +216,13 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         for (auto jt = 0; jt < coalitions.size(); jt++)
         {
             t_coalition &c2 = coalitions[jt];
-            c_print("iterazione n ", count, yellow, P);
+            // c_print("iterazione n ", count, yellow, P);
             if (!(c1.second == c2.second))
             {
                 auto tmp_DEMAND = c1.second.TOT_DEMAND + c2.second.TOT_DEMAND;
                 if (tmp_DEMAND <= tmp_CAPACITY)
                 {
-                    c_print("sono dentro", yellow, P);
+                    // c_print("sono dentro", yellow, P);
                     logistic_sim::Mission m; // possibile coalizione
                     m.ID = id++;
 
@@ -254,24 +254,24 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 
                     // stampe debug
                     logistic_sim::Mission &m1 = c1.second;
-                    c_print("M1 ID ", m1.ID, red, P);
-                    for (int i = 0; i < m1.DSTS.size(); i++)
-                    {
-                        c_print("M1 DSTS ", m1.DSTS[i], "\tDEMANDS ", m1.DEMANDS[i], yellow, P);
-                    }
-                    c_print("M2 ID ", m2.ID, red, P);
-                    for (int i = 0; i < m2.DSTS.size(); i++)
-                    {
-                        c_print("M2 DSTS ", m2.DSTS[i], "\tDEMANDS ", m2.DEMANDS[i], yellow, P);
-                    }
-                    c_print("M_TOT ID ", m.ID, red, P);
-                    for (int i = 0; i < m.DSTS.size(); i++)
-                    {
-                        c_print("M_TOT DSTS ", m.DSTS[i], "\tDEMANDS ", m.DEMANDS[i], yellow, P);
-                    }
+                    // c_print("M1 ID ", m1.ID, red, P);
+                    // for (int i = 0; i < m1.DSTS.size(); i++)
+                    // {
+                    //     c_print("M1 DSTS ", m1.DSTS[i], "\tDEMANDS ", m1.DEMANDS[i], yellow, P);
+                    // }
+                    // c_print("M2 ID ", m2.ID, red, P);
+                    // for (int i = 0; i < m2.DSTS.size(); i++)
+                    // {
+                    //     c_print("M2 DSTS ", m2.DSTS[i], "\tDEMANDS ", m2.DEMANDS[i], yellow, P);
+                    // }
+                    // c_print("M_TOT ID ", m.ID, red, P);
+                    // for (int i = 0; i < m.DSTS.size(); i++)
+                    // {
+                    //     c_print("M_TOT DSTS ", m.DSTS[i], "\tDEMANDS ", m.DEMANDS[i], yellow, P);
+                    // }
 
                     m.TOT_DEMAND = std::accumulate(m.DEMANDS.begin(), m.DEMANDS.end(), 0);
-                    c_print("capacita: m1 ", c1.second.TOT_DEMAND, " m2 ", m2.TOT_DEMAND, " totale ", m.TOT_DEMAND, yellow, P);
+                    // c_print("capacita: m1 ", c1.second.TOT_DEMAND, " m2 ", m2.TOT_DEMAND, " totale ", m.TOT_DEMAND, yellow, P);
 
                     auto id_path = compute_id_path(m);
 
@@ -281,15 +281,15 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                     double first_V = c1.second.V;
                     double second_V = c2.second.V;
                     double res = (coal_V - (first_V + second_V));
-                    c_print("coal_V ", coal_V, "\tfirst_V ", first_V, "\tsecond_V", second_V, yellow, P);
+                    // c_print("coal_V ", coal_V, "\tfirst_V ", first_V, "\tsecond_V", second_V, yellow, P);
 
-                    c_print("before", red, P);
+                    // c_print("before", red, P);
                     for (int j = 0; j < coalitions.size(); j++)
                     {
                         logistic_sim::Mission &temp_m = coalitions[j].second;
                         for (int i = 0; i < temp_m.DSTS.size(); i++)
                         {
-                            c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
+                            // c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
                         }
                     }
 
@@ -302,13 +302,13 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                         coalitions.push_back(tmp_coalition);
                         coalitions.erase(find(coalitions.begin(), coalitions.end(), c1));
                         coalitions.erase(find(coalitions.begin(), coalitions.end(), c2));
-                        c_print("after", red, P);
+                        // c_print("after", red, P);
                         for (int j = 0; j < coalitions.size(); j++)
                         {
                             logistic_sim::Mission &temp_m = coalitions[j].second;
                             for (int i = 0; i < temp_m.DSTS.size(); i++)
                             {
-                                c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
+                                // c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
                             }
                         }
                         break;
@@ -316,15 +316,15 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                 }
                 else
                 {
-                    c_print("la capacita e' troppo alta", tmp_DEMAND, yellow, P);
+                    // c_print("la capacita e' troppo alta", tmp_DEMAND, yellow, P);
                 }
             }
             else
             {
-                c_print("siamo uguali", yellow, P);
+                // c_print("siamo uguali", yellow, P);
             }
 
-            c_print("\n\n", P);
+            // c_print("\n\n", P);
             count++;
         }
     }
@@ -384,7 +384,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     return best_coalition.second;
 }
 
-bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
+bool DistrAgent::check_interference_token(logistic_sim::Token &token)
 {
     int i;
     double dist_quad;
@@ -426,6 +426,7 @@ bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
             last_interference = ros::Time::now().toSec();
             if (my_metric < other_metric)
             {
+                token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                 return true;
             }
         }
@@ -451,6 +452,7 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
     // aggiorniamo condizioni destinazione
     if (go_home && current_vertex == initial_vertex)
     {
+        token.TOTAL_DISTANCE[ID_ROBOT] += token.MISSION_CURRENT_DISTANCE[ID_ROBOT];
         token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
         need_task = true;
     }
@@ -458,6 +460,7 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
     {
         current_mission.PICKUP = false;
         tmp_CAPACITY -= current_mission.TOT_DEMAND;
+        token.TOTAL_DISTANCE[ID_ROBOT] += token.MISSION_CURRENT_DISTANCE[ID_ROBOT];
         token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
     }
     else if (go_dst() && current_vertex == current_mission.DSTS[0])
@@ -470,9 +473,11 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
         tmp_CAPACITY += d;
         if (current_mission.DSTS.empty())
         {
+            token.MISSIONS_COMPLETED[ID_ROBOT]++;
             need_task = true;
         }
 
+        token.TOTAL_DISTANCE[ID_ROBOT] += token.MISSION_CURRENT_DISTANCE[ID_ROBOT];
         token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
 
         c_print("d: ", d, red);
@@ -581,6 +586,9 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
         token.MISSION_START_TIME.push_back(ros::Time::now());
         token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
+        token.INTERFERENCE_COUNTER.push_back(0);
+        token.MISSIONS_COMPLETED.push_back(0);
+        token.TOTAL_DISTANCE.push_back(0.0f);
         initialize = false;
     }
     else if (ros::Time::now().sec - init_start_time.sec >= init_wait_time)
