@@ -16,8 +16,8 @@
 # CUSTOM_STAGE: flag if custom version of Stage is used: true, false
 # SPEEDUP: simulator speedup (if Custom Stage is used)
 
-MAP=model5
-NROBOTS=4
+MAP=model6
+NROBOTS=1
 INITPOS=default
 ALG=DistrAgent
 LOC=AMCL
