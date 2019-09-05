@@ -63,12 +63,17 @@ protected:
     std::vector<std::vector<uint>> token_weight_map;
 
     ros::Time goal_start_time;
+    ros::Time mission_start_time;
 
 public:
-    virtual void init(int argc, char **argv);
-    virtual void run();
-    virtual void onGoalComplete();
-    virtual int compute_next_vertex();
+    void init(int argc, char **argv) override;
+    void run() override;
+    
+    void onGoalComplete() override;
+    int compute_next_vertex() override;
+
+    void onGoalComplete(logistic_sim::Token &token);
+    int compute_next_vertex(logistic_sim::Token &token);
     //
     uint compute_id_path(logistic_sim::Mission &m);
     void compute_travell(uint id_path, logistic_sim::Mission &m);

@@ -127,109 +127,13 @@ void DistrAgent::run()
 
 void DistrAgent::onGoalComplete()
 {
-    if (next_vertex > -1)
-    {
-        current_vertex = next_vertex;
-    }
 
-    c_print("[DEBUG]\tgo_src(): ", go_src(), "\tgo_dst(): ", go_dst(), yellow);
-    c_print("\t\tcurrent_vertex: ", current_vertex, yellow);
-    for (auto it = current_mission.DSTS.begin(); it != current_mission.DSTS.end(); it++)
-    {
-        c_print("\t\t\tDSTS ", (*it), magenta, P);
-    }
-    // aggiorniamo condizioni destinazione
-    if (go_home && current_vertex == initial_vertex)
-    {
-        need_task = true;
-    }
-    else if (go_src() && current_vertex == 6)
-    {
-        current_mission.PICKUP = false;
-        tmp_CAPACITY -= current_mission.TOT_DEMAND;
-    }
-    else if (go_dst() && current_vertex == current_mission.DSTS[0])
-    {
-        c_print("Capacity before unloading: ", tmp_CAPACITY, red);
-        uint d = current_mission.DEMANDS[0];
-        current_mission.DSTS.erase(current_mission.DSTS.begin());
-        current_mission.DEMANDS.erase(current_mission.DEMANDS.begin());
-        current_mission.TOT_DEMAND -= d;
-        tmp_CAPACITY += d;
-        if (current_mission.DSTS.empty())
-        {
-            need_task = true;
-        }
-
-        c_print("d: ", d, red);
-        c_print("Current capacity: ", tmp_CAPACITY, red);
-    }
-
-    // if (tmp_CAPACITY > 0)
-    // {
-    //     need_task = true;
-    // }
-    // else
-    // {
-    //     need_task = false;
-    // }
-
-    c_print("before compute_next_vertex()", yellow);
-    next_vertex = compute_next_vertex();
-
-    c_print("   @ compute_next_vertex: ", next_vertex, green);
-
-    send_goal_reached(); // Send TARGET to monitor
-
-    send_results(); // Algorithm specific function
-
-    // Send the goal to the robot (Global Map)
-    ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    // sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    sendGoal(next_vertex); // send to move_base
-
-    goal_complete = false;
 }
 
 int DistrAgent::compute_next_vertex()
 {
-    int vertex;
 
-    // alloco un vettore per il percorso
-    int path[dimension];
-    uint path_length;
-
-    if (go_home)
-    {
-        c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
-        tp_dijkstra(current_vertex, initial_vertex, path, path_length);
-    }
-    else if (go_src())
-    {
-        tp_dijkstra(current_vertex, 6, path, path_length);
-    }
-    else if (go_dst())
-    {
-        tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
-    }
-
-    c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
-    for (int i = 0; i < path_length; i++)
-    {
-        c_print("\t\t", path[i], yellow);
-    }
-
-    if (path_length > 1)
-    {
-        vertex = path[1]; //il primo vertice è quello di partenza, ritorno il secondo
-    }
-    else
-    {
-        vertex = current_vertex;
-    }
-
-    return vertex;
-} // compute_next_vertex()
+}
 
 bool DistrAgent::go_src()
 {

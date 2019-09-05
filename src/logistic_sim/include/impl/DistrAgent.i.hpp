@@ -402,9 +402,20 @@ bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
 
         dist_quad = (xPos[i] - xPos[ID_ROBOT]) * (xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT]) * (yPos[i] - yPos[ID_ROBOT]);
 
+        
+
         if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
         { //robots are ... meter or less apart
             //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
+            ros::Duration my_delta_time_mission = token.HEADER.stamp.now() - token.MISSION_START_TIME[ID_ROBOT];
+            ros::Duration other_delta_time_mission = token.HEADER.stamp.now() - token.MISSION_START_TIME[i];
+
+            float my_mission_distance = token.MISSION_CURRENT_DISTANCE[ID_ROBOT];
+            float other_mission_distance = token.MISSION_CURRENT_DISTANCE[i];
+
+            float my_metric = my_mission_distance / my_delta_time_mission.sec;
+            float other_metric = other_mission_distance / other_delta_time_mission.sec;
+        
             double x_dst = vertex_web[current_mission.DSTS[0]].x;
             double y_dst = vertex_web[current_mission.DSTS[0]].y;
             double other_x_dst = vertex_web[token.CURR_DST[i]].x;
@@ -413,7 +424,7 @@ bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
             double my_distance = (xPos[ID_ROBOT] - other_x_dst) * (xPos[ID_ROBOT] - other_x_dst) + (yPos[ID_ROBOT] - other_y_dst) * (yPos[ID_ROBOT] - other_y_dst);
             // c_print("my_distance ", my_distance, "\tother_distance ", other_distance, yellow);
             last_interference = ros::Time::now().toSec();
-            if (my_distance > other_distance)
+            if (my_metric < other_metric)
             {
                 return true;
             }
@@ -421,6 +432,118 @@ bool DistrAgent::check_interference_token(const logistic_sim::Token &token)
     }
     return false;
 }
+
+void DistrAgent::onGoalComplete(logistic_sim::Token &token)
+{
+    if (next_vertex > -1)
+    {
+        int dist = compute_cost_of_route({current_vertex, (uint) next_vertex});
+        token.MISSION_CURRENT_DISTANCE[ID_ROBOT] += (float) dist;
+        current_vertex = next_vertex;
+    }
+
+    c_print("[DEBUG]\tgo_src(): ", go_src(), "\tgo_dst(): ", go_dst(), yellow);
+    c_print("\t\tcurrent_vertex: ", current_vertex, yellow);
+    for (auto it = current_mission.DSTS.begin(); it != current_mission.DSTS.end(); it++)
+    {
+        c_print("\t\t\tDSTS ", (*it), magenta, P);
+    }
+    // aggiorniamo condizioni destinazione
+    if (go_home && current_vertex == initial_vertex)
+    {
+        token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
+        need_task = true;
+    }
+    else if (go_src() && current_vertex == 6)
+    {
+        current_mission.PICKUP = false;
+        tmp_CAPACITY -= current_mission.TOT_DEMAND;
+        token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
+    }
+    else if (go_dst() && current_vertex == current_mission.DSTS[0])
+    {
+        c_print("Capacity before unloading: ", tmp_CAPACITY, red);
+        uint d = current_mission.DEMANDS[0];
+        current_mission.DSTS.erase(current_mission.DSTS.begin());
+        current_mission.DEMANDS.erase(current_mission.DEMANDS.begin());
+        current_mission.TOT_DEMAND -= d;
+        tmp_CAPACITY += d;
+        if (current_mission.DSTS.empty())
+        {
+            need_task = true;
+        }
+
+        token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
+
+        c_print("d: ", d, red);
+        c_print("Current capacity: ", tmp_CAPACITY, red);
+    }
+
+    // if (tmp_CAPACITY > 0)
+    // {
+    //     need_task = true;
+    // }
+    // else
+    // {
+    //     need_task = false;
+    // }
+
+    c_print("before compute_next_vertex()", yellow);
+    next_vertex = compute_next_vertex(token);
+
+    c_print("   @ compute_next_vertex: ", next_vertex, green);
+
+    send_goal_reached(); // Send TARGET to monitor
+
+    send_results(); // Algorithm specific function
+
+    // Send the goal to the robot (Global Map)
+    ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    // sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);
+    sendGoal(next_vertex); // send to move_base
+
+    goal_complete = false;
+}
+
+int DistrAgent::compute_next_vertex(logistic_sim::Token &token)
+{
+    int vertex;
+
+    // alloco un vettore per il percorso
+    int path[dimension];
+    uint path_length;
+
+    if (go_home)
+    {
+        c_print("[DEBUG]\tgoing_home...\tinitial_vertex: ", initial_vertex, yellow);
+        tp_dijkstra(current_vertex, initial_vertex, path, path_length);
+    }
+    else if (go_src())
+    {
+        tp_dijkstra(current_vertex, 6, path, path_length);
+    }
+    else if (go_dst())
+    {
+        tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
+    }
+
+    c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
+    for (int i = 0; i < path_length; i++)
+    {
+        c_print("\t\t", path[i], yellow);
+    }
+
+    if (path_length > 1)
+    {
+        vertex = path[1]; //il primo vertice è quello di partenza, ritorno il secondo
+    }
+    else
+    {
+        vertex = current_vertex;
+    }
+
+    return vertex;
+} // compute_next_vertex()
 
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -456,6 +579,8 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // solo INIT
         token.CURR_DST.push_back(dimension + 1);
         token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
+        token.MISSION_START_TIME.push_back(ros::Time::now());
+        token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
         initialize = false;
     }
     else
@@ -468,12 +593,30 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
                 current_mission = coalition_formation(token);
                 c_print("[DEBUG]\tsize after oalition: ", token.MISSION.size(), yellow);
+                token.MISSION_START_TIME[ID_ROBOT] = token.HEADER.stamp.now();
+                token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
             }
             else
             {
                 go_home = true;
                 initial_vertex = token.INIT_POS.back();
+                
+                need_task = false;
+            }
+        }
+
+        if (go_home)
+        {
+            if (initial_vertex != token.INIT_POS.back())
+            {
+                initial_vertex = token.INIT_POS.back();
+                goal_complete = true;
+            }
+
+            if (current_vertex == token.INIT_POS.back())
+            {
                 token.INIT_POS.pop_back();
+                go_home = false;
                 need_task = false;
             }
         }
@@ -523,7 +666,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         if (goal_complete)
         {
             c_print("before OnGoal()", magenta);
-            onGoalComplete();
+            onGoalComplete(token);
             resend_goal_count = 0;
         }
     }

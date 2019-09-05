@@ -65,7 +65,7 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
 
 void TaskPlanner::missions_generator()
 {
-  int size = 10;
+  int size = 3;
   int size_2 = 3;
   int d = 1;
 
