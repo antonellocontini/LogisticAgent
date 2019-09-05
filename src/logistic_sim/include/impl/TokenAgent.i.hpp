@@ -130,13 +130,13 @@ void TokenAgent::onGoalComplete()
     else if (current_vertex == 6)
     {
         reached_pickup = true;
-        sleep(2);
+        // sleep(2);
     }
     else if(current_vertex == current_mission.DSTS[0] && reached_pickup)
     {
         need_task = true;
         reached_pickup = false;
-        sleep(2);
+        // sleep(2);
     }
 
     c_print("before compute_next_vertex()", yellow);

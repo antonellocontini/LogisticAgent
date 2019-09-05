@@ -583,7 +583,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
         initialize = false;
     }
-    else
+    else if (ros::Time::now().sec - init_start_time.sec >= init_wait_time)
     {
         if (need_task)
         {

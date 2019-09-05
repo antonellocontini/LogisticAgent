@@ -47,6 +47,13 @@ void DistrAgent::run()
         ROS_WARN("Was not able to clear costmap (%s) before patrolling...", mb_string.c_str());
     }
 
+    // TEST: attesa di qualche secondo dalla partenza del precedente
+    init_start_time = ros::Time::now();
+    init_wait_time = 13 * ID_ROBOT;
+    c_print("[DEBUG]\tAttendo ", init_wait_time, " secondi...", yellow);
+    // sleep(wait_time);
+    // c_print("[DEBUG]\tParto");
+
     // Asynch spinner (non-blocking)
     ros::AsyncSpinner spinner(2); // Use n threads
     spinner.start();
@@ -55,12 +62,6 @@ void DistrAgent::run()
     /* Run Algorithm */
 
     ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
-
-    // TEST: attesa di qualche secondo dalla partenza del precedente
-    int wait_time = 10 * ID_ROBOT;
-    c_print("[DEBUG]\tAttendo ", wait_time, " secondi...", yellow);
-    sleep(wait_time);
-    c_print("[DEBUG]\tParto");
 
     while (ros::ok())
     {

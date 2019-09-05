@@ -62,6 +62,8 @@ protected:
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
 
+    uint init_wait_time;
+    ros::Time init_start_time;
     ros::Time goal_start_time;
     ros::Time mission_start_time;
 
