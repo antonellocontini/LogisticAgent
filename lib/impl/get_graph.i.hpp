@@ -91,7 +91,7 @@ void GetGraphInfo(vertex *vertex_web, uint dimension, const char *graph_file)
     }
   }
 
-  //printf("[v=10], x = %f (meters)\n", vertex_web[10].x);
+  // printf("[v=10], x = %f (meters)\n", vertex_web[10].x);
 
   fclose(file);
 }
