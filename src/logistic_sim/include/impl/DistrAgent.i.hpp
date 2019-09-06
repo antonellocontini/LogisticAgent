@@ -353,16 +353,13 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
             auto temp = *dst_cm;
             best_coalition.second.DSTS.erase(dst_cm);
             best_coalition.second.DSTS.insert(best_coalition.second.DSTS.begin(), temp);
-            best_coalition.second.PICKUP = true;
-            need_task = false;
-            goal_complete = true;
             break;
         }
     }
 
     if (coit == coalitions.end())
     {
-        c_print("Robot ", ID_ROBOT, " Vado in safe", red);
+        c_print("Robot ", ID_ROBOT, " Nessuna missione conflict-free", red);
         // logistic_sim::Mission safe_mission;
         // safe_mission.ID = 123;
         // safe_mission.DSTS.push_back(26); //indice del nodo_safe
@@ -372,9 +369,9 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         // best_coalition.second = safe_mission; //aggiorno la current
         // best_coalition.first.clear();
         best_coalition = coalitions.front();
-        need_task = false;
-        goal_complete = true;
     }
+
+    best_coalition.second.PICKUP = true;
     // aggirnamento del token
     for (auto i = 0; i < best_coalition.first.size(); i++)
     {
@@ -608,9 +605,9 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             {
                 go_home = true;
                 initial_vertex = token.INIT_POS.back();
-                
-                need_task = false;
             }
+            need_task = false;
+            goal_complete = true;
         }
 
         if (go_home)
