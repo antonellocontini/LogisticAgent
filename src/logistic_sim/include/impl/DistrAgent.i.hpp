@@ -576,8 +576,18 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (msg->INIT)
     {
         token.CAPACITY.push_back(CAPACITY);
+        // all avvio indico quale arco i robot vorrebbero attraversare
+        // serve a forzare la partenza nella stessa direzione
+        if (ID_ROBOT > 0)
+        {
+            init_next_vertex = token.CURR_VERTEX[ID_ROBOT - 1];
+        }
+        else
+        {
+            init_next_vertex = current_vertex;
+        }
         token.CURR_VERTEX.push_back(current_vertex);
-        token.NEXT_VERTEX.push_back(current_vertex);
+        token.NEXT_VERTEX.push_back(init_next_vertex);
         // solo INIT
         token.CURR_DST.push_back(dimension + 1);
         token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
