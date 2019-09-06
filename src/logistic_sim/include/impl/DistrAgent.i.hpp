@@ -284,14 +284,14 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                     // c_print("coal_V ", coal_V, "\tfirst_V ", first_V, "\tsecond_V", second_V, yellow, P);
 
                     // c_print("before", red, P);
-                    for (int j = 0; j < coalitions.size(); j++)
-                    {
-                        logistic_sim::Mission &temp_m = coalitions[j].second;
-                        for (int i = 0; i < temp_m.DSTS.size(); i++)
-                        {
-                            // c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
-                        }
-                    }
+                    // for (int j = 0; j < coalitions.size(); j++)
+                    // {
+                    //     logistic_sim::Mission &temp_m = coalitions[j].second;
+                    //     for (int i = 0; i < temp_m.DSTS.size(); i++)
+                    //     {
+                    //         c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
+                    //     }
+                    // }
 
                     if (res < 0)
                     {
@@ -303,14 +303,14 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                         coalitions.erase(find(coalitions.begin(), coalitions.end(), c1));
                         coalitions.erase(find(coalitions.begin(), coalitions.end(), c2));
                         // c_print("after", red, P);
-                        for (int j = 0; j < coalitions.size(); j++)
-                        {
-                            logistic_sim::Mission &temp_m = coalitions[j].second;
-                            for (int i = 0; i < temp_m.DSTS.size(); i++)
-                            {
-                                // c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
-                            }
-                        }
+                        // for (int j = 0; j < coalitions.size(); j++)
+                        // {
+                        //     logistic_sim::Mission &temp_m = coalitions[j].second;
+                        //     for (int i = 0; i < temp_m.DSTS.size(); i++)
+                        //     {
+                        //         c_print("ID ", temp_m.ID, "\tDSTS ", temp_m.DSTS[i], "\tDEMANDS ", temp_m.DEMANDS[i], yellow, P);
+                        //     }
+                        // }
                         break;
                     }
                 }
@@ -329,7 +329,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         }
     }
 
-    c_print("size della colaitions: ", coalitions.size(), green);
+    c_print("size della coalitions: ", coalitions.size(), green);
 
     std::sort(coalitions.begin(), coalitions.end());
 

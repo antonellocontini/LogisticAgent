@@ -143,6 +143,7 @@ void TaskPlanner::missions_generator()
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
+    static int last_mission_size = 0;
     if (msg->ID_RECEIVER != TASK_PLANNER_ID)
         return;
 
@@ -156,6 +157,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         token.INIT = false;
         token.MISSION = missions;
         start_time = token.HEADER.stamp;
+        last_mission_size = missions.size();
     }
     else
     {
@@ -173,7 +175,11 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             first_round = false;
         }
 
-        c_print("Task rimanenti: ", token.MISSION.size(), green);
+        if (token.MISSION.size() < last_mission_size)
+        {
+            last_mission_size = token.MISSION.size();
+            c_print("Task rimanenti: ", last_mission_size, green);
+        }
 
         // aggiorno la mia struttura con i dati del token
         for (int i=0; i<num_robots; i++)

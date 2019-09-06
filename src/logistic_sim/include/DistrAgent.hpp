@@ -18,9 +18,10 @@ inline bool operator<(const logistic_sim::Mission &A, const logistic_sim::Missio
 }
 
 } // namespace logistic_sim
+
 inline bool operator==(const t_coalition &A, const t_coalition &B)
 {
-    return A.first.front() == B.first.front() && A.second.ID == B.second.ID ? 1 : 0;
+    return A.second.ID == B.second.ID ? 1 : 0;
 }
 
 inline bool operator<(const t_coalition &A, const t_coalition &B)
