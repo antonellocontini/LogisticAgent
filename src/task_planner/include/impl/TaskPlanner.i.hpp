@@ -173,6 +173,8 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             first_round = false;
         }
 
+        c_print("Task rimanenti: ", token.MISSION.size(), green);
+
         // aggiorno la mia struttura con i dati del token
         for (int i=0; i<num_robots; i++)
         {

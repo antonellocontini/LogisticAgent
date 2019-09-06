@@ -23,6 +23,11 @@ namespace tokenagent
 
             ros::Time goal_start_time;
 
+            float total_distance = 0.0f;
+            uint missions_completed = 0;
+            uint tasks_completed = 0;
+            uint interference_number = 0;
+
         public:
 
             virtual void init(int argc, char **argv);
@@ -31,6 +36,7 @@ namespace tokenagent
             virtual int compute_next_vertex();
             bool check_interference_token(const logistic_sim::Token &token);
             void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback) override;
+            int compute_cost_of_route(std::vector<uint> r);
 
             void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
             void init_tw_map();

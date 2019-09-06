@@ -77,6 +77,7 @@ void TokenAgent::run()
         {
             if (interference)
             {
+                interference_number++;
                 // do_interference_behavior();
                 // invece di eseguire il comportamento di interferenza
                 // provo a dire al robot di andare al vertice da dove è arrivato
@@ -117,8 +118,11 @@ void TokenAgent::run()
 
 void TokenAgent::onGoalComplete()
 {
+    float edge_dist = 0.0f;
     if (next_vertex > -1)
     {
+        edge_dist = (float) compute_cost_of_route({ current_vertex, (uint) next_vertex});
+        total_distance += edge_dist;
         current_vertex = next_vertex;
     }
 
@@ -134,6 +138,8 @@ void TokenAgent::onGoalComplete()
     }
     else if(current_vertex == current_mission.DSTS[0] && reached_pickup)
     {
+        missions_completed++;
+        tasks_completed++;
         need_task = true;
         reached_pickup = false;
         // sleep(2);
@@ -292,6 +298,11 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.NEXT_VERTEX.push_back(init_next_vertex);
         // inizializzo con valore non valido(non esiste id vertice maggiore di dimension)
         token.CURR_DST.push_back(dimension + 1);
+        // campi per monitor
+        token.INTERFERENCE_COUNTER.push_back(0);
+        token.MISSIONS_COMPLETED.push_back(0);
+        token.TASKS_COMPLETED.push_back(0);
+        token.TOTAL_DISTANCE.push_back(0.0f);
 
         initialize = false;
     }
@@ -379,7 +390,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 // svaforisco la mia direzione
                 token_weight_map[src][dst] += sec_diff;
                 // sfavorisco la direzione inversa
-                token_weight_map[dst][src] += sec_diff * 3;
+                token_weight_map[dst][src] += sec_diff * 4;
                 // sfavorisco tutti gli archi che entrano nella mia destinazione
                 // dovrebbe prevenire gli scontri agli incroci dove due robot
                 // arrivano da nodi diversi
@@ -407,13 +418,18 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         }
 
         // controllo interferenza
-
-
-
         interference = check_interference_token(token);
 
         if (interference)
-        c_print("Robot in interferenza: ",ID_ROBOT,red,P);
+        {
+            c_print("Robot in interferenza: ",ID_ROBOT,red,P);
+        }
+
+        // aggiorno i campi per il monitor
+        token.INTERFERENCE_COUNTER[ID_ROBOT] = interference_number;
+        token.MISSIONS_COMPLETED[ID_ROBOT] = missions_completed;
+        token.TASKS_COMPLETED[ID_ROBOT] = tasks_completed;
+        token.TOTAL_DISTANCE[ID_ROBOT] = total_distance;
     }
 
         
@@ -423,7 +439,26 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     ros::spinOnce();
 } // token_callback()
 
-// ciao
-// ehilà
+
+int TokenAgent::compute_cost_of_route(std::vector<uint> route)
+{
+    int custo_final = 0;
+    for (int i = 1; i < route.size(); i++)
+    {
+        int anterior = route[i - 1];
+        int proximo = route[i];
+
+        for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
+        {
+            if (vertex_web[anterior].id_neigh[j] == proximo)
+            {
+                custo_final += vertex_web[anterior].cost[j];
+                break;
+            }
+        }
+    }
+    return custo_final;
+}
+
 
 } //namespace tpagent
