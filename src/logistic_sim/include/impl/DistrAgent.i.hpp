@@ -474,6 +474,7 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
             need_task = true;
         }
 
+        token.TASKS_COMPLETED[ID_ROBOT]++;
         token.TOTAL_DISTANCE[ID_ROBOT] += token.MISSION_CURRENT_DISTANCE[ID_ROBOT];
         token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
 
@@ -595,6 +596,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
         token.INTERFERENCE_COUNTER.push_back(0);
         token.MISSIONS_COMPLETED.push_back(0);
+        token.TASKS_COMPLETED.push_back(0);
         token.TOTAL_DISTANCE.push_back(0.0f);
         initialize = false;
     }

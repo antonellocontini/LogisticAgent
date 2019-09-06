@@ -5,13 +5,13 @@ namespace taskplanner
 
 ostream& operator<<(ostream &os, const MonitorData &md)
 {
-    os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions;
+    os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions << "," << md.completed_tasks;
     return os;
 }
 
 ostream& operator<<(ostream &os, const vector<MonitorData> &v)
 {
-    os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS" << endl;
+    os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS,COMPLETED_TASKS" << endl;
     for(int i=0; i<v.size(); i++)
     {
         os << i << "," << v[i] << endl;
@@ -178,6 +178,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         {
             robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
             robots_data[i].completed_missions = token.MISSIONS_COMPLETED[i];
+            robots_data[i].completed_tasks = token.TASKS_COMPLETED[i];
             robots_data[i].tot_distance = token.TOTAL_DISTANCE[i];
         }
 

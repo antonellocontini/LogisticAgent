@@ -38,6 +38,7 @@ struct MonitorData
     float tot_distance = 0.0f;
     int interference_num = 0;
     int completed_missions = 0;
+    int completed_tasks = 0;
     float total_time = 0.0f;
     // campi ausiliari
     int last_dst = -1;
