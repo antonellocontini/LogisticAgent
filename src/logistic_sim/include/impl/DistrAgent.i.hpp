@@ -318,7 +318,8 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                         {
                             if (m2.DSTS[zt] == m.DSTS[xt])
                             {
-                                m.DEMANDS[xt] += m2.DEMANDS[zt];
+                                m.DEMANDS.insert(m.DEMANDS.begin() + xt, m2.DEMANDS[zt]);
+                                m.DSTS.insert(m.DSTS.begin() + xt, m2.DSTS[zt]);
                                 found = true;
                             }
                         }
@@ -707,15 +708,16 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
         if (go_home)
         {
-            if (initial_vertex != token.INIT_POS.back())
+            auto it = std::min_element(token.INIT_POS.begin(), token.INIT_POS.end());
+            if (initial_vertex != *it)
             {
-                initial_vertex = token.INIT_POS.back();
+                initial_vertex = *it;
                 goal_complete = true;
             }
 
-            if (current_vertex == token.INIT_POS.back())
+            if (current_vertex == *it)
             {
-                token.INIT_POS.pop_back();
+                token.INIT_POS.erase(it);
                 go_home = false;
                 need_task = false;
             }

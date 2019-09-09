@@ -17,6 +17,7 @@ namespace tokenagent
             bool init_wait_done = false;
 
             uint init_next_vertex;
+            uint src_vertex = 13    ;
            
             logistic_sim::Mission current_mission;
             std::vector< std::vector<uint> > token_weight_map;
