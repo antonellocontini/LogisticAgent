@@ -131,7 +131,7 @@ void TokenAgent::onGoalComplete()
     {
         need_task = true;
     }
-    else if (current_vertex == 6)
+    else if (current_vertex == src_vertex)
     {
         reached_pickup = true;
         // sleep(2);
@@ -181,7 +181,7 @@ int TokenAgent::compute_next_vertex()
     }
     else if (!reached_pickup)
     {
-        tp_dijkstra(current_vertex, 6, path, path_length);
+        tp_dijkstra(current_vertex, src_vertex, path, path_length);
     }
     else
     {
