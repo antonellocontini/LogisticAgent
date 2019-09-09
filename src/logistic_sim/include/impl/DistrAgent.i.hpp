@@ -196,9 +196,87 @@ void DistrAgent::compute_travell(uint id_path, logistic_sim::Mission &m)
     }
 }
 
+void DistrAgent::print_coalition(const t_coalition &coalition)
+{
+    auto tasks = coalition.first;
+    auto mission = coalition.second;
+    c_print("Mission id: ", mission.ID, green, P);
+    // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
+    // std::cout << "td: " << mission.TOT_DEMAND << "\n";
+    std::cout << " V: " << mission.V << "\n";
+    // auto size_dsts = mission.DSTS.size();
+    // std::cout << "dsts"
+    //           << "\n";
+    // for (int i = 0; i < size_dsts; i++)
+    // {
+    //     std::cout << mission.DSTS[i] << " ";
+    // }
+    // std::cout << "\n";
+
+    // auto size_boh = mission.DEMANDS.size();
+    // std::cout << "demands"
+    //           << "\n";
+    // for (int i = 0; i < size_boh; i++)
+    // {
+    //     std::cout << mission.DEMANDS[i] << " ";
+    // }
+    // std::cout << "\n";
+
+    // auto size_route = mission.ROUTE.size();
+    // std::cout << "route"
+    //           << "\n";
+    // for (int i = 0; i < size_route; i++)
+    // {
+    //     std::cout << mission.ROUTE[i] << " ";
+    // }
+    // std::cout << "\n";
+
+    // c_print("tasks", magenta, P);
+
+    // auto size_tasks = tasks.size();
+
+    // for (auto i = 0; i < size_tasks; i++)
+    // {
+    //     auto t = tasks[i];
+    //     c_print("task id: ", t.ID, magenta, P);
+    //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
+    //     std::cout << "td: " << t.TOT_DEMAND << "\n";
+    //     std::cout << " V: " << t.V << "\n";
+    //     auto size_dsts = t.DSTS.size();
+    //     std::cout << "dsts"
+    //               << "\n";
+    //     for (int i = 0; i < size_dsts; i++)
+    //     {
+    //         std::cout << t.DSTS[i] << " ";
+    //     }
+    //     std::cout << "\n";
+
+    //     auto size_boh = t.DEMANDS.size();
+    //     std::cout << "demands"
+    //               << "\n";
+    //     for (int i = 0; i < size_boh; i++)
+    //     {
+    //         std::cout << t.DEMANDS[i] << " ";
+    //     }
+    //     std::cout << "\n";
+
+    //     auto size_route = t.ROUTE.size();
+    //     std::cout << "route"
+    //               << "\n";
+    //     for (int i = 0; i < size_route; i++)
+    //     {
+    //         std::cout << t.ROUTE[i] << " ";
+    //     }
+    //     std::cout << "\n";
+    // }
+
+    c_print("fine mission id: ", mission.ID, red, P);
+}
+
 logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token)
 {
     std::vector<t_coalition> coalitions;
+    c_print("tmp_CAPACITY: ", tmp_CAPACITY, green, P);
     t_coalition best_coalition; //la migliore finore
     static int id = 500;
     for (auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
@@ -316,7 +394,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                 }
                 else
                 {
-                    // c_print("la capacita e' troppo alta", tmp_DEMAND, yellow, P);
+                    c_print("la capacita e' troppo alta", tmp_DEMAND, yellow, P);
                 }
             }
             else
@@ -331,8 +409,14 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 
     c_print("size della coalitions: ", coalitions.size(), green);
 
-    std::sort(coalitions.begin(), coalitions.end());
+    std::sort(coalitions.begin(), coalitions.end(), less_V());
 
+
+    for (auto i = 0; i < coalitions.size(); i++)
+    {
+        print_coalition(coalitions[i]);
+    }
+  
     auto coit = coalitions.begin();
     for (; coit != coalitions.end(); coit++)
     {
@@ -377,7 +461,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     {
         token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), best_coalition.first[i]));
     }
-
+    
     return best_coalition.second;
 }
 
@@ -399,8 +483,6 @@ bool DistrAgent::check_interference_token(logistic_sim::Token &token)
 
         dist_quad = (xPos[i] - xPos[ID_ROBOT]) * (xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT]) * (yPos[i] - yPos[ID_ROBOT]);
 
-        
-
         if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
         { //robots are ... meter or less apart
             //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
@@ -412,7 +494,7 @@ bool DistrAgent::check_interference_token(logistic_sim::Token &token)
 
             float my_metric = my_mission_distance / my_delta_time_mission.sec;
             float other_metric = other_mission_distance / other_delta_time_mission.sec;
-        
+
             double x_dst = vertex_web[current_mission.DSTS[0]].x;
             double y_dst = vertex_web[current_mission.DSTS[0]].y;
             double other_x_dst = vertex_web[token.CURR_DST[i]].x;
@@ -435,8 +517,8 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
 {
     if (next_vertex > -1)
     {
-        int dist = compute_cost_of_route({current_vertex, (uint) next_vertex});
-        token.MISSION_CURRENT_DISTANCE[ID_ROBOT] += (float) dist;
+        int dist = compute_cost_of_route({current_vertex, (uint)next_vertex});
+        token.MISSION_CURRENT_DISTANCE[ID_ROBOT] += (float)dist;
         current_vertex = next_vertex;
     }
 
@@ -609,6 +691,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 c_print("[DEBUG]\tsize before coalition: ", token.MISSION.size(), "\tcapacity: ", tmp_CAPACITY, yellow);
 
                 current_mission = coalition_formation(token);
+                c_print("ID: ",current_mission.ID, red, P);
                 c_print("[DEBUG]\tsize after oalition: ", token.MISSION.size(), yellow);
                 token.MISSION_START_TIME[ID_ROBOT] = token.HEADER.stamp.now();
                 token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
@@ -659,14 +742,13 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 // sfavorisco tutti gli archi che entrano nella mia destinazione
                 // dovrebbe prevenire gli scontri agli incroci dove due robot
                 // arrivano da nodi diversi
-                for( int j=0; j<dimension; j++)
+                for (int j = 0; j < dimension; j++)
                 {
-                    if(j != src)
+                    if (j != src)
                     {
                         token_weight_map[j][dst] += sec_diff * 2;
                     }
                 }
-             
             }
         }
 

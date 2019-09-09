@@ -19,6 +19,14 @@ inline bool operator<(const logistic_sim::Mission &A, const logistic_sim::Missio
 
 } // namespace logistic_sim
 
+struct less_V
+{
+    inline bool operator() (const t_coalition &A, const t_coalition &B)
+    {
+        return A.second.V < B.second.V;
+    }
+};
+
 inline bool operator==(const t_coalition &A, const t_coalition &B)
 {
     return A.second.ID == B.second.ID ? 1 : 0;
@@ -88,6 +96,9 @@ public:
     void init_tw_map();
     bool check_interference_token(logistic_sim::Token &token);
     void token_callback(const logistic_sim::TokenConstPtr &msg);
+
+    void print_coalition(const t_coalition &coalition);
+
 
     virtual bool go_src();
     virtual bool go_dst();
