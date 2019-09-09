@@ -46,6 +46,7 @@ protected:
     bool init_wait_done = false;
 
     uint init_next_vertex;
+    uint src_vertex = 13;
 
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};

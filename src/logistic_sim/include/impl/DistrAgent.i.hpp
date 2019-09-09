@@ -453,7 +453,7 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
         token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
         need_task = true;
     }
-    else if (go_src() && current_vertex == 6)
+    else if (go_src() && current_vertex == src_vertex)
     {
         current_mission.PICKUP = false;
         tmp_CAPACITY -= current_mission.TOT_DEMAND;
@@ -523,7 +523,7 @@ int DistrAgent::compute_next_vertex(logistic_sim::Token &token)
     }
     else if (go_src())
     {
-        tp_dijkstra(current_vertex, 13, path, path_length); //id src 13 prima 6
+        tp_dijkstra(current_vertex, src_vertex, path, path_length); //id src 13 prima 6
     }
     else if (go_dst())
     {
