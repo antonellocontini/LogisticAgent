@@ -5,13 +5,13 @@ namespace taskplanner
 
 ostream& operator<<(ostream &os, const MonitorData &md)
 {
-    os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions << "," << md.completed_tasks;
+    os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions << "," << md.completed_tasks << "," << md.total_time;
     return os;
 }
 
 ostream& operator<<(ostream &os, const vector<MonitorData> &v)
 {
-    os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS,COMPLETED_TASKS" << endl;
+    os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS,COMPLETED_TASKS,TOTAL_TIME" << endl;
     for(int i=0; i<v.size(); i++)
     {
         os << i << "," << v[i] << endl;
@@ -159,7 +159,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         token.INIT = false;
         token.MISSION = missions;
         token.END_SIMULATION = false;
-        start_time = token.HEADER.stamp;
+        start_time = ros::Time::now();
         last_mission_size = missions.size();
     }
     else
@@ -191,6 +191,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             robots_data[i].completed_missions = token.MISSIONS_COMPLETED[i];
             robots_data[i].completed_tasks = token.TASKS_COMPLETED[i];
             robots_data[i].tot_distance = token.TOTAL_DISTANCE[i];
+            robots_data[i].total_time = (ros::Time::now() - start_time).sec;
         }
 
         if (token.INIT_POS.empty())
