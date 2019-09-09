@@ -61,8 +61,8 @@ public:
     uint TEAM_SIZE = 0;
     uint nTask = 0;
     uint id = 0;
-    uint src_vertex = 6;
-    uint dst_vertex[3] = {11, 16, 21};
+    uint src_vertex = 13;
+    uint dst_vertex[3] = {18, 23, 28};
     // per ora statici senza funzioni
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};

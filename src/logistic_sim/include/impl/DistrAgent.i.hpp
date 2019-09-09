@@ -62,20 +62,20 @@ uint DistrAgent::compute_id_path(logistic_sim::Mission &m)
 
     if (d.size() == 1)
     {
-        if (d[0] == 11)
+        if (d[0] == 18)
             res = 1;
-        else if (d[0] == 16)
+        else if (d[0] == 23)
             res = 2;
         else
             res = 3;
     }
     else if (d.size() == 2)
     {
-        if ((d[0] == 11) && (d[1] == 16))
+        if ((d[0] == 18) && (d[1] == 23))
         {
             res = 4;
         }
-        else if ((d[0] == 11) && (d[1] == 21))
+        else if ((d[0] == 18) && (d[1] == 28))
         {
             res = 5;
         }
@@ -523,7 +523,7 @@ int DistrAgent::compute_next_vertex(logistic_sim::Token &token)
     }
     else if (go_src())
     {
-        tp_dijkstra(current_vertex, 6, path, path_length);
+        tp_dijkstra(current_vertex, 13, path, path_length); //id src 13 prima 6
     }
     else if (go_dst())
     {
