@@ -23,6 +23,8 @@ TaskPlanner::TaskPlanner(ros::NodeHandle &nh_)
 {
     sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_Callback, this);
     pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
+
+    nh_.setParam("/simulation_running", "true");
 }
 
 void TaskPlanner::init(int argc, char **argv)
@@ -81,7 +83,7 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
 
 void TaskPlanner::missions_generator()
 {
-    int size = 10;
+    int size = 3;
     int size_2 = 3;
     int d = 1;
 
@@ -156,6 +158,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         CAPACITY = msg->CAPACITY;
         token.INIT = false;
         token.MISSION = missions;
+        token.END_SIMULATION = false;
         start_time = token.HEADER.stamp;
         last_mission_size = missions.size();
     }
@@ -190,13 +193,23 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             robots_data[i].tot_distance = token.TOTAL_DISTANCE[i];
         }
 
-        ofstream test("test.csv");
-        test << robots_data;
-        test.close();
+        if (token.INIT_POS.empty())
+        {
+            ofstream test("test.csv");
+            test << robots_data;
+            test.close();
+            ros::NodeHandle nh;
+            nh.setParam("/simulation_running", "false");
+            token.END_SIMULATION = true;
+        }
     }
 
     pub_token.publish(token);
     ros::spinOnce();
+    if (token.END_SIMULATION)
+    {
+        ros::shutdown();
+    }
 }
 
 } // namespace taskplanner

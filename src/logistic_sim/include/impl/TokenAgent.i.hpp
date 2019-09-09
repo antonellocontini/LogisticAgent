@@ -437,6 +437,11 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     usleep(30000);
     token_pub.publish(token);
     ros::spinOnce();
+
+    if (token.END_SIMULATION)
+    {
+        end_simulation = true;
+    }
 } // token_callback()
 
 

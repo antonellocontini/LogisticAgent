@@ -770,11 +770,17 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             onGoalComplete(token);
             resend_goal_count = 0;
         }
+
     }
 
     usleep(30000);
     token_pub.publish(token);
     ros::spinOnce();
+    
+    if (token.END_SIMULATION)
+    {
+        end_simulation = true;
+    }
 } // token_callback()
 
 } // namespace distragent
