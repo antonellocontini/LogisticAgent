@@ -196,9 +196,22 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 
         if (token.INIT_POS.empty())
         {
-            ofstream test("test.csv");
-            test << robots_data;
-            test.close();
+            int run_number = 1;
+            std::stringstream filename;
+            std::ifstream check_new;
+            // loop per controllare se il file già esiste
+            do
+            {
+                filename.str("");   // cancella la stringa
+                filename << "teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << run_number << ".csv";
+                check_new = std::ifstream(filename.str());
+                run_number++;
+            } while (check_new);
+            check_new.close();
+            
+            ofstream stats(filename.str());
+            stats << robots_data;
+            stats.close();
             ros::NodeHandle nh;
             nh.setParam("/simulation_running", "false");
             token.END_SIMULATION = true;

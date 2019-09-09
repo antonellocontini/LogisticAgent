@@ -10,4 +10,4 @@ results/
 
 src/logistic_sim/experiments.txt
 src/logistic_sim/rostime.txt
-src/logistic_sim/test.csv
+src/logistic_sim/*.csv
