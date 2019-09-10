@@ -223,6 +223,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
     if (token.END_SIMULATION)
     {
         ros::shutdown();
+        system("./stop_experiment.sh");
     }
 }
 
