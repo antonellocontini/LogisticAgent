@@ -56,6 +56,7 @@ public:
 
     vertex *vertex_web;
 
+    std::string ALGORITHM;
     uint TEAM_CAPACITY = 0;
     std::vector<uint> CAPACITY;
     uint TEAM_SIZE = 0;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "boost/filesystem.hpp"
+
 namespace taskplanner
 {
 
@@ -39,6 +41,7 @@ void TaskPlanner::init(int argc, char **argv)
     uint nedges = GetNumberEdges(vertex_web, dimension);
     printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
     TEAM_SIZE = atoi(argv[3]);
+    ALGORITHM = argv[2];
 
     missions_generator();
 
@@ -196,6 +199,20 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 
         if (token.INIT_POS.empty())
         {
+            boost::filesystem::path results_directory("results");
+            if (!boost::filesystem::exists(results_directory))
+            {
+                boost::filesystem::create_directory(results_directory);
+            }
+
+            std::stringstream conf_dir_name;
+            conf_dir_name << "results/" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0];  
+            boost::filesystem::path conf_directory(conf_dir_name.str());
+            if (!boost::filesystem::exists(conf_directory))
+            {
+                boost::filesystem::create_directory(conf_directory);
+            }
+
             int run_number = 1;
             std::stringstream filename;
             std::ifstream check_new;
@@ -203,11 +220,12 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             do
             {
                 filename.str("");   // cancella la stringa
-                filename << "teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << run_number << ".csv";
+                filename << conf_dir_name.str() << "/" << run_number << ".csv";
                 check_new = std::ifstream(filename.str());
                 run_number++;
             } while (check_new);
             check_new.close();
+            
             
             ofstream stats(filename.str());
             stats << robots_data;
