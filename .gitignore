@@ -1,6 +1,6 @@
 devel/
 build/
-results/
+results/*/
 
 .vscode
 .catkin_workspace
