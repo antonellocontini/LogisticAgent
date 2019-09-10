@@ -53,7 +53,7 @@ def main():
             sqm_missions = []
 
             tasks = []
-            tot_tasks = [0]*robots
+            tot_tasks = [0.0]*robots
             mean_tasks = []
             sqm_tasks = []
 
