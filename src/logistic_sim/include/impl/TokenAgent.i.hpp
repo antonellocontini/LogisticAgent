@@ -129,7 +129,7 @@ void TokenAgent::onGoalComplete()
    // aggiorniamo condizioni destinazione
     if(go_home && current_vertex == initial_vertex)
     {
-        need_task = true;
+        need_task = false;
     }
     else if (current_vertex == src_vertex)
     {
@@ -298,6 +298,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.NEXT_VERTEX.push_back(init_next_vertex);
         // inizializzo con valore non valido(non esiste id vertice maggiore di dimension)
         token.CURR_DST.push_back(dimension + 1);
+        token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
         // campi per monitor
         token.INTERFERENCE_COUNTER.push_back(0);
         token.MISSIONS_COMPLETED.push_back(0);
@@ -353,7 +354,7 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 }
                 
                 c_print("[DEBUG]\tTask rimosso dalla lista", yellow, P);
-                token.ASSIGNED_MISSION.push_back(t);
+                // token.ASSIGNED_MISSION.push_back(t);
                 token.CURR_DST[ID_ROBOT] = t.DSTS[0];
                 current_mission = t;
                 c_print("[DEBUG]\tTask assegnato nel token", yellow, P);
@@ -369,6 +370,23 @@ void TokenAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
             need_task = false;
             goal_complete = true;
+        }
+
+        if (go_home && !reached_home)
+        {
+            auto it = std::min_element(token.INIT_POS.begin(), token.INIT_POS.end());
+            if (initial_vertex != *it)
+            {
+                initial_vertex = *it;
+                goal_complete = true;
+            }
+
+            if (current_vertex == *it)
+            {
+                token.INIT_POS.erase(it);
+                need_task = false;
+                reached_home = true;
+            }
         }
 
         // aggiorno la mappa

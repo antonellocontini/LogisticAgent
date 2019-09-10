@@ -14,6 +14,7 @@ namespace tokenagent
             bool need_task = true;
             bool reached_pickup = false;
             bool go_home = false;
+            bool reached_home = false;
             bool init_wait_done = false;
 
             uint init_next_vertex;
