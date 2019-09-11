@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 import os
 import csv
 import math
+
 
 def calculate_means(sums, n_exps):
     result = []
