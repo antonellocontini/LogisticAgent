@@ -2,6 +2,9 @@ import os
 import csv
 import math
 
+#  import numpy <--- agevola il lavoro
+#  import matplot se vogliamo fare grafici con i dati 
+
 def calculate_means(sums, n_exps):
     result = []
     for t in sums:
