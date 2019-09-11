@@ -7,8 +7,6 @@ build/
 
 # *.txt
 
-
-
 src/logistic_sim/experiments.txt
 src/logistic_sim/rostime.txt
 
