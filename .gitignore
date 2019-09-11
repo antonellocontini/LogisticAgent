@@ -10,4 +10,8 @@ results/*/
 
 src/logistic_sim/experiments.txt
 src/logistic_sim/rostime.txt
+<<<<<<< HEAD
 src/logistic_sim/results/*/*.csv
+=======
+src/logistic_sim/results/
+>>>>>>> 4b0d28a91ad53344ccbea9a34097398d5bd09788

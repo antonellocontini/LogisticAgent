@@ -412,12 +412,11 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 
     std::sort(coalitions.begin(), coalitions.end(), less_V());
 
-
     for (auto i = 0; i < coalitions.size(); i++)
     {
         print_coalition(coalitions[i]);
     }
-  
+
     auto coit = coalitions.begin();
     for (; coit != coalitions.end(); coit++)
     {
@@ -462,7 +461,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     {
         token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), best_coalition.first[i]));
     }
-    
+
     return best_coalition.second;
 }
 
@@ -692,7 +691,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 c_print("[DEBUG]\tsize before coalition: ", token.MISSION.size(), "\tcapacity: ", tmp_CAPACITY, yellow);
 
                 current_mission = coalition_formation(token);
-                c_print("ID: ",current_mission.ID, red, P);
+                c_print("ID: ", current_mission.ID, red, P);
                 c_print("[DEBUG]\tsize after oalition: ", token.MISSION.size(), yellow);
                 token.MISSION_START_TIME[ID_ROBOT] = token.HEADER.stamp.now();
                 token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
@@ -770,13 +769,12 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             onGoalComplete(token);
             resend_goal_count = 0;
         }
-
     }
 
     usleep(30000);
     token_pub.publish(token);
     ros::spinOnce();
-    
+
     if (token.END_SIMULATION)
     {
         end_simulation = true;
