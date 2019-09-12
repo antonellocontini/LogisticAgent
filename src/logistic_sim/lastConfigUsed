@@ -1,7 +1,7 @@
 [Config]
-map: model5
-nrobots: 4
-algorithm: DistrAgent
+map: model6
+nrobots: 6
+algorithm: ConstAgent
 locmode: AMCL
 navmode: ros
 gwait: 0

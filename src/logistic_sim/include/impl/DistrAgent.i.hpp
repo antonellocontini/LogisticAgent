@@ -465,13 +465,13 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     return best_coalition.second;
 }
 
-bool DistrAgent::check_interference_token(logistic_sim::Token &token)
+int DistrAgent::check_interference_token(logistic_sim::Token &token)
 {
     int i;
     double dist_quad;
 
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
-        return false;                                      // false if within 10 seconds from the last one
+        return 0;                                      // false if within 10 seconds from the last one
 
     /* Poderei usar TEAMSIZE para afinar */
     // ID_ROBOT
@@ -506,11 +506,11 @@ bool DistrAgent::check_interference_token(logistic_sim::Token &token)
             if (my_metric < other_metric)
             {
                 token.INTERFERENCE_COUNTER[ID_ROBOT]++;
-                return true;
+                return 1;
             }
         }
     }
-    return false;
+    return 0;
 }
 
 void DistrAgent::onGoalComplete(logistic_sim::Token &token)
@@ -758,9 +758,9 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
         token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
 
-        interference = check_interference_token(token);
+        t_interference = check_interference_token(token);
 
-        if (interference)
+        if (t_interference)
             c_print("Robot in interferenza: ", ID_ROBOT, red, P);
 
         if (goal_complete)

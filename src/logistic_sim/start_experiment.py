@@ -38,7 +38,8 @@ Alg_names = [
         [ 'CFAGENT', 'CFAGENT'],
         [ 'TP',   'TP'],
         [ 'TokenAgent', 'TokenAgent'],
-        [ 'DistrAgent', 'DistrAgent']
+        [ 'DistrAgent', 'DistrAgent'],
+        [ 'ConstAgent', 'ConstAgent']
      ]
 
 Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1','model1','model2','model3','model4','model5','model6']   

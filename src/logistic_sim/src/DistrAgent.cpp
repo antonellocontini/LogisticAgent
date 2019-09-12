@@ -87,7 +87,7 @@ void DistrAgent::run()
         //     resend_goal_count = 0;
         // }
 
-        if (interference)
+        if (t_interference)
         {
             //do_interference_behavior();
             // do_interference_behavior();
@@ -99,7 +99,7 @@ void DistrAgent::run()
             // se non setto interference a false questo ramo viene eseguito un paio
             // di volte poichè il token deve completare il giro prima che la variabile
             // interference venga calcolata
-            interference = false;
+            t_interference = 0;
             sendGoal(next_vertex);
             c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, vado in ", next_vertex, red, P);
         }

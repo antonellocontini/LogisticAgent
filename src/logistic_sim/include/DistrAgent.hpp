@@ -21,7 +21,7 @@ inline bool operator<(const logistic_sim::Mission &A, const logistic_sim::Missio
 
 struct less_V
 {
-    inline bool operator() (const t_coalition &A, const t_coalition &B)
+    inline bool operator()(const t_coalition &A, const t_coalition &B)
     {
         return A.second.V < B.second.V;
     }
@@ -44,6 +44,7 @@ using namespace agent;
 class DistrAgent : public Agent
 {
 protected:
+    int t_interference = 0;
     ros::Publisher token_pub;
     ros::Subscriber token_sub;
 
@@ -78,11 +79,11 @@ protected:
     ros::Time mission_start_time;
 
 public:
-    void init(int argc, char **argv) override;
-    void run() override;
-    
-    void onGoalComplete() override;
-    int compute_next_vertex() override;
+    void init(int argc, char **argv);
+    virtual void run();
+
+    void onGoalComplete();
+    int compute_next_vertex();
 
     void onGoalComplete(logistic_sim::Token &token);
     int compute_next_vertex(logistic_sim::Token &token);
@@ -94,11 +95,10 @@ public:
     //
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();
-    bool check_interference_token(logistic_sim::Token &token);
+    virtual int check_interference_token(logistic_sim::Token &token);
     void token_callback(const logistic_sim::TokenConstPtr &msg);
 
     void print_coalition(const t_coalition &coalition);
-
 
     virtual bool go_src();
     virtual bool go_dst();
