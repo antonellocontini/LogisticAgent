@@ -634,4 +634,19 @@ void Agent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr &msg)
     ros::spinOnce();
 }
 
+bool Agent::check_neighbour_dist(int id_neighbour, double dist)
+{
+    double curr_dist = (xPos[ID_ROBOT] - xPos[id_neighbour])*(xPos[ID_ROBOT] - xPos[id_neighbour])
+                    + (yPos[ID_ROBOT] - yPos[id_neighbour])*(yPos[ID_ROBOT] - yPos[id_neighbour]);
+    
+    if (curr_dist <= dist)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 } // namespace agent

@@ -2,13 +2,13 @@
 
 using namespace constagent;
 
-int ConstAgent::check_interference_token(logistic_sim::Token &token)
+std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &token)
 {
     int i;
     double dist_quad;
 
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
-        return 0;                                          // false if within 10 seconds from the last one
+        return std::pair<int,int>(0, 0);                                          // false if within 10 seconds from the last one
 
     /* Poderei usar TEAMSIZE para afinar */
     // ID_ROBOT
@@ -18,7 +18,9 @@ int ConstAgent::check_interference_token(logistic_sim::Token &token)
         if (i == ID_ROBOT)
             continue;
 
-        dist_quad = (xPos[i] - xPos[ID_ROBOT]) * (xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT]) * (yPos[i] - yPos[ID_ROBOT]);
+        // c_print("MY_POSITION ", token.X_POS[ID_ROBOT], " ", token.Y_POS[ID_ROBOT], red, P);
+        // c_print("OTHER_POSITION ", token.X_POS[i], " ", token.Y_POS[i], red, P);
+        dist_quad = (token.X_POS[i] - token.X_POS[ID_ROBOT]) * (token.X_POS[i] - token.X_POS[ID_ROBOT]) + (token.Y_POS[i] - token.Y_POS[ID_ROBOT]) * (token.Y_POS[i] - token.Y_POS[ID_ROBOT]);
 
         if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
         { //robots are ... meter or less apart
@@ -36,20 +38,23 @@ int ConstAgent::check_interference_token(logistic_sim::Token &token)
             double y_dst = vertex_web[current_mission.DSTS[0]].y;
             double other_x_dst = vertex_web[token.CURR_DST[i]].x;
             double other_y_dst = vertex_web[token.CURR_DST[i]].y;
-            double other_distance = (xPos[i] - x_dst) * (xPos[i] - x_dst) + (yPos[i] - y_dst) * (yPos[i] - y_dst);
-            double my_distance = (xPos[ID_ROBOT] - other_x_dst) * (xPos[ID_ROBOT] - other_x_dst) + (yPos[ID_ROBOT] - other_y_dst) * (yPos[ID_ROBOT] - other_y_dst);
+            double other_distance = (token.X_POS[i] - x_dst) * (token.X_POS[i] - x_dst) + (token.Y_POS[i] - y_dst) * (token.Y_POS[i] - y_dst);
+            double my_distance = (token.X_POS[ID_ROBOT] - other_x_dst) * (token.X_POS[ID_ROBOT] - other_x_dst) + (token.Y_POS[ID_ROBOT] - other_y_dst) * (token.Y_POS[ID_ROBOT] - other_y_dst);
             // c_print("my_distance ", my_distance, "\tother_distance ", other_distance, yellow);
             last_interference = ros::Time::now().toSec();
-            if (my_metric < other_metric)
+            c_print("Metric boolean: ", my_distance > other_distance, red, P);
+            if (my_distance > other_distance)
             {
                 token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                 if (current_vertex == token.NEXT_VERTEX[i])
                 {
-                    return 1;
+                    token.INTERFERENCE_STATUS[ID_ROBOT] = 1;
+                    return std::pair<int,int>(1, i);
                 }
                 else
                 {
-                    return 2;
+                    token.INTERFERENCE_STATUS[ID_ROBOT] = 2;
+                    return std::pair<int,int>(2, i);
                 }
             }
             else
@@ -58,7 +63,7 @@ int ConstAgent::check_interference_token(logistic_sim::Token &token)
             }
         }
     }
-    return 0;
+    return std::pair<int, int>(0, 0);
 }
 
 void ConstAgent::run()
@@ -130,6 +135,7 @@ void ConstAgent::run()
         //     resend_goal_count = 0;
         // }
         uint temp = 0;
+        bool clear = true;
         switch (t_interference)
         {
         case 0:
@@ -147,7 +153,17 @@ void ConstAgent::run()
             // caso wait 5 sec
             cancelGoal();
             c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, wait stay in ", next_vertex, green, P);
-            sleep(5);
+
+            do
+            {
+                clear = true;
+                if (id_interference != ID_ROBOT && !check_neighbour_dist(id_interference, INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE))
+                {
+                    clear = false;
+                }
+                usleep(10000);
+            } while (!clear);
+            
             sendGoal(next_vertex);
             break;
         default:

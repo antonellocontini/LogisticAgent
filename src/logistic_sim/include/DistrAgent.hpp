@@ -45,6 +45,7 @@ class DistrAgent : public Agent
 {
 protected:
     int t_interference = 0;
+    int id_interference = -1;
     ros::Publisher token_pub;
     ros::Subscriber token_sub;
 
@@ -95,7 +96,7 @@ public:
     //
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();
-    virtual int check_interference_token(logistic_sim::Token &token);
+    virtual std::pair<int,int> check_interference_token(logistic_sim::Token &token);
     void token_callback(const logistic_sim::TokenConstPtr &msg);
 
     void print_coalition(const t_coalition &coalition);

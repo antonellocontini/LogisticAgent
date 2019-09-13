@@ -6,6 +6,9 @@ bool        INIT
 Mission[]   MISSION
 Mission[]   ASSIGNED_MISSION
 
+float64[]   X_POS
+float64[]   Y_POS
+
 uint32[]    CURR_VERTEX
 uint32[]    NEXT_VERTEX
 
@@ -16,6 +19,7 @@ uint32[]    INIT_POS
 time[]      MISSION_START_TIME
 float32[]   MISSION_CURRENT_DISTANCE
 
+int32[]      INTERFERENCE_STATUS
 uint32[]    INTERFERENCE_COUNTER
 uint32[]    MISSIONS_COMPLETED
 uint32[]    TASKS_COMPLETED

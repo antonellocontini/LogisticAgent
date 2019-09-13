@@ -465,13 +465,15 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     return best_coalition.second;
 }
 
-int DistrAgent::check_interference_token(logistic_sim::Token &token)
+// il primo campo è il tipo di interferenza
+// il secondo è il robot che mi ha causato l'interferenza
+std::pair<int,int> DistrAgent::check_interference_token(logistic_sim::Token &token)
 {
     int i;
     double dist_quad;
 
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
-        return 0;                                      // false if within 10 seconds from the last one
+        return std::pair<int,int>(0, 0);                                      // false if within 10 seconds from the last one
 
     /* Poderei usar TEAMSIZE para afinar */
     // ID_ROBOT
@@ -506,7 +508,7 @@ int DistrAgent::check_interference_token(logistic_sim::Token &token)
             if (my_metric < other_metric)
             {
                 token.INTERFERENCE_COUNTER[ID_ROBOT]++;
-                return 1;
+                return std::pair<int, int>(1, i);
             }
             else
             {
@@ -515,7 +517,7 @@ int DistrAgent::check_interference_token(logistic_sim::Token &token)
             
         }
     }
-    return 0;
+    return std::pair<int, int>(0, 0);
 }
 
 void DistrAgent::onGoalComplete(logistic_sim::Token &token)
@@ -685,10 +687,26 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.MISSIONS_COMPLETED.push_back(0);
         token.TASKS_COMPLETED.push_back(0);
         token.TOTAL_DISTANCE.push_back(0.0f);
+        token.INTERFERENCE_STATUS.push_back(0);
+        token.X_POS.push_back(0.0);
+        token.Y_POS.push_back(0.0);
         initialize = false;
     }
     else if (ros::Time::now().sec - init_start_time.sec >= init_wait_time)
     {
+
+        // aggiorno posizione
+        token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
+        token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
+        for(int i=0; i<TEAM_SIZE; i++)
+        {
+            if (i != ID_ROBOT)
+            {
+                xPos[i] = token.X_POS[i];
+                yPos[i] = token.Y_POS[i];
+            }
+        }
+
         if (need_task)
         {
             if (!token.MISSION.empty())
@@ -763,8 +781,9 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
         token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
 
-        t_interference = check_interference_token(token);
-
+        std::pair<int,int> interf_pair = check_interference_token(token);
+        t_interference = interf_pair.first;
+        id_interference = interf_pair.second;
         if (t_interference)
             c_print("Robot in interferenza: ", ID_ROBOT, red, P);
 

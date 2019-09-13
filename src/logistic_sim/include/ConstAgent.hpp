@@ -8,7 +8,7 @@ class ConstAgent : public DistrAgent
 {
 public:
     void run() override;
-    int check_interference_token(logistic_sim::Token &token) override;
+    std::pair<int,int> check_interference_token(logistic_sim::Token &token) override;
 };
 } // namespace constagent
 

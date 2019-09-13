@@ -189,6 +189,8 @@ public:
 
   // Must be implemented by sub-classes
   virtual int compute_next_vertex(); 
+
+  bool check_neighbour_dist(int id_neighbour, double dist);
 };
 
 } // namespace agent
