@@ -508,6 +508,11 @@ int DistrAgent::check_interference_token(logistic_sim::Token &token)
                 token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                 return 1;
             }
+            else
+            {
+                c_print("[DEBUG]\tDovrebbe andare ROBOT_ID: ", i, " in interferenza", red, P);
+            }
+            
         }
     }
     return 0;

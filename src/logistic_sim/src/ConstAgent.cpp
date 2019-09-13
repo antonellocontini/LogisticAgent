@@ -52,6 +52,10 @@ int ConstAgent::check_interference_token(logistic_sim::Token &token)
                     return 2;
                 }
             }
+            else
+            {
+                c_print("[DEBUG]\tDovrebbe andare ROBOT_ID: ", i, " in interferenza", red, P);
+            }
         }
     }
     return 0;
