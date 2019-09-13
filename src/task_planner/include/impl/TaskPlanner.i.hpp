@@ -149,6 +149,7 @@ void TaskPlanner::missions_generator()
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
     static int last_mission_size = 0;
+    static vector<int> last_interf_count;
     if (msg->ID_RECEIVER != TASK_PLANNER_ID)
         return;
 
@@ -178,13 +179,26 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
                 robots_data.push_back(data);
             }
 
+            last_interf_count = vector<int>(num_robots, 0);
+
             first_round = false;
         }
 
+        // stampa task rimanenti
         if (token.MISSION.size() < last_mission_size)
         {
             last_mission_size = token.MISSION.size();
             c_print("Task rimanenti: ", last_mission_size, green);
+        }
+
+        // stampa quando avviene interferenza
+        for(int i=0; i<last_interf_count.size(); i++)
+        {
+            if (token.INTERFERENCE_COUNTER[i] > last_interf_count[i])
+            {
+                last_interf_count[i] = token.INTERFERENCE_COUNTER[i];
+                c_print("Interferenza rilevata dal robot ", i, "!", red);
+            }
         }
 
         // aggiorno la mia struttura con i dati del token
