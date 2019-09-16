@@ -132,11 +132,11 @@ add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_
 
 
 # Declare a cpp library
-add_library(DistrAgent
+add_library(DistrAgentLib
   src/DistrAgent.cpp
 )
 
-add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
+add_dependencies(DistrAgentLib ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 ########################################################################################################################
 
 # add_dependencies(Agent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
@@ -161,16 +161,16 @@ add_dependencies(LogicAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPOR
 target_link_libraries(LogicAgent Agent ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
-#add_executable(DistrAgent src/DistrAgent.cpp)
-#add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_executable(DistrAgent src/DistrAgent.cpp)
+add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(DistrAgent Agent ${catkin_LIBRARIES})
+target_link_libraries(DistrAgent Agent ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(ConstAgent src/ConstAgent.cpp)
 add_dependencies(ConstAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(ConstAgent Agent DistrAgent ${catkin_LIBRARIES})
+target_link_libraries(ConstAgent Agent DistrAgentLib ${catkin_LIBRARIES})
 
 ########################################################################################################################
 
