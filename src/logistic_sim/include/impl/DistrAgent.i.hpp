@@ -473,19 +473,18 @@ std::pair<int,int> DistrAgent::check_interference_token(logistic_sim::Token &tok
     double dist_quad;
 
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
-        return std::pair<int,int>(0, 0);                                      // false if within 10 seconds from the last one
+    {
+        return std::pair<int,int>(t_interference, id_interference);    // false if within 10 seconds from the last one
+    }
 
     /* Poderei usar TEAMSIZE para afinar */
     // ID_ROBOT
     for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
 
-        if (i == ID_ROBOT)
-            continue;
-
         dist_quad = (xPos[i] - xPos[ID_ROBOT]) * (xPos[i] - xPos[ID_ROBOT]) + (yPos[i] - yPos[ID_ROBOT]) * (yPos[i] - yPos[ID_ROBOT]);
 
-        if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
+        if (i!= ID_ROBOT && dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
         { //robots are ... meter or less apart
             //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
             ros::Duration my_delta_time_mission = token.HEADER.stamp.now() - token.MISSION_START_TIME[ID_ROBOT];
@@ -501,8 +500,8 @@ std::pair<int,int> DistrAgent::check_interference_token(logistic_sim::Token &tok
             double y_dst = vertex_web[current_mission.DSTS[0]].y;
             double other_x_dst = vertex_web[token.CURR_DST[i]].x;
             double other_y_dst = vertex_web[token.CURR_DST[i]].y;
-            double other_distance = (xPos[i] - x_dst) * (xPos[i] - x_dst) + (yPos[i] - y_dst) * (yPos[i] - y_dst);
-            double my_distance = (xPos[ID_ROBOT] - other_x_dst) * (xPos[ID_ROBOT] - other_x_dst) + (yPos[ID_ROBOT] - other_y_dst) * (yPos[ID_ROBOT] - other_y_dst);
+            double other_distance = (xPos[i] - other_x_dst) * (xPos[i] - other_x_dst) + (yPos[i] - other_y_dst) * (yPos[i] - other_y_dst);
+            double my_distance = (xPos[ID_ROBOT] - x_dst) * (xPos[ID_ROBOT] - x_dst) + (yPos[ID_ROBOT] - y_dst) * (yPos[ID_ROBOT] - y_dst);
             // c_print("my_distance ", my_distance, "\tother_distance ", other_distance, yellow);
             last_interference = ros::Time::now().toSec();
             if (my_metric < other_metric)
