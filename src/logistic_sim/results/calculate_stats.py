@@ -2,10 +2,18 @@
 import os
 import csv
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
-# numpy medie ecc
-# matplot per i grafici 
-
+def draw_boxplot(name, data, subdir, n_robots):
+    fig, ax = plt.subplots()
+    lbls = ['robot_'+str(i) for i in range(n_robots)]
+    min_v = np.min(data)
+    max_v = np.max(data)
+    ax.set_ylim(min_v*0.9, max_v*1.1)
+    ax.boxplot(data, labels=lbls, showmeans=True)
+    ax.set_title(name + ' ' + subdir)
+    fig.savefig(os.path.join(subdir, name + '_plot.png'))
 
 def calculate_means(sums, n_exps):
     result = []
@@ -25,6 +33,12 @@ def calculate_sqms(data, means, n_exps, n_robots):
 
 def main():
     for subdir, dirs, files in os.walk('.'):
+        # tengo solo i csv che mi interessano
+        temp = []
+        for f in files:
+            if f.endswith(".csv") and f != 'aggregated.csv':
+                temp.append(f)
+        files = temp
         if subdir != '.':
             experiments = len(files)
             robots = 0
@@ -36,61 +50,85 @@ def main():
                     robots = robots + 1
                 robots = robots - 1
 
-            print robots
+            print 'Directory:', subdir
+            print 'Number of robots:', robots
+            print 'Number of experiments: ', experiments
             distances = []
+            dsts_col = [ [] for i in range(robots) ]
             tot_distances = [0.0]*robots
             mean_distances = []
             sqm_distances = []
 
             interferences = []
+            ints_col = [ [] for i in range(robots) ]
             tot_interfs = [0.0]*robots
             mean_interfs = []
             sqm_interfs = []
 
             times = []
+            times_col = [ [] for i in range(robots) ]
             tot_times = [0.0]*robots
             mean_times = []
             sqm_times = []
 
             missions = []
+            missions_col = [ [] for i in range(robots) ]
             tot_missions = [0.0]*robots
             mean_missions = []
             sqm_missions = []
 
             tasks = []
+            tasks_col = [ [] for i in range(robots) ]
             tot_tasks = [0]*robots
             mean_tasks = []
             sqm_tasks = []
 
             # raccolta dati
             for f in files:
-                path = os.path.join(subdir, f)
-                with open(path) as csv_file:
-                    csv_reader = csv.reader(csv_file, delimiter=',')
-                    line_count = 0
-                    d = []
-                    i = []
-                    t = []
-                    m = []
-                    ts = []
-                    for row in csv_reader:
-                        if line_count != 0:
-                            d.append(row[1])
-                            tot_distances[line_count-1] += int(row[1])
-                            i.append(row[2])
-                            tot_interfs[line_count-1] += int(row[2])
-                            m.append(row[3])
-                            tot_missions[line_count-1] += int(row[3])
-                            ts.append(row[4])
-                            tot_tasks[line_count-1] += int(row[4])
-                            t.append(row[5])
-                            tot_times[line_count-1] += int(row[5])
-                        line_count = line_count + 1
-                    distances.append(d)
-                    interferences.append(i)
-                    missions.append(m)
-                    tasks.append(ts)
-                    times.append(t)
+                if f != 'aggregated.csv':
+                    path = os.path.join(subdir, f)
+                    with open(path) as csv_file:
+                        csv_reader = csv.reader(csv_file, delimiter=',')
+                        line_count = 0
+                        d = []
+                        i = []
+                        t = []
+                        m = []
+                        ts = []
+                        for row in csv_reader:
+                            if line_count != 0:
+                                d.append(row[1])
+                                dsts_col[line_count-1].append(float(row[1]))
+                                tot_distances[line_count-1] += int(row[1])
+
+                                i.append(row[2])
+                                ints_col[line_count-1].append(float(row[2]))
+                                tot_interfs[line_count-1] += int(row[2])
+
+                                m.append(row[3])
+                                missions_col[line_count-1].append(float(row[3]))
+                                tot_missions[line_count-1] += int(row[3])
+
+                                ts.append(row[4])
+                                tasks_col[line_count-1].append(float(row[4]))
+                                tot_tasks[line_count-1] += int(row[4])
+
+                                t.append(row[5])
+                                times_col[line_count-1].append(float(row[5]))
+                                tot_times[line_count-1] += int(row[5])
+                            line_count = line_count + 1
+                        distances.append(d)
+                        interferences.append(i)
+                        missions.append(m)
+                        tasks.append(ts)
+                        times.append(t)
+
+            # boxplot
+            draw_boxplot('distances', dsts_col, subdir, robots)
+            draw_boxplot('interferences', ints_col, subdir, robots)
+            draw_boxplot('times', times_col, subdir, robots)
+            draw_boxplot('missions', missions_col, subdir, robots)
+            draw_boxplot('tasks', tasks_col, subdir, robots)
 
             # calcolo medie
             mean_distances = calculate_means(tot_distances, experiments)

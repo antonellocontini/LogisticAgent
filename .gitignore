@@ -11,5 +11,6 @@ src/logistic_sim/experiments.txt
 src/logistic_sim/rostime.txt
 
 *.csv
+src/logistic_sim/results/**/*.png
 
 !src/logistic_sim/results/**/*.py
