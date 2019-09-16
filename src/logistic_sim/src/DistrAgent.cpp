@@ -131,6 +131,19 @@ void DistrAgent::onGoalComplete()
 
 }
 
+// non chiamo check_interference perchè lo faccio nel token
+void DistrAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback)
+{
+    send_positions();
+
+    int value = ID_ROBOT;
+    if (value == -1)
+    {
+        value = 0;
+    }
+    interference = false;
+}
+
 int DistrAgent::compute_next_vertex()
 {
 

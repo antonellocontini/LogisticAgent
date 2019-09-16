@@ -159,6 +159,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
     token.ID_RECEIVER = 0;
     if (msg->INIT)
     {
+        token.HEADER.seq = 1;
         CAPACITY = msg->CAPACITY;
         token.INIT = false;
         token.MISSION = missions;
@@ -168,6 +169,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
     }
     else
     {
+        token.HEADER.seq += 1;
         // calcolo quanti robot ci sono e preparo la struttura dati
         if (first_round)
         {

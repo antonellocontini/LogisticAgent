@@ -98,6 +98,7 @@ public:
     void init_tw_map();
     virtual std::pair<int,int> check_interference_token(logistic_sim::Token &token);
     void token_callback(const logistic_sim::TokenConstPtr &msg);
+    void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback) override;
 
     void print_coalition(const t_coalition &coalition);
 

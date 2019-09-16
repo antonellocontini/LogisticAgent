@@ -6,24 +6,35 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
 {
     int i;
     double dist_quad;
+    // TEST DISTANZA
+    // for (i=0; i<TEAM_SIZE; i++)
+    // {
+    //     dist_quad = (token.X_POS[i] - token.X_POS[ID_ROBOT]) * (token.X_POS[i] - token.X_POS[ID_ROBOT]) + (token.Y_POS[i] - token.Y_POS[ID_ROBOT]) * (token.Y_POS[i] - token.Y_POS[ID_ROBOT]);
+    //     if (i != ID_ROBOT && dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
+    //     {
+    //         c_print("LAST_INTERFERENCE= ", last_interference, red, P);
+    //         c_print("SEQ= ",token.HEADER.seq,"\tSONO VICINO A ", i,":\tDIST= ",dist_quad, red, P);
+    //     }
+    // }
 
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
-        return std::pair<int,int>(0, 0);                                          // false if within 10 seconds from the last one
+    {
+        return std::pair<int,int>(t_interference, id_interference); // false if within 10 seconds from the last one
+    }
 
     /* Poderei usar TEAMSIZE para afinar */
     // ID_ROBOT
     for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
 
-        if (i == ID_ROBOT)
-            continue;
-
         // c_print("MY_POSITION ", token.X_POS[ID_ROBOT], " ", token.Y_POS[ID_ROBOT], red, P);
         // c_print("OTHER_POSITION ", token.X_POS[i], " ", token.Y_POS[i], red, P);
         dist_quad = (token.X_POS[i] - token.X_POS[ID_ROBOT]) * (token.X_POS[i] - token.X_POS[ID_ROBOT]) + (token.Y_POS[i] - token.Y_POS[ID_ROBOT]) * (token.Y_POS[i] - token.Y_POS[ID_ROBOT]);
+        // c_print("SEQ:\t",token.HEADER.seq,"\tDISTANCE WITH ",i,":\t",dist_quad,red,P);
 
-        if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
+        if (i != ID_ROBOT && dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
         { //robots are ... meter or less apart
+
             //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
             ros::Duration my_delta_time_mission = token.HEADER.stamp.now() - token.MISSION_START_TIME[ID_ROBOT];
             ros::Duration other_delta_time_mission = token.HEADER.stamp.now() - token.MISSION_START_TIME[i];
@@ -38,13 +49,20 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
             double y_dst = vertex_web[current_mission.DSTS[0]].y;
             double other_x_dst = vertex_web[token.CURR_DST[i]].x;
             double other_y_dst = vertex_web[token.CURR_DST[i]].y;
-            double other_distance = (token.X_POS[i] - x_dst) * (token.X_POS[i] - x_dst) + (token.Y_POS[i] - y_dst) * (token.Y_POS[i] - y_dst);
-            double my_distance = (token.X_POS[ID_ROBOT] - other_x_dst) * (token.X_POS[ID_ROBOT] - other_x_dst) + (token.Y_POS[ID_ROBOT] - other_y_dst) * (token.Y_POS[ID_ROBOT] - other_y_dst);
+            double other_distance = (token.X_POS[i] - other_x_dst) * (token.X_POS[i] - other_x_dst) + (token.Y_POS[i] - other_y_dst) * (token.Y_POS[i] - other_y_dst);
+            double my_distance = (token.X_POS[ID_ROBOT] - x_dst) * (token.X_POS[ID_ROBOT] - x_dst) + (token.Y_POS[ID_ROBOT] - y_dst) * (token.Y_POS[ID_ROBOT] - y_dst);
             // c_print("my_distance ", my_distance, "\tother_distance ", other_distance, yellow);
-            last_interference = ros::Time::now().toSec();
+
+            // TEST
+            // c_print("[DEBUG]\tTEST", red, P);
+            // token.INTERFERENCE_COUNTER[ID_ROBOT]++;
+            // token.INTERFERENCE_STATUS[ID_ROBOT] = 1;
+            // return std::pair<int,int>(1, i);
+
             c_print("Metric boolean: ", my_distance > other_distance, red, P);
             if (my_distance > other_distance)
             {
+                last_interference = ros::Time::now().toSec();
                 token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                 if (current_vertex == token.NEXT_VERTEX[i])
                 {
@@ -63,6 +81,7 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
             }
         }
     }
+    token.INTERFERENCE_STATUS[ID_ROBOT] = 0;
     return std::pair<int, int>(0, 0);
 }
 
@@ -165,6 +184,7 @@ void ConstAgent::run()
             } while (!clear);
             
             sendGoal(next_vertex);
+            t_interference = 0;
             break;
         default:
             c_print("default");
