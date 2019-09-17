@@ -80,13 +80,13 @@ public:
     ros::Time start_time;
 
     int compute_cost_of_route(std::vector<uint> route);
-    void missions_generator();
+    virtual void missions_generator();
 
     void init(int argc, char **argv);
 
-    void token_Callback( const logistic_sim::TokenConstPtr &msg);
+    virtual void token_Callback( const logistic_sim::TokenConstPtr &msg);
 
-private:
+protected:
     // per l'inizializzazione e il token dei task
     ros::Subscriber sub_token;
     ros::Publisher pub_token;

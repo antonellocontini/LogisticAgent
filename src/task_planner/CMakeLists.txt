@@ -128,6 +128,11 @@ add_dependencies(TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORT
 # ## Specify libraries to link a library or executable target against
 target_link_libraries(TaskPlanner ${catkin_LIBRARIES})
 
+add_executable(NonUniformTaskPlanner src/NonUniformTaskPlanner.cpp)
+add_dependencies(NonUniformTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# ## Specify libraries to link a library or executable target against
+target_link_libraries(NonUniformTaskPlanner ${catkin_LIBRARIES})
+
 add_executable(Part src/test_part.cpp)
 add_dependencies(Part ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # ## Specify libraries to link a library or executable target against

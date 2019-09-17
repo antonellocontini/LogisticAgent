@@ -42,6 +42,8 @@ Alg_names = [
         [ 'ConstAgent', 'ConstAgent']
      ]
 
+TaskPlanner_names = [ 'TaskPlanner', 'NonUniformTaskPlanner' ]
+
 Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1','model1','model2','model3','model4','model5','model6']   
 
 NRobots_list = ['1','2','4','6','8','10','12']
@@ -112,7 +114,7 @@ def getSimulationRunning():
 # Terminates if simulation is stopped (/simulation_running param is false)
 # or if timeout is reached (if this is >0)
 # CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
-def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY):
+def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -210,7 +212,10 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
 	    os.system(gcmd)
     os.system('sleep 5')
     print 'bash -c \rosrun task_planner TaskPlanner'
-    cmd_taskplanner = 'bash -c \'rosrun task_planner TaskPlanner '+ MAP+' '+ALG+' '+str(NROBOTS)+'\''
+    if (TP_NAME == 'NonUniformTaskPlanner'):
+        cmd_taskplanner = 'bash -c \'rosrun task_planner NonUniformTaskPlanner '+ MAP+' '+ALG+' '+str(NROBOTS)+'\''
+    else:
+        cmd_taskplanner = 'bash -c \'rosrun task_planner TaskPlanner '+ MAP+' '+ALG+' '+str(NROBOTS)+'\''
     cmd_TP = 'gnome-terminal  --tab -e "'+cmd_taskplanner+'"&'
     
     if (TERM == 'xterm'):
@@ -416,6 +421,20 @@ class DIP(tk.Frame):
   
         _row = _row + 1
 
+        lbl = Label(self, text="TaskPlanner")
+        lbl.grid(sticky=W, row = _row, column= 0, pady=4, padx=5)
+
+        self.tp_list = TaskPlanner_names
+        self.tp_ddm = StringVar(self)
+        try:
+            lasttp=self.oldConfigs["tp"]
+        except:
+            lasttp=self.tp_list[0]
+        self.tp_ddm.set(lasttp)
+        tk.OptionMenu(self, self.tp_ddm, *self.tp_list).grid(sticky=W, row=_row, column=1, pady=4, padx=5)
+  
+        _row = _row + 1
+
         launchButton = Button(self, text="Start Experiment",command=self.launch_script)
         launchButton.grid(sticky=W, row=_row, column=0, pady=4, padx=5)
         
@@ -425,7 +444,7 @@ class DIP(tk.Frame):
     
     def launch_script(self):
         self.saveConfigFile();
-        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0, self.capacity_ddm.get()) )
+        thread.start_new_thread( run_experiment, (self.map_ddm.get(), self.robots_ddm.get(), INITPOS_DEFAULT, self.alg_ddm.get(),self.locmode_ddm.get(), self.navmode_ddm.get(), self.gwait_ddm.get(), COMMDELAY_DEFAULT, self.term_ddm.get(),0,"false",1.0, self.capacity_ddm.get(), self.tp_ddm.get()) )
 
     
     def quit(self):
@@ -446,6 +465,7 @@ class DIP(tk.Frame):
       f.write("gwait: %s\n"%self.gwait_ddm.get())
       f.write("capacity: %s\n"%self.capacity_ddm.get())
       f.write("term: %s\n"%self.term_ddm.get())
+      f.write("tp: %s\n"%self.tp_ddm.get())
       f.close()
 
 
@@ -468,12 +488,12 @@ def main():
   if (len(sys.argv)==1):
     root = tk.Tk()
     DIP(root)
-    root.geometry("300x360+0+0")
+    root.geometry("300x400+0+0")
     root.mainloop()  
 
-  elif (len(sys.argv)<13):
+  elif (len(sys.argv)<14):
     print "Use: ",sys.argv[0]
-    print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <capacity> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
+    print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <capacity> <tp_name> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
 
   else:
     MAP = sys.argv[1]
@@ -489,6 +509,7 @@ def main():
     CUSTOM_STAGE = False
     SPEEDUP = float(1.0)
     CAPACITY = int(sys.argv[13])
+    TP_NAME = sys.argv[14]
 
     # MAP = model5
     # NROBOTS = 2
@@ -511,9 +532,9 @@ def main():
     # if (len(sys.argv)>=13):
     #   SPEEDUP = float(sys.argv[12])
 
-    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY
+    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY,TP_NAME
     
-    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY)
+    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME)
 
  
 
