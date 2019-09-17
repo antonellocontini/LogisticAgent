@@ -41,8 +41,8 @@ void TaskPlanner::init(int argc, char **argv)
     uint nedges = GetNumberEdges(vertex_web, dimension);
     printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
     TEAM_SIZE = atoi(argv[3]);
-    ALGORITHM = argv[2];
-
+    ALGORITHM = argv[2]; 
+    
     missions_generator();
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);

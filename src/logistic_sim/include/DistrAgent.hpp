@@ -3,6 +3,7 @@
 #include "Agent.hpp"
 #include "logistic_sim/Token.h"
 
+
 using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 namespace logistic_sim
 {
@@ -97,7 +98,7 @@ public:
     void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();
     virtual std::pair<int,int> check_interference_token(logistic_sim::Token &token);
-    void token_callback(const logistic_sim::TokenConstPtr &msg);
+    virtual void token_callback(const logistic_sim::TokenConstPtr &msg);
     void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback) override;
 
     void print_coalition(const t_coalition &coalition);

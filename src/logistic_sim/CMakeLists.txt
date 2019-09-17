@@ -172,6 +172,12 @@ add_dependencies(ConstAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPOR
 ## Specify libraries to link a library or executable target against
 target_link_libraries(ConstAgent Agent DistrAgentLib ${catkin_LIBRARIES})
 
+## Declare a cpp executable 
+add_executable(SPartAgent src/SPartAgent.cpp)
+add_dependencies(SPartAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(SPartAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+
 ########################################################################################################################
 
 # Results and Monitor Node:

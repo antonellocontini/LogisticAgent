@@ -68,6 +68,7 @@ public:
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
     uint p_21[16] = {6, 7, 9, 12, 14, 17, 19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
+    
     //----------------------------------------------------------------------------
 
     vector<logistic_sim::Mission> missions;
@@ -82,7 +83,8 @@ public:
     void missions_generator();
 
     void init(int argc, char **argv);
-    void token_Callback(const logistic_sim::TokenConstPtr &msg);
+
+    void token_Callback( const logistic_sim::TokenConstPtr &msg);
 
 private:
     // per l'inizializzazione e il token dei task
