@@ -21,7 +21,7 @@ ostream& operator<<(ostream &os, const vector<MonitorData> &v)
     return os;
 }
 
-TaskPlanner::TaskPlanner(ros::NodeHandle &nh_)
+TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(name)
 {
     sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_Callback, this);
     pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
@@ -222,7 +222,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             std::stringstream conf_dir_name;
-            conf_dir_name << "results/" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0];  
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0];  
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
             {

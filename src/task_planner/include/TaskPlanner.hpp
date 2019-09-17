@@ -51,7 +51,7 @@ ostream& operator<<(ostream &os, const vector<MonitorData> &v);
 class TaskPlanner
 {
 public:
-    TaskPlanner(ros::NodeHandle &nh_);
+    TaskPlanner(ros::NodeHandle &nh_, const std::string &name = "TaskPlanner");
     ~TaskPlanner(){};
 
     vertex *vertex_web;
@@ -90,6 +90,7 @@ protected:
     // per l'inizializzazione e il token dei task
     ros::Subscriber sub_token;
     ros::Publisher pub_token;
+    std::string name;
 };
 
 } // namespace taskplanner
