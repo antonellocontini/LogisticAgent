@@ -8,7 +8,7 @@
 
 #include "TaskPlanner.hpp"
 
-  using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
+using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 // std::ostream&
 // operator<<(std::ostream& out, partition::iterator &it)
 // {
@@ -23,82 +23,81 @@
 //   return out;
 // }
 
-
 void print_coalition(const t_coalition &coalition)
 {
-    auto tasks = coalition.first;
-    auto mission = coalition.second;
-    c_print("Mission id: ", mission.ID, green, P);
-    // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
-    // std::cout << "td: " << mission.TOT_DEMAND << "\n";
-    std::cout << " V: " << mission.V << "\n";
-    // auto size_dsts = mission.DSTS.size();
-    // std::cout << "dsts"
-    //           << "\n";
-    // for (int i = 0; i < size_dsts; i++)
-    // {
-    //     std::cout << mission.DSTS[i] << " ";
-    // }
-    // std::cout << "\n";
+  auto tasks = coalition.first;
+  auto mission = coalition.second;
+  c_print("Mission id: ", mission.ID, green, P);
+  // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
+  // std::cout << "td: " << mission.TOT_DEMAND << "\n";
+  std::cout << " V: " << mission.V << "\n";
+  auto size_dsts = mission.DSTS.size();
+  std::cout << "dsts"
+            << "\n";
+  for (int i = 0; i < size_dsts; i++)
+  {
+      std::cout << mission.DSTS[i] << " ";
+  }
+  std::cout << "\n";
 
-    // auto size_boh = mission.DEMANDS.size();
-    // std::cout << "demands"
-    //           << "\n";
-    // for (int i = 0; i < size_boh; i++)
-    // {
-    //     std::cout << mission.DEMANDS[i] << " ";
-    // }
-    // std::cout << "\n";
+  auto size_boh = mission.DEMANDS.size();
+  std::cout << "demands"
+            << "\n";
+  for (int i = 0; i < size_boh; i++)
+  {
+      std::cout << mission.DEMANDS[i] << " ";
+  }
+  std::cout << "\n";
 
-    // auto size_route = mission.ROUTE.size();
-    // std::cout << "route"
-    //           << "\n";
-    // for (int i = 0; i < size_route; i++)
-    // {
-    //     std::cout << mission.ROUTE[i] << " ";
-    // }
-    // std::cout << "\n";
+  auto size_route = mission.ROUTE.size();
+  std::cout << "route"
+            << "\n";
+  for (int i = 0; i < size_route; i++)
+  {
+      std::cout << mission.ROUTE[i] << " ";
+  }
+  std::cout << "\n";
 
-    // c_print("tasks", magenta, P);
+  c_print("tasks", magenta, P);
 
-    // auto size_tasks = tasks.size();
+  // auto size_tasks = tasks.size();
 
-    // for (auto i = 0; i < size_tasks; i++)
-    // {
-    //     auto t = tasks[i];
-    //     c_print("task id: ", t.ID, magenta, P);
-    //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
-    //     std::cout << "td: " << t.TOT_DEMAND << "\n";
-    //     std::cout << " V: " << t.V << "\n";
-    //     auto size_dsts = t.DSTS.size();
-    //     std::cout << "dsts"
-    //               << "\n";
-    //     for (int i = 0; i < size_dsts; i++)
-    //     {
-    //         std::cout << t.DSTS[i] << " ";
-    //     }
-    //     std::cout << "\n";
+  // for (auto i = 0; i < size_tasks; i++)
+  // {
+  //     auto t = tasks[i];
+  //     c_print("task id: ", t.ID, magenta, P);
+  //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
+  //     std::cout << "td: " << t.TOT_DEMAND << "\n";
+  //     std::cout << " V: " << t.V << "\n";
+  //     auto size_dsts = t.DSTS.size();
+  //     std::cout << "dsts"
+  //               << "\n";
+  //     for (int i = 0; i < size_dsts; i++)
+  //     {
+  //         std::cout << t.DSTS[i] << " ";
+  //     }
+  //     std::cout << "\n";
 
-    //     auto size_boh = t.DEMANDS.size();
-    //     std::cout << "demands"
-    //               << "\n";
-    //     for (int i = 0; i < size_boh; i++)
-    //     {
-    //         std::cout << t.DEMANDS[i] << " ";
-    //     }
-    //     std::cout << "\n";
+  //     auto size_boh = t.DEMANDS.size();
+  //     std::cout << "demands"
+  //               << "\n";
+  //     for (int i = 0; i < size_boh; i++)
+  //     {
+  //         std::cout << t.DEMANDS[i] << " ";
+  //     }
+  //     std::cout << "\n";
 
-    //     auto size_route = t.ROUTE.size();
-    //     std::cout << "route"
-    //               << "\n";
-    //     for (int i = 0; i < size_route; i++)
-    //     {
-    //         std::cout << t.ROUTE[i] << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
+  //     auto size_route = t.ROUTE.size();
+  //     std::cout << "route"
+  //               << "\n";
+  //     for (int i = 0; i < size_route; i++)
+  //     {
+  //         std::cout << t.ROUTE[i] << " ";
+  //     }
+  //     std::cout << "\n";
+  // }
 
-    c_print("fine mission id: ", mission.ID, red, P);
+  c_print("fine mission id: ", mission.ID, red, P);
 }
 
 int main(int argc, char **argv)
@@ -135,15 +134,29 @@ int main(int argc, char **argv)
       // candidate.first.resize(subset);
       uint id_m = 0;
       double tmp_V = 0;
-      for (auto i = 0; i < subset; i ++)
+      for (auto i = 0; i < subset; i++)
       {
         uint tmp_D = 0;
         std::vector<logistic_sim::Mission> part = all_part[i];
+        //dalla part mi creo la missione
         candidate.first = part;
+        for (auto j = 0; j < part.size(); j++)
+        {
+          candidate.second.TOT_DEMAND += part[j].TOT_DEMAND;
+          copy(part[j].DSTS.begin(), part[j].DSTS.end(), back_inserter(candidate.second.DSTS));
+          copy(part[j].DEMANDS.begin(), part[j].DEMANDS.end(), back_inserter(candidate.second.DEMANDS));
+          copy(part[j].ITEM.begin(), part[j].ITEM.end(), back_inserter(candidate.second.ITEM));
+          candidate.second.PATH_DISTANCE += part[j].PATH_DISTANCE;
+        }
+
+        candidate.second.V = (double)candidate.second.PATH_DISTANCE / (double)candidate.second.TOT_DEMAND;
+        if (candidate.second.TOT_DEMAND <= CAPACITY_ROBOT)
+        {
+          v_coalitions.push_back(candidate);
+          print_coalition(candidate);
+        }
       }
       ++it;
-
-      // print_coalition(candidate);
     }
   }
   catch (std::overflow_error &)
