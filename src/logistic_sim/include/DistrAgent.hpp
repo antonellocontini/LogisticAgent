@@ -52,6 +52,7 @@ protected:
 
     bool need_task = true;
     bool reached_pickup, go_home = false;
+    bool reached_home = false;
     uint tmp_CAPACITY = 0;
 
     bool init_wait_done = false;

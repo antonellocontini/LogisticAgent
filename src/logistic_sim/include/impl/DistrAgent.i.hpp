@@ -472,6 +472,11 @@ std::pair<int,int> DistrAgent::check_interference_token(logistic_sim::Token &tok
     int i;
     double dist_quad;
 
+    if (reached_home)
+    {
+        return std::pair<int,int>(0, 0);
+    }
+
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
     {
         return std::pair<int,int>(t_interference, id_interference);    // false if within 10 seconds from the last one
@@ -540,6 +545,7 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
         token.TOTAL_DISTANCE[ID_ROBOT] += token.MISSION_CURRENT_DISTANCE[ID_ROBOT];
         token.MISSION_CURRENT_DISTANCE[ID_ROBOT] = 0.0f;
         need_task = true;
+        reached_home = true;
     }
     else if (go_src() && current_vertex == src_vertex)
     {
@@ -759,7 +765,16 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 sec_diff = std::max(1, sec_diff);
                 // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
                 // svaforisco la mia direzione
-                token_weight_map[src][dst] += sec_diff;
+                if (t_interference != 2)
+                {
+                    token_weight_map[src][dst] += sec_diff;
+                }
+                else
+                {
+                    // se sono fermo per far passare qualcun'altro
+                    // voglio evitare che qualcuno arrivi da dietro
+                    token_weight_map[src][dst] += sec_diff * 5;
+                }
                 // sfavorisco la direzione inversa
                 token_weight_map[dst][src] += sec_diff * 4;
                 // sfavorisco tutti gli archi che entrano nella mia destinazione
@@ -784,7 +799,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         t_interference = interf_pair.first;
         id_interference = interf_pair.second;
         if (t_interference)
-            c_print("Robot in interferenza: ", ID_ROBOT, red, P);
+            c_print("Robot in interferenza: ", ID_ROBOT, " contro ", id_interference, "\tTipo interferenza: ", t_interference, red, P);
 
         if (goal_complete)
         {
