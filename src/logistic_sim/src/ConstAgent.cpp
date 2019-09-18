@@ -1,6 +1,98 @@
 #include "ConstAgent.hpp"
+#include <fstream>
 
 using namespace constagent;
+
+
+// uso bfs per individuare i vertici entro distanza threshold dalla sorgente
+// threshold indica il numero di salti
+// TODO: si potrebbe usare come metrica la distanza reale
+std::vector<uint> near_list(uint threshold, uint source, vertex *web, uint dimension)
+{
+    std::vector<uint> result;
+    std::vector<std::pair<uint, uint> > queue;
+    std::vector<bool> visited(dimension, false);
+
+    queue.push_back(make_pair<>(source, 0U)); // coppia <vertice, distanza>
+    visited[source] = true;
+    while (!queue.empty())
+    {
+        std::pair<uint,uint> v = queue.back();
+        queue.pop_back();
+        uint v_id = v.first;
+        uint v_dist = v.second;
+        assert(v_id < dimension && v_id >= 0);
+        result.push_back(v_id);
+        if (v_dist < threshold)
+        {
+            for(int i=0; i < web[v_id].num_neigh; i++)
+            {
+                uint neigh = web[v_id].id_neigh[i];
+                if (!visited[neigh])
+                {
+                    visited[neigh] = true;
+                    queue.push_back(make_pair<>(neigh, v_dist + 1));
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+void ConstAgent::tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path)
+{
+    vertex web_copy[dimension];
+    uint threshold = 3;
+    //TEST
+    // std::ofstream log;
+    // log.open("log.txt", std::ofstream::out | std::ofstream::app);
+    // log << "ROBOT: " << ID_ROBOT << "\tSOURCE: " << source;
+    std::vector<uint> near_vertices = near_list(threshold, source, vertex_web, dimension);
+    // log << "\tNEAR_SIZE: " << near_vertices.size() << std::endl;
+    // log.close();
+
+    // TEST
+    std::stringstream ss;
+    for(auto it = near_vertices.begin(); it != near_vertices.end(); it++)
+    {
+        ss << *it << " ";
+    }
+    c_print("[DEBUG]\tBFS, THRESHOLD: ", threshold, "\t[ ", ss.str(), "]", yellow, P);
+
+    for (int i = 0; i < dimension; i++)
+    {
+        // copia della struttura
+        web_copy[i].id = vertex_web[i].id;
+        web_copy[i].num_neigh = vertex_web[i].num_neigh;
+        web_copy[i].x = vertex_web[i].x;
+        web_copy[i].y = vertex_web[i].y;
+        memcpy(web_copy[i].id_neigh, vertex_web[i].id_neigh, sizeof(uint) * 8);
+        memcpy(web_copy[i].cost, vertex_web[i].cost, sizeof(uint) * 8);
+        memcpy(web_copy[i].cost_m, vertex_web[i].cost_m, sizeof(float) * 8);
+        memcpy(web_copy[i].visited, vertex_web[i].visited, sizeof(bool) * 8);
+        for (int j = 0; j < web_copy[i].num_neigh; j++)
+        {
+            memcpy(web_copy[i].dir[j], vertex_web[i].dir[j], sizeof(char) * 3);
+        }
+
+        // incremento il peso degli archi occupati
+        for (int j = 0; j < web_copy[i].num_neigh; j++)
+        {
+            // incremento il peso solo se il vertice di partenza
+            // è nella lista di vertici ritenuti vicini
+            uint from = web_copy[i].id;
+            uint to = web_copy[i].id_neigh[j];
+            if (std::find(near_vertices.begin(), near_vertices.end(), from) != near_vertices.end())
+            {
+                web_copy[i].cost[j] *= token_weight_map[from][to];
+            }
+        }
+    }
+
+    // calcolo il percorso con il nuovo grafo
+    dijkstra(source, destination, shortest_path, elem_s_path, web_copy, dimension);
+}
 
 std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &token)
 {
@@ -68,15 +160,16 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
             if (my_distance > other_distance)
             {
                 last_interference = ros::Time::now().toSec();
-                token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                 // i due robot si stanno venendo incontro
                 if (current_vertex == token.NEXT_VERTEX[i] && token.CURR_VERTEX[i] == next_vertex)
                 {
+                    token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                     token.INTERFERENCE_STATUS[ID_ROBOT] = 1;
                     return std::pair<int,int>(1, i);
                 }
                 else if(next_vertex == token.NEXT_VERTEX[i])
                 {
+                    token.INTERFERENCE_COUNTER[ID_ROBOT]++;
                     token.INTERFERENCE_STATUS[ID_ROBOT] = 2;
                     return std::pair<int,int>(2, i);
                 }

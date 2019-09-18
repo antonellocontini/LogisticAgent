@@ -9,6 +9,7 @@ class ConstAgent : public DistrAgent
 public:
     void run() override;
     std::pair<int,int> check_interference_token(logistic_sim::Token &token) override;
+    void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path) override;
 };
 } // namespace constagent
 

@@ -96,7 +96,7 @@ public:
     int compute_cost_of_route(std::vector<uint> r);
     logistic_sim::Mission coalition_formation(logistic_sim::Token &token);
     //
-    void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
+    virtual void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();
     virtual std::pair<int,int> check_interference_token(logistic_sim::Token &token);
     virtual void token_callback(const logistic_sim::TokenConstPtr &msg);

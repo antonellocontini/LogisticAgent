@@ -23,19 +23,29 @@ void DistrAgent::tp_dijkstra(uint source, uint destination, int *shortest_path, 
     for (int i = 0; i < dimension; i++)
     {
         // copia della struttura
-        // web_copy[i] = vertex_web[i];
         web_copy[i].id = vertex_web[i].id;
         web_copy[i].num_neigh = vertex_web[i].num_neigh;
         web_copy[i].x = vertex_web[i].x;
         web_copy[i].y = vertex_web[i].y;
-        memcpy(web_copy[i].id_neigh, vertex_web[i].id_neigh, sizeof(uint) * 8);
-        memcpy(web_copy[i].cost, vertex_web[i].cost, sizeof(uint) * 8);
-        memcpy(web_copy[i].cost_m, vertex_web[i].cost_m, sizeof(float) * 8);
-        memcpy(web_copy[i].visited, vertex_web[i].visited, sizeof(bool) * 8);
-        for (int j = 0; j < web_copy[i].num_neigh; j++)
+        for(int j=0; j<web_copy[i].num_neigh; j++)
         {
-            memcpy(web_copy[i].dir[j], vertex_web[i].dir[j], sizeof(char) * 3);
+            web_copy[i].id_neigh[j] = vertex_web[i].id_neigh[j];
+            web_copy[i].cost[j] = vertex_web[i].cost[j];
+            web_copy[i].cost_m[j] = vertex_web[i].cost_m[j];
+            web_copy[i].visited[j] = vertex_web[i].visited[j];
+            for(int k=0; k<3; k++)
+            {
+                web_copy[i].dir[j][k] = vertex_web[i].dir[j][k];
+            }
         }
+        // memcpy(web_copy[i].id_neigh, vertex_web[i].id_neigh, sizeof(uint) * 8);
+        // memcpy(web_copy[i].cost, vertex_web[i].cost, sizeof(uint) * 8);
+        // memcpy(web_copy[i].cost_m, vertex_web[i].cost_m, sizeof(float) * 8);
+        // memcpy(web_copy[i].visited, vertex_web[i].visited, sizeof(bool) * 8);
+        // for (int j = 0; j < web_copy[i].num_neigh; j++)
+        // {
+        //     memcpy(web_copy[i].dir[j], vertex_web[i].dir[j], sizeof(char) * 3);
+        // }
 
         // incremento il peso degli archi occupati
         for (int j = 0; j < web_copy[i].num_neigh; j++)
@@ -622,6 +632,11 @@ int DistrAgent::compute_next_vertex(logistic_sim::Token &token)
     else if (go_dst())
     {
         tp_dijkstra(current_vertex, current_mission.DSTS[0], path, path_length);
+    }
+    else
+    {
+        c_print("[WARN]\tdon't know what to do, staying still...");
+        return current_vertex;
     }
 
     c_print("[DEBUG]\tpath_length: ", path_length, "\tpath:", yellow);
