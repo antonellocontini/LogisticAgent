@@ -17,6 +17,11 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
     //     }
     // }
 
+    if (reached_home)
+    {
+        return std::pair<int,int>(0, 0);
+    }
+
     if (ros::Time::now().toSec() - last_interference < 10) // seconds
     {
         return std::pair<int,int>(t_interference, id_interference); // false if within 10 seconds from the last one
@@ -59,17 +64,18 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
             // token.INTERFERENCE_STATUS[ID_ROBOT] = 1;
             // return std::pair<int,int>(1, i);
 
-            c_print("Metric boolean: ", my_distance > other_distance, red, P);
+            // c_print("Distance Metric boolean: ", my_distance > other_distance, red, P);
             if (my_distance > other_distance)
             {
                 last_interference = ros::Time::now().toSec();
                 token.INTERFERENCE_COUNTER[ID_ROBOT]++;
-                if (current_vertex == token.NEXT_VERTEX[i])
+                // i due robot si stanno venendo incontro
+                if (current_vertex == token.NEXT_VERTEX[i] && token.CURR_VERTEX[i] == next_vertex)
                 {
                     token.INTERFERENCE_STATUS[ID_ROBOT] = 1;
                     return std::pair<int,int>(1, i);
                 }
-                else
+                else if(next_vertex == token.NEXT_VERTEX[i])
                 {
                     token.INTERFERENCE_STATUS[ID_ROBOT] = 2;
                     return std::pair<int,int>(2, i);
@@ -77,7 +83,8 @@ std::pair<int,int> ConstAgent::check_interference_token(logistic_sim::Token &tok
             }
             else
             {
-                c_print("[DEBUG]\tDovrebbe andare ROBOT_ID: ", i, " in interferenza", red, P);
+                if (next_vertex == token.NEXT_VERTEX[i] || (current_vertex == token.NEXT_VERTEX[i] && token.CURR_VERTEX[i] == next_vertex))
+                    c_print("[DEBUG]\tDovrebbe andare ROBOT_ID: ", i, " in interferenza", red, P);
             }
         }
     }
