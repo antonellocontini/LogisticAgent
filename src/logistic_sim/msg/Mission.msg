@@ -9,3 +9,5 @@ uint32[]    DEMANDS
 float64     V
 uint32      TOT_DEMAND
 uint32      PATH_DISTANCE
+
+uint32      GOOD

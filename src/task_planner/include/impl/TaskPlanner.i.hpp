@@ -47,24 +47,24 @@ void TaskPlanner::init(int argc, char **argv)
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
-    // // aspetto che arrivino gli agenti
-    // sleep(10);
+    // aspetto che arrivino gli agenti
+    sleep(10);
 
-    // // giro di inizializzazione
-    // logistic_sim::Token token;
-    // token.ID_SENDER = TASK_PLANNER_ID;
-    // token.ID_RECEIVER = 0;
-    // token.INIT = true;
+    // giro di inizializzazione
+    logistic_sim::Token token;
+    token.ID_SENDER = TASK_PLANNER_ID;
+    token.ID_RECEIVER = 0;
+    token.INIT = true;
 
-    // pub_token.publish(token);
-    // ros::spinOnce();
+    pub_token.publish(token);
+    ros::spinOnce();
 
-    // sleep(1);
+    sleep(1);
 
-    // c_print("INIT", green);
+    c_print("INIT", green);
 }
 
-int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
+int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
 {
     int custo_final = 0;
     for (int i = 1; i < route.size(); i++)
@@ -75,6 +75,7 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
         for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
         {
             if (vertex_web[anterior].id_neigh[j] == proximo)
+     
             {
                 custo_final += vertex_web[anterior].cost[j];
                 break;
@@ -84,10 +85,11 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
     return custo_final;
 }
 
+
 void TaskPlanner::missions_generator()
 {
     int size = 3;
-    int size_2 = 1;
+    int size_2 = 3;
     int d = 1;
 
     static int id = 0;
@@ -109,7 +111,6 @@ void TaskPlanner::missions_generator()
             case 0:
             {
                 c_print("0");
-                // copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
                 std::copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
                 break;
             }
@@ -151,61 +152,6 @@ void TaskPlanner::missions_generator()
 
 } // namespace taskplanner
 
-void TaskPlanner::set_partition()
-{
-
-    t_partition v;
-    try
-    {
-        partition::iterator it(nTask);
-        int id_partition = 0;
-        while (true)
-        {
-            std::vector<std::vector<logistic_sim::Mission>> partitions = *it[missions];
-            auto n_subsets = it.subsets();
-            logistic_sim::Mission best_partition;
-            best_partition.ID = id_partition;
-            id_partition++;
-            uint tmp_TD = 0;
-            uint tmp_D = 0;
-            c_print(tmp_D);
-            for (int i = 0; i < n_subsets; i++)
-            {
-                std::vector<logistic_sim::Mission> subset = partitions[i];
-                for (int j = 0; j < subset.size(); j++)
-                {
-                    tmp_D += subset[j].TOT_DEMAND;
-                }
-                if (tmp_D > 3)
-                {
-                    c_print("candidato cattivo", red);
-                    
-                    ++it;
-                    tmp_D = 0;
-                    break;
-                }
-                if(i == n_subsets -1)
-                {
-                    // c_print("aggiungo il candidato", yellow);
-                    v.first = partitions;   
-                }
-            }
-
-            c_print(tmp_D);
-
-            // if (tmp_D <= 12)
-            // {
-            //     c_print("candidato buono", green);
-            // }
-        }
-    }
-    catch (std::overflow_error &)
-    {
-    }
-
-    auto c = v.first.size();
-    cout <<"size: "<< c ;
-}
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {

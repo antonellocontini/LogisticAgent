@@ -34,8 +34,6 @@
 namespace taskplanner
 {
 
-using t_partition = std::pair<std::vector<std::vector<logistic_sim::Mission>>, logistic_sim::Mission>;
-
 const std::string PS_path = ros::package::getPath("logistic_sim");
 
 // dati relativi al singolo robot
@@ -50,9 +48,9 @@ struct MonitorData
     int last_dst = -1;
 };
 
-ostream& operator<<(ostream &os, const MonitorData &md);
+ostream &operator<<(ostream &os, const MonitorData &md);
 
-ostream& operator<<(ostream &os, const vector<MonitorData> &v);
+ostream &operator<<(ostream &os, const vector<MonitorData> &v);
 
 class TaskPlanner
 {
@@ -74,7 +72,13 @@ public:
     const uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     const uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
     const uint p_21[16] = {6, 7, 9, 12, 14, 17, 19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
-    
+    const uint p_11_16[14] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 15, 13, 10, 8, 5};
+    const uint p_11_21[18] = {6, 7, 9, 12, 11, 12, 14, 17, 19,
+                              22, 21, 20, 18, 15, 13, 10, 8, 5};
+    const uint p_16_21[18] = {6, 7, 9, 12, 14, 17, 16, 17, 19, 22,
+                              21, 20, 18, 15, 13, 10, 8, 5};
+    const uint p_11_16_21[20] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 17,
+                                 19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
     //----------------------------------------------------------------------------
 
     vector<logistic_sim::Mission> missions;
@@ -85,12 +89,13 @@ public:
 
     ros::Time start_time;
 
-    int compute_cost_of_route(std::vector<uint> route);
-    virtual void missions_generator();
-    void set_partition();
-    void init(int argc, char **argv);
+    int compute_cost_of_route(std::vector<uint> &route);
 
-    virtual void token_Callback( const logistic_sim::TokenConstPtr &msg);
+    virtual void missions_generator();
+
+    virtual void init(int argc, char **argv);
+
+    virtual void token_Callback(const logistic_sim::TokenConstPtr &msg);
 
 protected:
     // per l'inizializzazione e il token dei task
