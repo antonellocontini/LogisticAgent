@@ -808,7 +808,14 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // metto nel token quale arco sto occupando
         token.CURR_VERTEX[ID_ROBOT] = current_vertex;
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
-        token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
+        if (!current_mission.DSTS.empty())
+        {
+            token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
+        }
+        else
+        {
+            token.CURR_DST[ID_ROBOT] = initial_vertex;
+        }
 
         std::pair<int,int> interf_pair = check_interference_token(token);
         t_interference = interf_pair.first;
