@@ -13,6 +13,8 @@ int main(int argc, char **argv)
 
   TP.init(argc, argv);
 
+  TP.set_partition();
+
   c_print("inizializzazione finita!", green);
 
   ros::AsyncSpinner spinner(2);

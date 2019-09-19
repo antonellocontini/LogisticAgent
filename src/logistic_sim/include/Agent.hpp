@@ -57,8 +57,6 @@
 #include "algorithms.hpp" // <<< ALGO
 #include "get_graph.hpp"
 #include "message_types.hpp"
-#include "struct_task.hpp"
-
 
 #include "logistic_sim/Mission.h"
 
@@ -120,7 +118,7 @@ protected:
 
   vertex *vertex_web;
   std::vector<uint> path;
-  std::vector<Task> mission;
+  
   uint id_vertex = 0;
   uint id_task = 0;
 

@@ -5,16 +5,16 @@
 namespace taskplanner
 {
 
-ostream& operator<<(ostream &os, const MonitorData &md)
+ostream &operator<<(ostream &os, const MonitorData &md)
 {
     os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions << "," << md.completed_tasks << "," << md.total_time;
     return os;
 }
 
-ostream& operator<<(ostream &os, const vector<MonitorData> &v)
+ostream &operator<<(ostream &os, const vector<MonitorData> &v)
 {
     os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS,COMPLETED_TASKS,TOTAL_TIME" << endl;
-    for(int i=0; i<v.size(); i++)
+    for (int i = 0; i < v.size(); i++)
     {
         os << i << "," << v[i] << endl;
     }
@@ -41,27 +41,27 @@ void TaskPlanner::init(int argc, char **argv)
     uint nedges = GetNumberEdges(vertex_web, dimension);
     printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
     TEAM_SIZE = atoi(argv[3]);
-    ALGORITHM = argv[2]; 
-    
+    ALGORITHM = argv[2];
+
     missions_generator();
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
-    // aspetto che arrivino gli agenti
-    sleep(10);
+    // // aspetto che arrivino gli agenti
+    // sleep(10);
 
-    // giro di inizializzazione
-    logistic_sim::Token token;
-    token.ID_SENDER = TASK_PLANNER_ID;
-    token.ID_RECEIVER = 0;
-    token.INIT = true;
+    // // giro di inizializzazione
+    // logistic_sim::Token token;
+    // token.ID_SENDER = TASK_PLANNER_ID;
+    // token.ID_RECEIVER = 0;
+    // token.INIT = true;
 
-    pub_token.publish(token);
-    ros::spinOnce();
+    // pub_token.publish(token);
+    // ros::spinOnce();
 
-    sleep(1);
+    // sleep(1);
 
-    c_print("INIT", green);
+    // c_print("INIT", green);
 }
 
 int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
@@ -86,37 +86,42 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> route)
 
 void TaskPlanner::missions_generator()
 {
-    int size = 4;
-    int size_2 = 3;
+    int size = 3;
+    int size_2 = 1;
     int d = 1;
 
     static int id = 0;
     for (auto i = 0; i < size; i++)
     {
+        c_print("oh");
         for (auto j = 0; j < size_2; j++)
         {
-
+            c_print("eh");
             logistic_sim::Mission m;
             m.PICKUP = false;
             m.ID = id;
             id++;
             m.PRIORITY = 0;
             m.ITEM.push_back(i % 3);
-
+            c_print("ah");
             switch (i % 3)
             {
             case 0:
             {
-                copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
+                c_print("0");
+                // copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
+                std::copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
                 break;
             }
             case 1:
             {
+                c_print("1");
                 copy(std::begin(p_16), std::end(p_16), back_inserter(m.ROUTE));
                 break;
             }
             case 2:
             {
+                c_print("2");
                 copy(std::begin(p_21), std::end(p_21), back_inserter(m.ROUTE));
                 break;
             }
@@ -145,6 +150,62 @@ void TaskPlanner::missions_generator()
     }
 
 } // namespace taskplanner
+
+void TaskPlanner::set_partition()
+{
+
+    t_partition v;
+    try
+    {
+        partition::iterator it(nTask);
+        int id_partition = 0;
+        while (true)
+        {
+            std::vector<std::vector<logistic_sim::Mission>> partitions = *it[missions];
+            auto n_subsets = it.subsets();
+            logistic_sim::Mission best_partition;
+            best_partition.ID = id_partition;
+            id_partition++;
+            uint tmp_TD = 0;
+            uint tmp_D = 0;
+            c_print(tmp_D);
+            for (int i = 0; i < n_subsets; i++)
+            {
+                std::vector<logistic_sim::Mission> subset = partitions[i];
+                for (int j = 0; j < subset.size(); j++)
+                {
+                    tmp_D += subset[j].TOT_DEMAND;
+                }
+                if (tmp_D > 3)
+                {
+                    c_print("candidato cattivo", red);
+                    
+                    ++it;
+                    tmp_D = 0;
+                    break;
+                }
+                if(i == n_subsets -1)
+                {
+                    // c_print("aggiungo il candidato", yellow);
+                    v.first = partitions;   
+                }
+            }
+
+            c_print(tmp_D);
+
+            // if (tmp_D <= 12)
+            // {
+            //     c_print("candidato buono", green);
+            // }
+        }
+    }
+    catch (std::overflow_error &)
+    {
+    }
+
+    auto c = v.first.size();
+    cout <<"size: "<< c ;
+}
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -175,7 +236,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         {
             // per come i robot sono ordinati l'ID del sender equivale al numero di robot meno 1
             num_robots = msg->ID_SENDER + 1;
-            for(int i=0; i<num_robots; i++)
+            for (int i = 0; i < num_robots; i++)
             {
                 MonitorData data;
                 robots_data.push_back(data);
@@ -194,7 +255,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         }
 
         // stampa quando avviene interferenza
-        for(int i=0; i<last_interf_count.size(); i++)
+        for (int i = 0; i < last_interf_count.size(); i++)
         {
             if (token.INTERFERENCE_COUNTER[i] > last_interf_count[i])
             {
@@ -204,7 +265,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         }
 
         // aggiorno la mia struttura con i dati del token
-        for (int i=0; i<num_robots; i++)
+        for (int i = 0; i < num_robots; i++)
         {
             robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
             robots_data[i].completed_missions = token.MISSIONS_COMPLETED[i];
@@ -222,7 +283,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             std::stringstream conf_dir_name;
-            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0];  
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0];
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
             {
@@ -235,14 +296,13 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             // loop per controllare se il file già esiste
             do
             {
-                filename.str("");   // cancella la stringa
+                filename.str(""); // cancella la stringa
                 filename << conf_dir_name.str() << "/" << run_number << ".csv";
                 check_new = std::ifstream(filename.str());
                 run_number++;
             } while (check_new);
             check_new.close();
-            
-            
+
             ofstream stats(filename.str());
             stats << robots_data;
             stats.close();
