@@ -764,7 +764,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 need_task = false;
             }
         }
-
+        // controllo del next step degli altri robot 
         init_tw_map();
         // c_print("[DEBUG]\tinit_tw_map() terminato\n\tAggiornamento mappa archi...", yellow);
         for (auto i = 0; i < TEAM_SIZE; i++)

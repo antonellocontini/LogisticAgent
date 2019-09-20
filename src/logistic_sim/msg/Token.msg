@@ -25,4 +25,7 @@ uint32[]    MISSIONS_COMPLETED
 uint32[]    TASKS_COMPLETED
 float32[]   TOTAL_DISTANCE
 
+bool[]      GOAL_STATUS
+
 bool        END_SIMULATION
+
