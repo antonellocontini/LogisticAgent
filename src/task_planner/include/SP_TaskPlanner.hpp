@@ -61,14 +61,14 @@ void print_coalition(const t_coalition &coalition)
         //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
         std::cout << "td: " << t.TOT_DEMAND << "\n";
         //     std::cout << " V: " << t.V << "\n";
-        //     auto size_dsts = t.DSTS.size();
-        //     std::cout << "dsts"
-        //               << "\n";
-        //     for (int i = 0; i < size_dsts; i++)
-        //     {
-        //         std::cout << t.DSTS[i] << " ";
-        //     }
-        //     std::cout << "\n";
+            auto size_dsts = t.DSTS.size();
+            std::cout << "dsts"
+                      << "\n";
+            for (int i = 0; i < size_dsts; i++)
+            {
+                std::cout << t.DSTS[i] << " ";
+            }
+            std::cout << "\n";
 
         auto size_boh = t.DEMANDS.size();
         std::cout << "demands"
@@ -101,11 +101,10 @@ class SP_TaskPlanner : public TaskPlanner
 public:
     SP_TaskPlanner(ros::NodeHandle &nh_);
     ~SP_TaskPlanner(){};
-    void init(int argc, char **argv) override;
+
     uint compute_cycle_dst(logistic_sim::Mission &mission);
     void compute_route(uint id, logistic_sim::Mission &mission);
-    void set_partition();
-    void token_Callback( const logistic_sim::TokenConstPtr &msg) override;
+    void set_partition() override;
 };
 
 } // namespace SP_TaskPlanner

@@ -2,6 +2,11 @@
 
 using namespace taskplanner;
 
+void TaskPlanner::set_partition()
+{
+  c_print("set_partition on TP Base", red);
+}
+
 //------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {

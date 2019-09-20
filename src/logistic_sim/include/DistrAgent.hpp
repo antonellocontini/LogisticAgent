@@ -94,7 +94,7 @@ public:
     uint compute_id_path(logistic_sim::Mission &m);
     void compute_travell(uint id_path, logistic_sim::Mission &m);
     int compute_cost_of_route(std::vector<uint> r);
-    logistic_sim::Mission coalition_formation(logistic_sim::Token &token);
+    virtual logistic_sim::Mission coalition_formation(logistic_sim::Token &token);
     //
     virtual void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
     void init_tw_map();

@@ -9,7 +9,6 @@ SP_TaskPlanner::SP_TaskPlanner(ros::NodeHandle &nh_)
 
 }
 
-
 uint SP_TaskPlanner::compute_cycle_dst(logistic_sim::Mission &mission)
 {
     uint res = 0;
@@ -156,7 +155,7 @@ void SP_TaskPlanner::set_partition()
 
                 candidate.second.V += candidate_subset.V;
 
-                if (candidate_subset.TOT_DEMAND > 3)
+                if (candidate_subset.TOT_DEMAND > 6)
                 {
                     candidate.second.GOOD++;
                 }
@@ -190,6 +189,8 @@ void SP_TaskPlanner::set_partition()
      auto ele = good_partition.front();
 
      print_coalition(ele);
+
+     missions = ele.first;
 
 } // namespace taskplanner
 

@@ -55,22 +55,23 @@ int main(int argc, char **argv)
 {
   using namespace taskplanner;
 
-  // sinistra task, destra mission
+  // // sinistra task, destra mission
 
-  ros::init(argc, argv, "task_planner");
+  // ros::init(argc, argv, "task_planner");
 
-  ros::NodeHandle nh_; // con ~ avremmo il prefisso sui topic
+  // ros::NodeHandle nh_; // con ~ avremmo il prefisso sui topic
 
-  TaskPlanner TP(nh_);
+  // TaskPlanner TP(nh_);
+  // TP.init(argc, argv);
 
-  TP.missions_generator();
+  // TP.missions_generator();
 
-  int CAPACITY_ROBOT = 3;
+  // int CAPACITY_ROBOT = 3;
 
-  auto size_m = TP.missions.size();
+  // auto size_m = TP.missions.size();
 
-  while (1)
-  cout << "MA dio cane\n";
+  // while (1)
+  //   cout << "MA dio cane\n";
 
   // std::vector<t_coalition> v_coalitions;
 

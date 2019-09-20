@@ -61,6 +61,7 @@ public:
     vertex *vertex_web;
 
     std::string ALGORITHM;
+    std::string GENERATION;
     uint TEAM_CAPACITY = 0;
     std::vector<uint> CAPACITY;
     uint TEAM_SIZE = 0;
@@ -91,9 +92,16 @@ public:
 
     int compute_cost_of_route(std::vector<uint> &route);
 
-    virtual void missions_generator();
+    void missions_generator(std::string &gen_type);
 
-    virtual void init(int argc, char **argv);
+    void u_missions_generator();
+    void nu_missions_generator();
+
+    logistic_sim::Mission create_mission(uint type, int id);
+    
+    virtual void set_partition();
+
+    void init(int argc, char **argv);
 
     virtual void token_Callback(const logistic_sim::TokenConstPtr &msg);
 

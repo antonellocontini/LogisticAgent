@@ -1,9 +1,11 @@
 [Config]
 map: model6
-nrobots: 6
-algorithm: ConstAgent
+nrobots: 2
+algorithm: SPartAgent
 locmode: AMCL
 navmode: ros
 gwait: 0
 capacity: 3
 term: xterm
+tp: SP_TaskPlanner
+gen: uniform
