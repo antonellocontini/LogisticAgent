@@ -58,6 +58,7 @@ add_message_files(
   TaskRequest.msg
   Token.msg
   Mission.msg
+  Path.msg
   # Vertex.msg
   # VertexWeb.ms/g
 )

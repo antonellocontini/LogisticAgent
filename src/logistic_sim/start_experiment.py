@@ -40,7 +40,8 @@ Alg_names = [
         [ 'TokenAgent', 'TokenAgent'],
         [ 'DistrAgent', 'DistrAgent'],
         [ 'ConstAgent', 'ConstAgent'],
-        [ 'SPartAgent','SPartAgent']
+        [ 'SPartAgent','SPartAgent'],
+        [ 'CFreeAgent','CFreeAgent']
      ]
 
 TaskPlanner_names = [ 'TaskPlanner', 'SP_TaskPlanner' ]

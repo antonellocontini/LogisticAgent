@@ -63,7 +63,7 @@ void DistrAgent::run()
 
     ros::Rate loop_rate(30); // 0.033 seconds or 30Hz
 
-    while (ros::ok())
+    while (ros::ok() && !end_simulation)
     {
 
         //  cosa ho globale??? mi serve tempo velocita e posizione
