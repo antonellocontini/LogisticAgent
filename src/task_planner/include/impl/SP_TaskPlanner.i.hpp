@@ -155,7 +155,7 @@ void SP_TaskPlanner::set_partition()
 
                 candidate.second.V += candidate_subset.V;
 
-                if (candidate_subset.TOT_DEMAND > 6)
+                if (candidate_subset.TOT_DEMAND > 3)
                 {
                     candidate.second.GOOD++;
                 }

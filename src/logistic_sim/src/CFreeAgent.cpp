@@ -55,7 +55,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.INTERFERENCE_STATUS.push_back(0);
         token.X_POS.push_back(0.0);
         token.Y_POS.push_back(0.0);
-        token.GOAL_STATUS.push_back(false);
+        token.GOAL_STATUS.push_back(0);
         token.TRAILS.push_back(logistic_sim::Path());
 
         initialize = false;
@@ -138,30 +138,51 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             token.CURR_DST[ID_ROBOT] = initial_vertex;
         }
 
-        if (goal_complete)
-        {
-            token.GOAL_STATUS[ID_ROBOT] = true;
-            goal_complete = false;
-        }
-
         bool go_on = true;
         for(int i=0; i<TEAM_SIZE; i++)
         {
-            if(!token.GOAL_STATUS[i])
+            if(token.GOAL_STATUS[i] != 1)
             {
                 go_on = false;
             }
         }
 
-        if (go_on)
+        if (go_on || token.GOAL_STATUS[ID_ROBOT] == 2)
         {
             c_print("before OnGoal()", magenta);
             next_vertex = token.TRAILS[ID_ROBOT].PATH.front();
             token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
             resend_goal_count = 0;
-            token.GOAL_STATUS[ID_ROBOT] = false;
+            int next;
+            if (ID_ROBOT < TEAM_SIZE - 1)
+            {
+                next = ID_ROBOT + 1;
+            }
+            else
+            {
+                next = 0;
+            }
+
+            token.GOAL_STATUS[ID_ROBOT] = 0;
+            if (token.GOAL_STATUS[next] == 1)
+            {
+                token.GOAL_STATUS[next] = 2;
+            }
+            
             sendGoal(next_vertex);
         }
+
+        if (goal_complete)
+        {
+            current_vertex = next_vertex;
+            token.GOAL_STATUS[ID_ROBOT] = 1;
+            goal_complete = false;
+            if (token.TRAILS[ID_ROBOT].PATH.empty())
+            {
+                need_task = true;
+            }
+        }
+
     }
 
     usleep(30000);

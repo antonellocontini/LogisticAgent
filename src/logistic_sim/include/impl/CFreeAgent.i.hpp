@@ -130,7 +130,8 @@ void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logis
 
   for(i=0; i<elem_s_path; i++){	
 	shortest_path[i] = tab_dijkstra[id_next_vertex].path[i];
-    other_paths[ID_ROBOT].PATH.push_back(tab_dijkstra[id_next_vertex].path[i]);
+	if(i>0)
+    	other_paths[ID_ROBOT].PATH.push_back(tab_dijkstra[id_next_vertex].path[i]);
   }
   
   delete [] tab_dijkstra;
