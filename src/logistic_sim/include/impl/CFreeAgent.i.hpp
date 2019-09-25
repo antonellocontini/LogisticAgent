@@ -36,7 +36,6 @@ void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logis
   std::vector<uint> steps(dimension, 0);
 
   while(true){	
-	
 //	printf("next_vertex = %i\n", next_vertex);
 	
 	if(next_vertex == destination){
@@ -67,7 +66,7 @@ void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logis
             if(i != ID_ROBOT)
             {
                 const logistic_sim::Path &path = other_paths[i];
-                int dist = tab_dijkstra[id_next_vertex].dist;
+                int dist = tab_dijkstra[id_next_vertex].elem_path + other_paths[ID_ROBOT].PATH.size() - 1;
                 if (dist < path.PATH.size())
                 {
                     int other_pos = path.PATH[dist];
@@ -75,11 +74,15 @@ void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logis
                     if (tab_dijkstra[j].id == other_next_pos)
                     {
                         c_print("[WARN ]\tAvoiding other robot", yellow, P);
+						c_print("\tDist: ", dist, yellow, P);
+						c_print("\tOther_pos: ", other_pos, "\tother_next_pos", other_next_pos, yellow, P);
                         cont = false;
                     }
                     if (tab_dijkstra[j].id == other_pos && tab_dijkstra[id_next_vertex].id == other_next_pos)
                     {
                         c_print("[WARN ]\tAvoiding edge of other robot", yellow, P);
+						c_print("\tDist: ", dist, yellow, P);
+						c_print("\tOther_pos: ", other_pos, "\tother_next_pos", other_next_pos, yellow, P);
                         cont = false;
                     }
                 }
@@ -130,7 +133,7 @@ void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logis
 
   for(i=0; i<elem_s_path; i++){	
 	shortest_path[i] = tab_dijkstra[id_next_vertex].path[i];
-	if(i>0)
+	if(i>0 || other_paths[ID_ROBOT].PATH.empty())
     	other_paths[ID_ROBOT].PATH.push_back(tab_dijkstra[id_next_vertex].path[i]);
   }
   

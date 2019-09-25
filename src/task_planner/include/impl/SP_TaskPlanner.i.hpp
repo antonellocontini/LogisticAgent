@@ -127,7 +127,7 @@ void SP_TaskPlanner::set_partition()
             auto n_subsets = it.subsets();
             logistic_sim::Mission candidate_partition;
             candidate_partition.ID = id_partition;
-            c_print(id_partition);
+            // c_print(id_partition);
             id_partition++;
             uint tmp_TD = 0;
             int id_subset = 0;
