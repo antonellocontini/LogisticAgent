@@ -2,6 +2,7 @@ Header      HEADER
 uint32      ID_SENDER
 uint32      ID_RECEIVER
 bool        INIT
+bool        STEP
 
 Mission[]   MISSION
 Mission[]   ASSIGNED_MISSION
@@ -27,6 +28,7 @@ float32[]   TOTAL_DISTANCE
 
 uint32[]      GOAL_STATUS
 Path[]      TRAILS
+uint32      INIT_POS_INDEX
 
 bool        END_SIMULATION
 
