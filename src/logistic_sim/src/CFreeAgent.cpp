@@ -99,7 +99,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         if(!path_calculated)
         {
             uint last = current_vertex;
-            uint init_pos = token.INIT_POS[token.INIT_POS_INDEX];
+            // uint init_pos = token.INIT_POS[token.INIT_POS_INDEX];
+            uint init_pos = 9;
             token.INIT_POS_INDEX++;
             for(auto jt = missions.begin(); jt != missions.end(); jt++)
             {
@@ -116,15 +117,52 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
             c_print("Planning from ", last, " to ", init_pos, yellow, P);
             token_dijkstra(last, init_pos, token.TRAILS);
-            int i=0;
+            int j=0;
             for(auto it = token.TRAILS[ID_ROBOT].PATH.begin(); it != token.TRAILS[ID_ROBOT].PATH.end(); it++)
             {
-                c_print("INDEX: ", i, "V: ", *it, green, P);
-                i++;
+                c_print("INDEX: ", j, "V: ", *it, green, P);
+                j++;
             }
+
+            // controllo se percorsi sono definiti per ritorno a casa
+            bool defined = true;
+            for(int i=0; i<TEAM_SIZE; i++)
+            {
+                if (token.TRAILS[i].PATH.empty())
+                    defined = false;
+            }
+            // entra solo l'ultimo robot a calcolare i percorsi
+            if (defined)
+            {
+                // fisso la parte finale per tutti i robot
+                std::vector<uint> indices(TEAM_SIZE);
+                for(int i=0; i<TEAM_SIZE; i++)
+                {
+                    indices[i] = i;
+                }
+                auto cmp_function = [&](uint lhs, uint rhs)
+                {
+                    return token.TRAILS[lhs].PATH.size() > token.TRAILS[rhs].PATH.size();
+                };
+                std::sort(indices.begin(), indices.end(), cmp_function);
+                for(auto it = indices.begin(); it != indices.end(); it++)
+                {
+                    std::cout << "*it " << *it << "INIT_POS[*it] " << token.INIT_POS[*it] << "\n";
+                    std::cout << "Casa robot " << *it << "\n";
+                    int home_vertex = token.INIT_POS[*it];
+                    for(int i=5; i>=home_vertex; i--)
+                    {
+                        std::cout << i << " ";
+                        token.TRAILS[*it].PATH.push_back(i);
+                    }
+                    std::cout << std::endl;
+                }
+            }
+
             sendGoal(token.TRAILS[ID_ROBOT].PATH[0]);
             path_calculated = true;
         }
+
         // aggiorno posizione
         token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
         token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
@@ -134,23 +172,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             {
                 xPos[i] = token.X_POS[i];
                 yPos[i] = token.Y_POS[i];
-            }
-        }
-
-        if (go_home)
-        {
-            auto it = std::min_element(token.INIT_POS.begin(), token.INIT_POS.end());
-            if (initial_vertex != *it)
-            {
-                initial_vertex = *it;
-                goal_complete = true;
-            }
-
-            if (current_vertex == *it)
-            {
-                token.INIT_POS.erase(it);
-                go_home = false;
-                need_task = false;
             }
         }
 
@@ -174,8 +195,23 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 go_on = false;
             }
         }
+        
+        if (goal_complete)
+        {
+            current_vertex = next_vertex;
+            token.GOAL_STATUS[ID_ROBOT] = 1;
+            if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+            {
+                goal_complete = false;
+                token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
+            }
+            else
+            {
+                reached_home = true;
+            }
+        }
 
-        if (go_on || token.GOAL_STATUS[ID_ROBOT] == 2)
+        if ((go_on || token.GOAL_STATUS[ID_ROBOT] == 2) && !reached_home)
         {
             c_print("before OnGoal()", magenta);
             next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
@@ -200,13 +236,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             sendGoal(next_vertex);
         }
 
-        if (goal_complete)
-        {
-            current_vertex = next_vertex;
-            token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
-            token.GOAL_STATUS[ID_ROBOT] = 1;
-            goal_complete = false;           
-        }
 
     }
 
