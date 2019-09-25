@@ -136,24 +136,24 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 
 void TaskPlanner::u_missions_generator()
 {
-    int size = 3;
-    int size_2 = 3;
+    int size = 5;
+    int size_2 = 2;
     int d = 1;
 
     static int id = 0;
     for (auto i = 0; i < size; i++)
     {
-        c_print("oh");
+        // c_print("oh");
         for (auto j = 0; j < size_2; j++)
         {
-            c_print("eh");
+            // c_print("eh");
             logistic_sim::Mission m;
             m.PICKUP = false;
             m.ID = id;
             id++;
             m.PRIORITY = 0;
             m.ITEM.push_back(i % 3);
-            c_print("ah");
+            // c_print("ah");
             switch (i % 3)
             {
             case 0:

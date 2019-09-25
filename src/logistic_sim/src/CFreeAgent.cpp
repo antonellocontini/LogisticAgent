@@ -66,15 +66,37 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     }
     else if(msg->STEP)
     {
-        static std::vector<logistic_sim::Mission> missions;
+        // static std::vector<logistic_sim::Mission> missions;
         if (!token.MISSION.empty())
         {
+            // PRINT TOKEN MISSIONS
+            // std::cout << "=======================" << std::endl;
+            // for(auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
+            // {
+            //     const logistic_sim::Mission &m = *it;
+            //     std::cout << "Mission id: " << m.ID << std::endl;
+            //     for(auto jt = m.DSTS.begin(); jt != m.DSTS.end(); jt++)
+            //     {
+            //         std::cout << *jt << " ";
+            //     }
+            //     std::cout << std::endl << std::endl;
+            // }
             logistic_sim::Mission m = token.MISSION.back();
             token.MISSION.pop_back();
             missions.emplace(missions.begin(), m);
 
         }
         else
+        {
+            if (ID_ROBOT == TEAM_SIZE - 1)
+            {
+                token.STEP = false;
+            }
+        }
+    }
+    else
+    {
+        if(!path_calculated)
         {
             uint last = current_vertex;
             uint init_pos = token.INIT_POS[token.INIT_POS_INDEX];
@@ -100,15 +122,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 c_print("INDEX: ", i, "V: ", *it, green, P);
                 i++;
             }
-            if (ID_ROBOT == TEAM_SIZE - 1)
-            {
-                token.STEP = false;
-            }
             sendGoal(token.TRAILS[ID_ROBOT].PATH[0]);
+            path_calculated = true;
         }
-    }
-    else
-    {
         // aggiorno posizione
         token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
         token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
