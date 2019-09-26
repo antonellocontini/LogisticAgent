@@ -112,7 +112,6 @@ void SP_TaskPlanner::compute_route(uint id, logistic_sim::Mission &m)
 void SP_TaskPlanner::set_partition()
 {
     std::vector<t_coalition> good_partition;
-    std::vector<t_coalition> all_partition;
     try
     {
 
@@ -166,22 +165,16 @@ void SP_TaskPlanner::set_partition()
 
             ++it;
             candidate.first = m;
-            all_partition.push_back(candidate);
+            if (candidate.second.GOOD == 0)
+            {
+                c_print("ok", green);
+                // print_coalition(*it);
+                good_partition.push_back(candidate);
+            }
         }
     }
     catch (std::overflow_error &)
     {
-    }
-
-    for (vector<t_coalition>::iterator it = all_partition.begin(); it != all_partition.end();)
-    {
-        if (it->second.GOOD == 0)
-        {
-            c_print("ok", green);
-            // print_coalition(*it);
-            good_partition.push_back(*it);
-        }
-        ++it;
     }
 
      std::sort(good_partition.begin(), good_partition.end(), less_V());
