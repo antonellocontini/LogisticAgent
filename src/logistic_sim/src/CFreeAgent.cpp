@@ -142,18 +142,18 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 }
                 auto cmp_function = [&](uint lhs, uint rhs)
                 {
-                    return token.TRAILS[lhs].PATH.size() > token.TRAILS[rhs].PATH.size();
+                    return token.TRAILS[lhs].PATH.size() < token.TRAILS[rhs].PATH.size();
                 };
                 std::sort(indices.begin(), indices.end(), cmp_function);
-                for(auto it = indices.begin(); it != indices.end(); it++)
+                for(int j=0; j<indices.size(); j++)
                 {
-                    std::cout << "*it " << *it << "INIT_POS[*it] " << token.INIT_POS[*it] << "\n";
-                    std::cout << "Casa robot " << *it << "\n";
-                    int home_vertex = token.INIT_POS[*it];
+                    std::cout << "*it " << j << "INIT_POS[j] " << token.INIT_POS[indices[j]] << "\n";
+                    std::cout << "Casa robot " << j << "\n";
+                    int home_vertex = token.INIT_POS[indices[j]];
                     for(int i=5; i>=home_vertex; i--)
                     {
                         std::cout << i << " ";
-                        token.TRAILS[*it].PATH.push_back(i);
+                        token.TRAILS[j].PATH.push_back(i);
                     }
                     std::cout << std::endl;
                 }
@@ -186,57 +186,47 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         {
             token.CURR_DST[ID_ROBOT] = initial_vertex;
         }
-
-        bool go_on = true;
-        for(int i=0; i<TEAM_SIZE; i++)
-        {
-            if(token.GOAL_STATUS[i] != 1)
-            {
-                go_on = false;
-            }
-        }
         
         if (goal_complete)
         {
+            static bool first_time = true;
             current_vertex = next_vertex;
-            token.GOAL_STATUS[ID_ROBOT] = 1;
-            if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+            if(first_time)
             {
-                goal_complete = false;
-                token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
-            }
-            else
-            {
-                reached_home = true;
-            }
-        }
-
-        if ((go_on || token.GOAL_STATUS[ID_ROBOT] == 2) && !reached_home)
-        {
-            c_print("before OnGoal()", magenta);
-            next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
-            resend_goal_count = 0;
-            int next;
-            if (ID_ROBOT < TEAM_SIZE - 1)
-            {
-                next = ID_ROBOT + 1;
-            }
-            else
-            {
-                next = 0;
-            }
-
-            token.GOAL_STATUS[ID_ROBOT] = 0;
-            if (token.GOAL_STATUS[next] == 1)
-            {
-                token.GOAL_STATUS[next] = 2;
+                token.GOAL_STATUS[ID_ROBOT]++;
+                first_time = false;
             }
             
-            c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
-            sendGoal(next_vertex);
+            bool equal_status = true;
+            int status = token.GOAL_STATUS[0];
+            for(int i=1; i<TEAM_SIZE; i++)
+            {
+                if(token.GOAL_STATUS[i] != status)
+                    equal_status = false;
+            }
+
+            if(equal_status)
+            {
+                first_time = true;
+                if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+                {
+                    goal_complete = false;
+                    token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
+                    next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                }
+                else
+                {
+                    next_vertex = current_vertex;
+                    if (TEAM_SIZE-1 == current_vertex)
+                    {
+                        token.INIT_POS.clear();
+                    }
+                }
+                c_print("before OnGoal()", magenta);
+                c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
+                sendGoal(next_vertex);
+            }
         }
-
-
     }
 
     usleep(30000);
