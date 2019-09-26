@@ -2,141 +2,189 @@
 
 using namespace cfreeagent;
 
-void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logistic_sim::Path> &other_paths){
-  
-  uint i,j,k,x;
-  int id_next_vertex=-1;
-  
+void CFreeAgent::token_dijkstra(uint source, uint destination, std::vector<logistic_sim::Path> &other_paths)
+{
+  uint i, j, k, x;
+  int id_next_vertex = -1;
+
   int shortest_path[dimension];
   uint elem_s_path;
   s_path *tab_dijkstra = new s_path[dimension];
-  
-  //Initialization:
-  for(i=0; i<dimension; i++){
-	
+
+  // Initialization:
+  for (i = 0; i < dimension; i++)
+  {
 	tab_dijkstra[i].id = vertex_web[i].id;
 	tab_dijkstra[i].elem_path = 0;
 	tab_dijkstra[i].visit = false;
-	
-	if (vertex_web[i].id == source) {
+
+	if (vertex_web[i].id == source)
+	{
 	  tab_dijkstra[i].dist = 0;
 	  tab_dijkstra[i].path[0] = source;
 	  tab_dijkstra[i].elem_path++;
 	  id_next_vertex = i;
-	}else{
+	}
+	else
+	{
 	  tab_dijkstra[i].dist = INT_MAX;
 	}
+  }
 
-  }  
-  
   int next_vertex = source;
   int minim_dist;
   bool cont;
-  
+
   std::vector<uint> steps(dimension, 0);
 
-  while(true){	
-//	printf("next_vertex = %i\n", next_vertex);
-	
-	if(next_vertex == destination){
-	 break; 
+  while (true)
+  {
+	//	printf("next_vertex = %i\n", next_vertex);
+
+	if (next_vertex == destination)
+	{
+	  break;
 	}
-	
+
 	tab_dijkstra[id_next_vertex].visit = true;
-	
+
 	/* id_next_vertex has INDEX of next_vertex in tab_dijkstra */
 	/* j has INDEX of the neighbor in tab_disjkstra */
 	/* k has index of the neighbor in the neighbor table of next_vertex */
-	
-	//Go to neihgobors;	
-	for(k=0; k<vertex_web[next_vertex].num_neigh; k++){
-	  
-		cont = false;
-		
-		//condition - cannot have been visited:
-		for(j=0; j<dimension; j++){
-		  if(tab_dijkstra[j].id == vertex_web[next_vertex].id_neigh[k] && tab_dijkstra[j].visit == false){
-			cont = true;
-			break;
-		  }		  
-		}
 
-        for(int i=0; i<other_paths.size(); i++)
-        {
-            if(i != ID_ROBOT)
-            {
-                const logistic_sim::Path &path = other_paths[i];
-                int dist = tab_dijkstra[id_next_vertex].elem_path + other_paths[ID_ROBOT].PATH.size() - 1;
-                if (dist < path.PATH.size())
-                {
-                    int other_pos = path.PATH[dist];
-                    int other_next_pos = path.PATH[dist+1];
-                    if (tab_dijkstra[j].id == other_next_pos)
-                    {
-                        c_print("[WARN ]\tAvoiding other robot", yellow, P);
-						c_print("\tDist: ", dist, yellow, P);
-						c_print("\tOther_pos: ", other_pos, "\tother_next_pos", other_next_pos, yellow, P);
-                        cont = false;
-                    }
-                    if (tab_dijkstra[j].id == other_pos && tab_dijkstra[id_next_vertex].id == other_next_pos)
-                    {
-                        c_print("[WARN ]\tAvoiding edge of other robot", yellow, P);
-						c_print("\tDist: ", dist, yellow, P);
-						c_print("\tOther_pos: ", other_pos, "\tother_next_pos", other_next_pos, yellow, P);
-                        cont = false;
-                    }
-                }
-            }
-        }
-		
-		if(cont){
-		  
-		  //calculate distance from this neighbor:
-		  if( tab_dijkstra[id_next_vertex].dist + vertex_web[next_vertex].cost[k] < tab_dijkstra[j].dist){
-			
-			//update distance to this vertex:
-			tab_dijkstra[j].dist = tab_dijkstra[id_next_vertex].dist + vertex_web[next_vertex].cost[k];
-			
-			//update path (previous path + this one):
-			for (x=0; x<tab_dijkstra[id_next_vertex].elem_path; x++){			 
-			  tab_dijkstra[j].path[x] = tab_dijkstra[id_next_vertex].path[x];			  
+	// Go to neihgobors;
+	int blocked_count = 0;
+	for (k = 0; k < vertex_web[next_vertex].num_neigh; k++)
+	{
+	  cont = false;
+	  bool occupied = false;
+
+	  // condition - cannot have been visited:
+	  for (j = 0; j < dimension; j++)
+	  {
+		// cerco l'id del vertice vicino per poter controllare in tabella se l'ho già visitato
+		if (tab_dijkstra[j].id == vertex_web[next_vertex].id_neigh[k] && tab_dijkstra[j].visit == false)
+		{
+		  cont = true;
+		  break;
+		}
+	  }
+
+	  for (int i = 0; i < other_paths.size() && cont; i++)
+	  {
+		if (i != ID_ROBOT)
+		{
+		  const logistic_sim::Path &path = other_paths[i];
+		  int dist = tab_dijkstra[id_next_vertex].elem_path + other_paths[ID_ROBOT].PATH.size() - 1;
+		  if (dist < path.PATH.size())
+		  {
+			int other_pos = path.PATH[dist];
+			int other_next_pos = path.PATH[dist + 1];
+			if (tab_dijkstra[j].id == other_next_pos)
+			{
+			  //   c_print("[WARN ]\tAvoiding other robot", yellow, P);
+			  //   c_print("\tDist: ", dist, yellow, P);
+			  //   c_print("\tOther_pos: ", other_pos, "\tother_next_pos", other_next_pos, yellow, P);
+			  occupied = true;
 			}
-			
-			tab_dijkstra[j].path[tab_dijkstra[id_next_vertex].elem_path] = tab_dijkstra[j].id;
-			tab_dijkstra[j].elem_path = tab_dijkstra[id_next_vertex].elem_path+1;
-
-		  }	
-		  
+			if (tab_dijkstra[j].id == other_pos && tab_dijkstra[id_next_vertex].id == other_next_pos)
+			{
+			  //   c_print("[WARN ]\tAvoiding edge of other robot", yellow, P);
+			  //   c_print("\tDist: ", dist, yellow, P);
+			  //   c_print("\tOther_pos: ", other_pos, "\tother_next_pos", other_next_pos, yellow, P);
+			  occupied = true;
+			}
+		  }
 		}
-		
+	  }
 
- 
+	  if (!occupied && cont)
+	  {
+		// calculate distance from this neighbor:
+		if (tab_dijkstra[id_next_vertex].dist + vertex_web[next_vertex].cost[k] < tab_dijkstra[j].dist)
+		{
+		  // update distance to this vertex:
+		  tab_dijkstra[j].dist = tab_dijkstra[id_next_vertex].dist + vertex_web[next_vertex].cost[k];
+
+		  // update path (previous path + this one):
+		  for (x = 0; x < tab_dijkstra[id_next_vertex].elem_path; x++)
+		  {
+			tab_dijkstra[j].path[x] = tab_dijkstra[id_next_vertex].path[x];
+		  }
+
+		  tab_dijkstra[j].path[tab_dijkstra[id_next_vertex].elem_path] = tab_dijkstra[j].id;
+		  tab_dijkstra[j].elem_path = tab_dijkstra[id_next_vertex].elem_path + 1;
+		}
+	  }
+	  else if (occupied && cont)
+	  {
+		blocked_count++;
+	  }
 	}
-	
+
+	// valuto l'autoanello
+	// ciclo sui percorsi degli altri
+	if (blocked_count == vertex_web[next_vertex].num_neigh)
+	{
+	  c_print("Valuto autoanello su vertice ", tab_dijkstra[id_next_vertex].id, magenta, P);
+	  cont = true;
+	  for (int i = 0; i < other_paths.size(); i++)
+	  {
+		if (i != ID_ROBOT)
+		{
+		  const logistic_sim::Path &path = other_paths[i];
+		  int dist = tab_dijkstra[id_next_vertex].elem_path + other_paths[ID_ROBOT].PATH.size() - 1;
+		  if (dist < path.PATH.size())
+		  {
+			int other_pos = path.PATH[dist];
+			int other_next_pos = path.PATH[dist + 1];
+			if (tab_dijkstra[id_next_vertex].id == other_next_pos)
+			{
+			  c_print("[WARN ]\tNon posso fare autoanello", yellow, P);
+			  c_print("Robot ", i, " mi impedisce", yellow, P);
+			  c_print("\tDist: ", dist, yellow, P);
+			  c_print("\tother_next_pos ", other_next_pos, yellow, P);
+			  cont = false;
+			}
+		  }
+		}
+	  }
+
+	  if (cont)
+	  {
+		tab_dijkstra[id_next_vertex].path[tab_dijkstra[id_next_vertex].elem_path] = id_next_vertex;
+		tab_dijkstra[id_next_vertex].elem_path = tab_dijkstra[id_next_vertex].elem_path + 1;
+	  }
+	  else
+	  {
+		c_print("IMPOSSIBILE CALCOLARE PERCORSO PARTIZIONI CFree", red, P);
+		return;
+	  }
+	}
+
 	minim_dist = INT_MAX;
-	
-	//decide next_vertex:
-	for(i=0; i<dimension; i++){	  
-	  
-	  if(tab_dijkstra[i].dist < minim_dist && tab_dijkstra[i].visit == false){
+
+	// decide next_vertex:
+	for (i = 0; i < dimension; i++)
+	{
+	  if (tab_dijkstra[i].dist < minim_dist && tab_dijkstra[i].visit == false)
+	  {
 		minim_dist = tab_dijkstra[i].dist;
 		next_vertex = tab_dijkstra[i].id;
 		id_next_vertex = i;
-	  }	 
-	  
+	  }
 	}
-	
   }
-  
-  //Save shortest_path & delete tab_dijkstra... 
-  elem_s_path = tab_dijkstra[id_next_vertex].elem_path; //id_next_vertex has the ID of the destination in tab_dijkstra
 
-  for(i=0; i<elem_s_path; i++){	
+  // Save shortest_path & delete tab_dijkstra...
+  elem_s_path = tab_dijkstra[id_next_vertex].elem_path;  // id_next_vertex has the ID of the destination in tab_dijkstra
+
+  for (i = 0; i < elem_s_path; i++)
+  {
 	shortest_path[i] = tab_dijkstra[id_next_vertex].path[i];
-	if(i>0 || other_paths[ID_ROBOT].PATH.empty())
-    	other_paths[ID_ROBOT].PATH.push_back(tab_dijkstra[id_next_vertex].path[i]);
+	if (i > 0 || other_paths[ID_ROBOT].PATH.empty())
+	  other_paths[ID_ROBOT].PATH.push_back(tab_dijkstra[id_next_vertex].path[i]);
   }
-  
-  delete [] tab_dijkstra;
-  
+
+  delete[] tab_dijkstra;
 }

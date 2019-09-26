@@ -136,8 +136,8 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 
 void TaskPlanner::u_missions_generator()
 {
-    int size = 5;
-    int size_2 = 2;
+    int size = 4;
+    int size_2 = 3;
     int d = 1;
 
     static int id = 0;

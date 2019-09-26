@@ -136,8 +136,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             {
                 // fisso la parte finale per tutti i robot
                 std::vector<uint> indices(TEAM_SIZE);
+                std::cout << "Dimensione percorsi\n";
                 for(int i=0; i<TEAM_SIZE; i++)
                 {
+                    std::cout << "robot " << i << ": " << token.TRAILS[i].PATH.size() << std::endl;
                     indices[i] = i;
                 }
                 auto cmp_function = [&](uint lhs, uint rhs)

@@ -167,7 +167,7 @@ void SP_TaskPlanner::set_partition()
             candidate.first = m;
             if (candidate.second.GOOD == 0)
             {
-                c_print("ok", green);
+                // c_print("ok", green);
                 // print_coalition(*it);
                 good_partition.push_back(candidate);
             }
