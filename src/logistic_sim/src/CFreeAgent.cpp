@@ -98,31 +98,18 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         if(!path_calculated)
         {
-            uint last = current_vertex;
-            // uint init_pos = token.INIT_POS[token.INIT_POS_INDEX];
             uint init_pos = 9;
-            token.INIT_POS_INDEX++;
-            for(auto jt = missions.begin(); jt != missions.end(); jt++)
+            std::vector<uint> waypoints = {current_vertex};
+            for (logistic_sim::Mission m : missions)
             {
-                logistic_sim::Mission m = *jt;
-                c_print("Planning from ", last, " to ", src_vertex, green, P);
-                token_dijkstra(last, src_vertex, token.TRAILS);
-                last = src_vertex;
-                for(auto it = m.DSTS.begin(); it != m.DSTS.end(); it++)
+                waypoints.push_back(src_vertex);
+                for (uint dst : m.DSTS)
                 {
-                    c_print("Planning from ", last, " to ", *it, red, P);
-                    token_dijkstra(last, *it, token.TRAILS);
-                    last = *it;
+                    waypoints.push_back(dst);
                 }
             }
-            c_print("Planning from ", last, " to ", init_pos, yellow, P);
-            token_dijkstra(last, init_pos, token.TRAILS);
-            int j=0;
-            for(auto it = token.TRAILS[ID_ROBOT].PATH.begin(); it != token.TRAILS[ID_ROBOT].PATH.end(); it++)
-            {
-                c_print("INDEX: ", j, "V: ", *it, green, P);
-                j++;
-            }
+            waypoints.push_back(init_pos);
+            token_dijkstra(waypoints, token.TRAILS);
 
             // controllo se percorsi sono definiti per ritorno a casa
             bool defined = true;
