@@ -1,8 +1,8 @@
 #!/bin/bash
 
-SESSION=$USER
+SESSION=log_sim
 MAP=model6
-NROBOTS=2
+NROBOTS=4
 INITPOS=default
 ALG=CFreeAgent
 LOC=AMCL
@@ -13,7 +13,7 @@ TERM=xterm
 TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
-CAPACITY=6
+CAPACITY=3
 TP_NAME=SP_TaskPlanner
 GEN=uniform
 DEBUG=true
@@ -71,11 +71,11 @@ for i in $(seq 0 $n); do
 	tmux splitw
 	tmux select-pane -t $SESSION:2.$i
 	if [ $DEBUG = true ] ; then
-		# if [ $i -eq 5 ] ; then
-		# 	tmux send-keys "rosrun --prefix 'gdb -x commands.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-		# else
-			tmux send-keys "rosrun --prefix 'gdb -ex run --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-		# fi
+		if [ -f "commands_$i.txt" ] ; then
+			tmux send-keys "rosrun --prefix 'gdb -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+		else
+			tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+		fi
 	else
 		tmux send-keys "rosrun logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
 	fi
