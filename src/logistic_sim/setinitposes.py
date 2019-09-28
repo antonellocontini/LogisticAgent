@@ -20,7 +20,7 @@ def setIP(mapname,vip):
     for i in range(0,n):
         x = ip[i*2]
         y = ip[i*2+1]
-        th = 90
+        th = 0
         fn = 'params/amcl/robot_'+str(i)+'_initial_pose.xml'
         f = open(fn, 'w')
         f.write('<launch>\n')
