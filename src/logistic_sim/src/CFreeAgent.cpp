@@ -110,6 +110,12 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
             waypoints.push_back(init_pos);
             token_dijkstra(waypoints, token.TRAILS);
+            std::cout << "Percorso robot " << ID_ROBOT << std::endl;
+            for(uint v : token.TRAILS[ID_ROBOT].PATH)
+            {
+                std::cout << setw(2) << v << " ";
+            }
+            std::cout << std::endl;
 
             // controllo se percorsi sono definiti per ritorno a casa
             bool defined = true;
@@ -147,79 +153,94 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     }
                     std::cout << std::endl;
                 }
+
+                for(int j=0; j<TEAM_SIZE; j++)
+                {
+                    std::cout << "Percorso robot " << j << std::endl;
+                    for(uint v : token.TRAILS[j].PATH)
+                    {
+                        std::cout << setw(2) << v << " ";
+                    }
+                    std::cout << std::endl;
+                }
             }
 
-            sendGoal(token.TRAILS[ID_ROBOT].PATH[0]);
+            // sendGoal(token.TRAILS[ID_ROBOT].PATH[0]);
+            goal_complete = true;
             path_calculated = true;
-        }
-
-        // aggiorno posizione
-        token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
-        token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
-        for(int i=0; i<TEAM_SIZE; i++)
-        {
-            if (i != ID_ROBOT)
-            {
-                xPos[i] = token.X_POS[i];
-                yPos[i] = token.Y_POS[i];
-            }
-        }
-
-        // metto nel token quale arco sto occupando
-        token.CURR_VERTEX[ID_ROBOT] = current_vertex;
-        token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
-        if (!current_mission.DSTS.empty())
-        {
-            token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
         }
         else
         {
-            token.CURR_DST[ID_ROBOT] = initial_vertex;
-        }
-        
-        if (goal_complete)
-        {
-            static bool first_time = true;
-            current_vertex = next_vertex;
-            if(first_time)
+            // aggiorno posizione
+            token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
+            token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
+            for(int i=0; i<TEAM_SIZE; i++)
             {
-                token.GOAL_STATUS[ID_ROBOT]++;
-                first_time = false;
-            }
-            
-            bool equal_status = true;
-            int status = token.GOAL_STATUS[0];
-            for(int i=1; i<TEAM_SIZE; i++)
-            {
-                if(token.GOAL_STATUS[i] != status)
-                    equal_status = false;
+                if (i != ID_ROBOT)
+                {
+                    xPos[i] = token.X_POS[i];
+                    yPos[i] = token.Y_POS[i];
+                }
             }
 
-            if(equal_status)
+            // metto nel token quale arco sto occupando
+            token.CURR_VERTEX[ID_ROBOT] = current_vertex;
+            token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+            if (!current_mission.DSTS.empty())
             {
-                first_time = true;
-                if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+                token.CURR_DST[ID_ROBOT] = current_mission.DSTS[0];
+            }
+            else
+            {
+                token.CURR_DST[ID_ROBOT] = initial_vertex;
+            }
+            
+            if (goal_complete)
+            {
+                static bool first_time = true;
+                current_vertex = next_vertex;
+                if(first_time)
                 {
-                    goal_complete = false;
-                    token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
-                    next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                    token.GOAL_STATUS[ID_ROBOT]++;
+                    first_time = false;
                 }
-                else
+                
+                bool equal_status = true;
+                int status = token.GOAL_STATUS[0];
+                for(int i=1; i<TEAM_SIZE; i++)
                 {
-                    // entro qui solo se sono tornato a casa
-                    // sono l'ultimo robot a dover tornare a casa
-                    // e solamente quando tutti hanno completato il loro goal
-                    next_vertex = current_vertex;
-                    if (TEAM_SIZE-1 == current_vertex)
+                    if(token.GOAL_STATUS[i] != status)
+                        equal_status = false;
+                }
+
+                if(equal_status)
+                {
+                    first_time = true;
+                    if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
                     {
-                        token.INIT_POS.clear();
+                        goal_complete = false;
+                        next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                        token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
                     }
+                    else
+                    {
+                        // entro qui solo se sono tornato a casa
+                        // sono l'ultimo robot a dover tornare a casa
+                        // e solamente quando tutti hanno completato il loro goal
+                        next_vertex = current_vertex;
+                        if (TEAM_SIZE-1 == current_vertex)
+                        {
+                            token.INIT_POS.clear();
+                        }
+                    }
+                    c_print("before OnGoal()", magenta);
+                    c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
+                    sendGoal(next_vertex);
                 }
-                c_print("before OnGoal()", magenta);
-                c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
-                sendGoal(next_vertex);
             }
         }
+        
+
     }
 
     usleep(30000);
