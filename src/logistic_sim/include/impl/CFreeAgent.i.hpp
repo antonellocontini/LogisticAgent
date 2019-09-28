@@ -211,7 +211,46 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 			}
 			else
 			{
-				throw std::string("Can't calculate this path!!!");
+				bool can_move = false;
+				// se non posso stare fermo provo a spostarmi in un nodo libero adiacente
+				for(uint neighbour : vertex_web[source].id_neigh)
+				{
+					// cerco l'id nella tabella dijkstra
+					uint id_neighbour;
+					for (int i=0; i < dimension; i++)
+					{
+						if (tab_dijkstra[i].id == neighbour)
+						{
+							id_neighbour = i;
+							break;
+						}
+					}
+
+					// controllo nella tabella se sono riuscito a raggiungere il nodo
+					if (tab_dijkstra[id_neighbour].elem_path == tab_dijkstra[id_source].elem_path + 1)
+					{
+						std::cout << "Non posso stare fermo in " << source << ", vado in " << neighbour << std::endl;
+						// vado nel vicino e resetto tabella dijkstra
+						can_move = true;
+						id_source = id_next_vertex = id_neighbour;
+						source = next_vertex = neighbour;
+						for(int i=0; i<dimension; i++)
+						{
+							tab_dijkstra[i].visit = false;
+							if (i != id_neighbour)
+							{
+								tab_dijkstra[i].elem_path = 0;
+								tab_dijkstra[i].dist = INT_MAX;
+							}
+						}
+						break; // non devo controllare gli altri vicini
+					}
+				}
+
+				if (!can_move)
+				{
+					throw std::string("Can't calculate this path!!!");
+				}
 			}
 			
 		}
@@ -223,7 +262,6 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 	for (i = 0; i < elem_s_path; i++)
 	{
 		int v = tab_dijkstra[id_next_vertex].path[i];
-		std::cout << v << " ";
 		other_paths[ID_ROBOT].PATH.push_back((uint) v);
 	}
 	std::cout << std::endl;

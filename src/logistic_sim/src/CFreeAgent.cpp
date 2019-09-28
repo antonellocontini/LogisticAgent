@@ -136,13 +136,14 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 std::sort(indices.begin(), indices.end(), cmp_function);
                 for(int j=0; j<indices.size(); j++)
                 {
-                    std::cout << "*it " << j << "INIT_POS[j] " << token.INIT_POS[indices[j]] << "\n";
-                    std::cout << "Casa robot " << j << "\n";
-                    int home_vertex = token.INIT_POS[indices[j]];
+                    // j indica il nodo home
+                    // indices[j] indica il robot assegnato a quel nodo
+                    std::cout << "Casa robot " << indices[j] << "\n";
+                    int home_vertex = j;
                     for(int i=5; i>=home_vertex; i--)
                     {
                         std::cout << i << " ";
-                        token.TRAILS[j].PATH.push_back(i);
+                        token.TRAILS[indices[j]].PATH.push_back(i);
                     }
                     std::cout << std::endl;
                 }
@@ -205,6 +206,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 }
                 else
                 {
+                    // entro qui solo se sono tornato a casa
+                    // sono l'ultimo robot a dover tornare a casa
+                    // e solamente quando tutti hanno completato il loro goal
                     next_vertex = current_vertex;
                     if (TEAM_SIZE-1 == current_vertex)
                     {
