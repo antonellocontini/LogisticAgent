@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=model6
-NROBOTS=6
+NROBOTS=4
 INITPOS=default
 ALG=CFreeAgent
 LOC=AMCL
@@ -15,7 +15,7 @@ CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=SP_TaskPlanner
-GEN=uniform
+GEN=non-uniform
 DEBUG=false
 
 clear
