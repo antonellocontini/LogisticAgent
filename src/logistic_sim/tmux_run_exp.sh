@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=model6
-NROBOTS=4
+NROBOTS=6
 INITPOS=default
 ALG=CFreeAgent
 LOC=AMCL
@@ -16,7 +16,7 @@ SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=SP_TaskPlanner
 GEN=uniform
-DEBUG=true
+DEBUG=false
 
 clear
 tmux -2 new-session -d -s $SESSION

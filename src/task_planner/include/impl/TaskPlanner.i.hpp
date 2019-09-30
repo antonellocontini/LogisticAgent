@@ -74,18 +74,18 @@ void TaskPlanner::init(int argc, char **argv)
     m.DSTS = {18};
     missions.push_back(logistic_sim::Mission(m));
     // nuovi task
-    m.DSTS = {28,18};
-    m.DEMANDS = {2,1};
-    m.ITEM = {1,0};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {28,18,23};
-    m.DEMANDS = {1,1,1};
-    m.ITEM = {0,1,2};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18,28};
-    m.DEMANDS = {2,1};
-    m.ITEM = {1,0};
-    missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {28,18};
+    // m.DEMANDS = {2,1};
+    // m.ITEM = {1,0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {28,18,23};
+    // m.DEMANDS = {1,1,1};
+    // m.ITEM = {0,1,2};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18,28};
+    // m.DEMANDS = {2,1};
+    // m.ITEM = {1,0};
+    // missions.push_back(logistic_sim::Mission(m));
 
     // set_partition();
 

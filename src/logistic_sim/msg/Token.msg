@@ -3,6 +3,7 @@ uint32      ID_SENDER
 uint32      ID_RECEIVER
 bool        INIT
 bool        STEP
+bool        CHECK
 
 Mission[]   MISSION
 Mission[]   ASSIGNED_MISSION

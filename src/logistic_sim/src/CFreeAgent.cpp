@@ -28,6 +28,21 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.ID_RECEIVER = (ID_ROBOT + 1) % TEAM_SIZE;
     }
 
+    if (msg->CHECK)
+    {
+        int id_vertex_stuck;
+        // controlliamo che non ci siano situazioni ti stuck lungo tutti i percorsi calcolati
+        for (int i = 0; i < TEAM_SIZE; i++)
+        {
+            if (!token_check_pt(token.TRAILS[i].PATH, token.TRAILS, i, &id_vertex_stuck))
+            {
+                c_print("Non sono CFree i percorsi calcolati per ID: ", i, " vertex: ", id_vertex_stuck, red, P);
+            }
+        }
+        token.CHECK = false;
+        token.END_SIMULATION = true;
+    }
+
     if (msg->INIT)
     {
         token.CAPACITY.push_back(CAPACITY);
@@ -64,11 +79,33 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             token.STEP = true;
         }
     }
-    else if(msg->STEP)
+    else if (msg->STEP)
     {
         // static std::vector<logistic_sim::Mission> missions;
         if (!token.MISSION.empty())
         {
+            if (missions.empty())
+            {
+                logistic_sim::Mission m = token.MISSION.back();
+                token.MISSION.pop_back();
+                missions.emplace(missions.begin(), m);
+            }
+            else
+            {
+                auto last_mission = missions.back();
+                auto min_dst = *std::min_element(last_mission.DSTS.begin(), last_mission.DSTS.end());
+                for (int i = 0; i < token.MISSION.size(); i++)
+                {
+                    auto tmp_min_dst = *std::min_element(token.MISSION[i].DSTS.begin(), token.MISSION[i].DSTS.end());
+                    if (min_dst <= tmp_min_dst)
+                    {
+                        logistic_sim::Mission m1 = token.MISSION[i];
+                        missions.emplace(missions.begin(), m1);
+                        token.MISSION.erase(token.MISSION.begin() + i);
+                    }
+                }
+            }
+
             // PRINT TOKEN MISSIONS
             // std::cout << "=======================" << std::endl;
             // for(auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
@@ -81,10 +118,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             //     }
             //     std::cout << std::endl << std::endl;
             // }
-            logistic_sim::Mission m = token.MISSION.back();
-            token.MISSION.pop_back();
-            missions.emplace(missions.begin(), m);
-
         }
         else
         {
@@ -96,7 +129,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     }
     else
     {
-        if(!path_calculated)
+        if (!path_calculated)
         {
             uint init_pos = 9;
             std::vector<uint> waypoints = {current_vertex};
@@ -111,7 +144,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             waypoints.push_back(init_pos);
             token_dijkstra(waypoints, token.TRAILS);
             std::cout << "Percorso robot " << ID_ROBOT << std::endl;
-            for(uint v : token.TRAILS[ID_ROBOT].PATH)
+            for (uint v : token.TRAILS[ID_ROBOT].PATH)
             {
                 std::cout << setw(2) << v << " ";
             }
@@ -119,7 +152,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
             // controllo se percorsi sono definiti per ritorno a casa
             bool defined = true;
-            for(int i=0; i<TEAM_SIZE; i++)
+            for (int i = 0; i < TEAM_SIZE; i++)
             {
                 if (token.TRAILS[i].PATH.empty())
                     defined = false;
@@ -130,23 +163,22 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 // fisso la parte finale per tutti i robot
                 std::vector<uint> indices(TEAM_SIZE);
                 std::cout << "Dimensione percorsi\n";
-                for(int i=0; i<TEAM_SIZE; i++)
+                for (int i = 0; i < TEAM_SIZE; i++)
                 {
                     std::cout << "robot " << i << ": " << token.TRAILS[i].PATH.size() << std::endl;
                     indices[i] = i;
                 }
-                auto cmp_function = [&](uint lhs, uint rhs)
-                {
+                auto cmp_function = [&](uint lhs, uint rhs) {
                     return token.TRAILS[lhs].PATH.size() < token.TRAILS[rhs].PATH.size();
                 };
                 std::sort(indices.begin(), indices.end(), cmp_function);
-                for(int j=0; j<indices.size(); j++)
+                for (int j = 0; j < indices.size(); j++)
                 {
                     // j indica il nodo home
                     // indices[j] indica il robot assegnato a quel nodo
                     std::cout << "Casa robot " << indices[j] << "\n";
                     int home_vertex = j;
-                    for(int i=5; i>=home_vertex; i--)
+                    for (int i = 5; i >= home_vertex; i--)
                     {
                         std::cout << i << " ";
                         token.TRAILS[indices[j]].PATH.push_back(i);
@@ -154,15 +186,17 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                     std::cout << std::endl;
                 }
 
-                for(int j=0; j<TEAM_SIZE; j++)
+                for (int j = 0; j < TEAM_SIZE; j++)
                 {
                     std::cout << "Percorso robot " << j << std::endl;
-                    for(uint v : token.TRAILS[j].PATH)
+                    for (uint v : token.TRAILS[j].PATH)
                     {
                         std::cout << setw(2) << v << " ";
                     }
                     std::cout << std::endl;
                 }
+
+                token.CHECK = true;
             }
 
             // sendGoal(token.TRAILS[ID_ROBOT].PATH[0]);
@@ -174,7 +208,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             // aggiorno posizione
             token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
             token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
-            for(int i=0; i<TEAM_SIZE; i++)
+            for (int i = 0; i < TEAM_SIZE; i++)
             {
                 if (i != ID_ROBOT)
                 {
@@ -194,26 +228,26 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             {
                 token.CURR_DST[ID_ROBOT] = initial_vertex;
             }
-            
+
             if (goal_complete)
             {
                 static bool first_time = true;
                 current_vertex = next_vertex;
-                if(first_time)
+                if (first_time)
                 {
                     token.GOAL_STATUS[ID_ROBOT]++;
                     first_time = false;
                 }
-                
+
                 bool equal_status = true;
                 int status = token.GOAL_STATUS[0];
-                for(int i=1; i<TEAM_SIZE; i++)
+                for (int i = 1; i < TEAM_SIZE; i++)
                 {
-                    if(token.GOAL_STATUS[i] != status)
+                    if (token.GOAL_STATUS[i] != status)
                         equal_status = false;
                 }
 
-                if(equal_status)
+                if (equal_status)
                 {
                     first_time = true;
                     if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
@@ -228,7 +262,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                         // sono l'ultimo robot a dover tornare a casa
                         // e solamente quando tutti hanno completato il loro goal
                         next_vertex = current_vertex;
-                        if (TEAM_SIZE-1 == current_vertex)
+                        if (TEAM_SIZE - 1 == current_vertex)
                         {
                             token.INIT_POS.clear();
                         }
@@ -239,8 +273,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 }
             }
         }
-        
-
     }
 
     usleep(30000);

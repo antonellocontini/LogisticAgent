@@ -2,9 +2,42 @@
 
 using namespace cfreeagent;
 
+bool CFreeAgent::token_check_pt(std::vector<uint> &my_path, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT, int *id_vertex_stuck)
+{
+	bool status = true;
+	// controllo che la posizione vicina sia raggiungibile in questo turno
+	for (int j = 0; j < my_path.size(); j++)
+	{
+
+		for (int i = 0; i < other_paths.size(); i++)
+		{
+			if (i != ID_ROBOT)
+			{
+				const logistic_sim::Path &path = other_paths[i];
+				if (j + 1 < path.PATH.size())
+				{
+					int other_pos = path.PATH[j];
+					int other_next_pos = path.PATH[j + 1];
+					if (my_path[j + 1] == other_next_pos)
+					{
+						*id_vertex_stuck = my_path[j + 1];
+						status = false;
+					}
+					if (my_path[j + 1] == other_pos && my_path[j] == other_next_pos)
+					{
+						*id_vertex_stuck = my_path[j + 1];
+						status = false;
+					}
+				}
+			}
+		}
+	}
+	return status;
+}
+
 void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths)
 {
-	auto waypoints_it = waypoints.begin()+1;
+	auto waypoints_it = waypoints.begin() + 1;
 	uint source = waypoints.front();
 	uint destination = *waypoints_it;
 	uint i, j, k, x;
@@ -47,10 +80,10 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 
 		if (next_vertex == destination)
 		{
-			if (waypoints_it+1 != waypoints.end())
+			if (waypoints_it + 1 != waypoints.end())
 			{
 				// resetto i percorsi degli altri nodi e li setto come non visitati
-				for(uint i=0; i<dimension; i++)
+				for (uint i = 0; i < dimension; i++)
 				{
 					if (i != id_next_vertex)
 					{
@@ -63,7 +96,7 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 				waypoints_it++;
 				source = destination;
 				// cerco id vertice sorgente
-				for(int i=0; i<dimension; i++)
+				for (int i = 0; i < dimension; i++)
 				{
 					if (tab_dijkstra[i].id == source)
 					{
@@ -169,13 +202,13 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 		{
 			// controllo di poter stare fermo
 			bool good = true;
-			for (int i=0; i<other_paths.size(); i++)
+			for (int i = 0; i < other_paths.size(); i++)
 			{
 				if (i != ID_ROBOT)
 				{
 					const logistic_sim::Path &path = other_paths[i];
 					int dist = tab_dijkstra[id_source].elem_path - 1;
-					if (dist+1 < path.PATH.size())
+					if (dist + 1 < path.PATH.size())
 					{
 						int other_next_pos = path.PATH[dist + 1];
 						if (tab_dijkstra[id_source].id == other_next_pos)
@@ -196,7 +229,7 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 				tab_dijkstra[id_source].path[tab_dijkstra[id_source].elem_path] = tab_dijkstra[id_source].id;
 				tab_dijkstra[id_source].elem_path++;
 				// resetto i percorsi degli altri nodi e li setto come non visitati
-				for(uint i=0; i<dimension; i++)
+				for (uint i = 0; i < dimension; i++)
 				{
 					if (i != id_source)
 					{
@@ -213,11 +246,11 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 			{
 				bool can_move = false;
 				// se non posso stare fermo provo a spostarmi in un nodo libero adiacente
-				for(uint neighbour : vertex_web[source].id_neigh)
+				for (uint neighbour : vertex_web[source].id_neigh)
 				{
 					// cerco l'id nella tabella dijkstra
 					uint id_neighbour;
-					for (int i=0; i < dimension; i++)
+					for (int i = 0; i < dimension; i++)
 					{
 						if (tab_dijkstra[i].id == neighbour)
 						{
@@ -234,7 +267,7 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 						can_move = true;
 						id_source = id_next_vertex = id_neighbour;
 						source = next_vertex = neighbour;
-						for(int i=0; i<dimension; i++)
+						for (int i = 0; i < dimension; i++)
 						{
 							tab_dijkstra[i].visit = false;
 							if (i != id_neighbour)
@@ -252,7 +285,6 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 					throw std::string("Can't calculate this path!!!");
 				}
 			}
-			
 		}
 	}
 
@@ -262,7 +294,7 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 	for (i = 0; i < elem_s_path; i++)
 	{
 		int v = tab_dijkstra[id_next_vertex].path[i];
-		other_paths[ID_ROBOT].PATH.push_back((uint) v);
+		other_paths[ID_ROBOT].PATH.push_back((uint)v);
 	}
 	std::cout << std::endl;
 
