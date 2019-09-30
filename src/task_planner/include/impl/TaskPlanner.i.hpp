@@ -46,9 +46,48 @@ void TaskPlanner::init(int argc, char **argv)
 
     GENERATION = argv[4];
 
-    missions_generator(GENERATION);
+    // missions_generator(GENERATION);
 
-    set_partition();
+    // taskset di test
+    logistic_sim::Mission m;
+    m.DSTS = {18,28};
+    m.DEMANDS = {1,2};
+    m.ITEM = {0,0};
+    m.TOT_DEMAND = 3;
+    missions.push_back(logistic_sim::Mission(m));
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {18};
+    m.DEMANDS = {3};
+    m.ITEM = {0};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {18,23};
+    m.DEMANDS = {1,2};
+    m.ITEM = {0,0};
+    missions.push_back(logistic_sim::Mission(m));
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {23};
+    m.DEMANDS = {3};
+    m.ITEM = {0};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {28};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {18};
+    missions.push_back(logistic_sim::Mission(m));
+    // nuovi task
+    m.DSTS = {28,18};
+    m.DEMANDS = {2,1};
+    m.ITEM = {1,0};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {28,18,23};
+    m.DEMANDS = {1,1,1};
+    m.ITEM = {0,1,2};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {18,28};
+    m.DEMANDS = {2,1};
+    m.ITEM = {1,0};
+    missions.push_back(logistic_sim::Mission(m));
+
+    // set_partition();
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
@@ -276,6 +315,15 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         token.HEADER.seq = 1;
         CAPACITY = msg->CAPACITY;
         token.INIT = false;
+        for(auto m : missions)
+        {
+            for (auto dst : m.DSTS )
+            {
+                std::cout << dst << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "\n";
         token.MISSION = missions;
         token.END_SIMULATION = false;
         start_time = ros::Time::now();
