@@ -35,61 +35,84 @@ bool CFreeAgent::token_check_pt(std::vector<uint> &my_path, std::vector<logistic
 	return status;
 }
 
-std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, const std::vector<unsigned int> &waypoints)
+struct st_location
 {
-    const unsigned int WHITE=0, GRAY=1, BLACK=2, MAX_TIME=50U;
+    unsigned int vertex;
+    unsigned int time;
+
+    st_location(unsigned int vertex = 0, unsigned int time = 0) : vertex(vertex), time(time) { }
+    st_location(const st_location &ref) : vertex(ref.vertex), time(ref.time) { }
+    bool operator<(const st_location &loc) const
+    {
+        return time < loc.time;
+    }
+};
+
+unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc)
+{
+    int i;
+    for(i=size-1; i>=0; i--)
+    {
+        if (loc < queue[i])
+            break;
+        queue[i+1] = queue[i];
+    }
+    queue[i+1] = loc;
+
+    return size+1;
+}
+
+using graph_type = std::vector<std::vector<unsigned int> >;
+std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const graph_type &graph, unsigned int size, const std::vector<unsigned int> &waypoints)
+{
+	std::cout << "WAYPOINTS:";
+	for(int i=0; i<waypoints.size(); i++)
+	{
+		std::cout << " " << waypoints[i];
+	}
+	std::cout << std::endl;
+	
+    const unsigned int WHITE=0, GRAY=1, BLACK=2, MAX_TIME=512U;
     unsigned int source = waypoints.front();
     auto it_waypoints = waypoints.begin()+1;
-	using st_location = std::pair<unsigned int, unsigned int>; // spacetime location: first=node, second=time
-    std::vector<st_location> queue;
-	queue.reserve(MAX_TIME);
+    
     std::vector<unsigned int> path;
-	path.reserve(100);
-    std::vector<std::vector<std::vector<unsigned int> > > prev_paths(size,
-        std::vector<std::vector<unsigned int> >(MAX_TIME, 
-            std::vector<unsigned int>()));
 
-	for (auto &v : prev_paths)
-	{
-		for(auto &w : v)
-		{
-			w.reserve(100);
-		}
-	}
-
-    prev_paths[source][0] = {source};
-    std::vector<std::vector<unsigned int> > visited(size);
-    for(auto it = visited.begin(); it != visited.end(); it++)
+    unsigned int ***prev_paths = new unsigned int**[size];
+    unsigned int **path_sizes = new unsigned int*[size];
+    for(unsigned int i=0; i<size; i++)
     {
-        int i = it - visited.begin();
-        visited[i] = std::vector<unsigned int>(MAX_TIME, WHITE);
+        prev_paths[i] = new unsigned int*[MAX_TIME];
+        path_sizes[i] = new unsigned int[MAX_TIME];
+        for(unsigned int j=0; j<MAX_TIME; j++)
+        {
+            prev_paths[i][j] = new unsigned int[MAX_TIME];
+            path_sizes[i][j] = 0;
+        }
     }
-    auto cmp_function = [](const st_location &lhs, const st_location &rhs)
-    {
-        // in coda metto la locazione che viene prima temporalmente
-        if (lhs.second < rhs.second)
-        {
-            return false;
-        }
-        else if (lhs.second > rhs.second)
-        {
-            return true;
-        }
-        else    // se hanno lo stesso istante guardo quella col percorso più breve (TODO)
-        {
-            return true;
-        }
-    };
-    st_location st(source, 0);
-    queue.push_back(st);
+    prev_paths[source][0][0] = source;
+    path_sizes[source][0] = 1;
 
-    while(!queue.empty())
+    unsigned int **visited = new unsigned int*[size];
+    for(unsigned int i=0; i<size; i++)
     {
-        std::sort(queue.begin(), queue.end(), cmp_function);
-        st_location current_st = queue.back();
-        queue.pop_back();
-        unsigned int u = current_st.first;
-        unsigned int time = current_st.second;
+        visited[i] = new unsigned int[MAX_TIME];
+        for(unsigned int j=0; j<MAX_TIME; j++)
+        {
+            visited[i][j] = WHITE;
+        }
+    }
+
+    st_location st(source, 0);
+    st_location *queue = new st_location[MAX_TIME];
+    queue[0] = st;
+    int queue_size = 1;
+
+    while(queue_size > 0)
+    {
+        st_location current_st = queue[--queue_size];
+        unsigned int u = current_st.vertex;
+        unsigned int time = current_st.time;
         
         visited[u][time] = BLACK;
 
@@ -97,17 +120,37 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
         {
             if (it_waypoints+1 == waypoints.end())
             {
-                return prev_paths[u][time];
+				std::vector<unsigned int> result = std::vector<unsigned int>(prev_paths[u][time], prev_paths[u][time] + path_sizes[u][time]);
+				
+				// pulizia heap
+				for(unsigned int i=0; i<size; i++)
+				{
+					for(unsigned int j=0; j<MAX_TIME; j++)
+					{
+						delete[] prev_paths[i][j];
+					}
+
+					delete[] prev_paths[i];
+					delete[] path_sizes[i];
+					delete[] visited[i];
+				}
+				delete[] prev_paths;
+				delete[] path_sizes;
+				delete[] visited;
+				delete[] queue;
+
+                return result;
             }
             else
             {
-                for( auto temp_st : queue)
+                for(int i=0; i<queue_size; i++)
                 {
-                    unsigned int temp_v = temp_st.first;
-                    unsigned int temp_t = temp_st.second;
+                    st_location temp_st = queue[i];
+                    unsigned int temp_v = temp_st.vertex;
+                    unsigned int temp_t = temp_st.time;
                     visited[temp_v][temp_t] = WHITE;
                 }
-                queue.clear();
+                queue_size = 0;
             }
 
             it_waypoints++;
@@ -116,47 +159,51 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
         // considero i vicini
         for(auto it = graph[u].begin(); it != graph[u].end(); it++)
         {
-            unsigned int v = *it;
-            unsigned int next_time = time + 1;
+            const unsigned int v = *it;
+            const unsigned int next_time = time + 1;
 
             if (visited[v][next_time] == WHITE)
             {
-				// controllo collisioni
 				bool good = true;
-                for(int i=0; i<TEAM_SIZE; i++)
-                {
-					if (i != ID_ROBOT) {
-						if (next_time < other_paths[i].size() && other_paths[i][time] == v && other_paths[i][next_time] == u) {
+				for(int i=0; i<TEAM_SIZE; i++)
+				{
+					if (i != ID_ROBOT)
+					{
+						if (next_time < other_paths[i].size() && other_paths[i][next_time] == v)
+						{
 							good = false;
 							break;
 						}
-						if (next_time < other_paths[i].size() && other_paths[i][next_time] == v) {
+						if (next_time < other_paths[i].size() && other_paths[i][next_time] == u
+								&& other_paths[i][time] == v)
+						{
 							good = false;
 							break;
 						}
 					}
-                }
+				}
 
-				if(good) {
+				if (good)
+				{
 					st_location next_st(v, next_time);
-					if ( v >= size) {
-						std::cout << "WARNING\n";
-					}
-					std::cout << "Vertex " << v << " BEFORE: queue size " << queue.size() << " queue capacity " << queue.capacity() << std::endl;
-					queue.push_back(next_st);
-					std::cout << "Vertex " << v << " AFTER: queue size " << queue.size() << " queue capacity " << queue.capacity() << std::endl;
+					queue_size = insertion_sort(queue, queue_size, next_st);
 					visited[v][next_time] = GRAY;
-					prev_paths[v][next_time] = prev_paths[u][time];
-					prev_paths[v][next_time].push_back(v);
+
+					unsigned int psize = path_sizes[u][time];
+					for(unsigned int i=0; i<psize; i++)
+					{
+						prev_paths[v][next_time][i] = prev_paths[u][time][i];
+					}
+					prev_paths[v][next_time][psize] = v;
+					path_sizes[v][next_time] = path_sizes[u][time] + 1;
 				}
             }
         }
 
         // considero l'attesa sul posto
-        if (visited[u][time+1] == WHITE)
+        unsigned int next_time = time + 1;
+        if (visited[u][next_time] == WHITE)
         {
-			uint next_time = time+1;
-            // controllo collisioni
 			bool good = true;
 			for(int i=0; i<TEAM_SIZE; i++)
 			{
@@ -169,13 +216,20 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 					}
 				}
 			}
+
 			if(good)
 			{
-				st_location next_st(u, time+1);
-				queue.push_back(next_st);
-				visited[u][time+1] = GRAY;
-				prev_paths[u][time+1] = prev_paths[u][time];
-				prev_paths[u][time+1].push_back(u);
+				st_location next_st(u, next_time);
+				queue_size = insertion_sort(queue, queue_size, next_st);
+				visited[u][next_time] = GRAY;
+
+				unsigned int psize = path_sizes[u][time];
+				for(unsigned int i=0; i<psize; i++)
+				{
+					prev_paths[u][next_time][i] = prev_paths[u][time][i];
+				}
+				prev_paths[u][next_time][psize] = u;
+				path_sizes[u][next_time] = path_sizes[u][time] + 1;
 			}
         }
     }
