@@ -37,10 +37,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             if (!token_check_pt(token.TRAILS[i].PATH, token.TRAILS, i, &id_vertex_stuck))
             {
                 c_print("Non sono CFree i percorsi calcolati per ID: ", i, " vertex: ", id_vertex_stuck, red, P);
+                token.END_SIMULATION = true;
             }
         }
         token.CHECK = false;
-        token.END_SIMULATION = true;
     }
 
     if (msg->INIT)
