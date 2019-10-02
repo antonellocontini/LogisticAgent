@@ -58,7 +58,10 @@ protected:
     bool init_wait_done = false;
 
     uint init_next_vertex;
-    uint src_vertex = 13;
+    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}};
+    std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}};
+    uint src_vertex;
+    std::vector<uint> dsts_vertex;
 
     uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
@@ -82,7 +85,7 @@ protected:
     ros::Time mission_start_time;
 
 public:
-    void init(int argc, char **argv);
+    void init(int argc, char **argv) override;
     virtual void run();
 
     void onGoalComplete();

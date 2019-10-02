@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost/filesystem.hpp"
+#include "algorithms.hpp"
 
 namespace taskplanner
 {
@@ -35,7 +36,7 @@ void TaskPlanner::init(int argc, char **argv)
     chdir(PS_path.c_str());
     string mapname = string(argv[1]);
     string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
-    uint dimension = GetGraphDimension(graph_file.c_str());
+    dimension = GetGraphDimension(graph_file.c_str());
     vertex_web = new vertex[dimension];
     GetGraphInfo(vertex_web, dimension, graph_file.c_str());
     uint nedges = GetNumberEdges(vertex_web, dimension);
@@ -46,33 +47,44 @@ void TaskPlanner::init(int argc, char **argv)
 
     GENERATION = argv[4];
 
-    // missions_generator(GENERATION);
+    src_vertex = map_src[mapname];
+    dsts_vertex = map_dsts[mapname];
+
+    for(uint dst : dsts_vertex)
+    {
+        int result[100];
+        uint result_size;
+        dijkstra(src_vertex, dst, result, result_size, vertex_web, dimension);
+        paths.push_back(std::vector<uint>(result, result + result_size));
+    }
+
+    missions_generator(GENERATION);
 
     // taskset di test
-    logistic_sim::Mission m;
-    m.DSTS = {18,28};
-    m.DEMANDS = {1,2};
-    m.ITEM = {0,0};
-    m.TOT_DEMAND = 3;
-    missions.push_back(logistic_sim::Mission(m));
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18};
-    m.DEMANDS = {3};
-    m.ITEM = {0};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18,23};
-    m.DEMANDS = {1,2};
-    m.ITEM = {0,0};
-    missions.push_back(logistic_sim::Mission(m));
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {23};
-    m.DEMANDS = {3};
-    m.ITEM = {0};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {28};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18};
-    missions.push_back(logistic_sim::Mission(m));
+    // logistic_sim::Mission m;
+    // m.DSTS = {18,28};
+    // m.DEMANDS = {1,2};
+    // m.ITEM = {0,0};
+    // m.TOT_DEMAND = 3;
+    // missions.push_back(logistic_sim::Mission(m));
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18,23};
+    // m.DEMANDS = {1,2};
+    // m.ITEM = {0,0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {23};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {28};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18};
+    // missions.push_back(logistic_sim::Mission(m));
     // nuovi task
     // m.DSTS = {28,18};
     // m.DEMANDS = {2,1};
@@ -87,7 +99,7 @@ void TaskPlanner::init(int argc, char **argv)
     // m.ITEM = {1,0};
     // missions.push_back(logistic_sim::Mission(m));
 
-    // set_partition();
+    set_partition();
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
@@ -140,29 +152,7 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
     m.PRIORITY = 0;
     m.ITEM.push_back(type);
 
-    switch (type)
-    {
-    case 0:
-    {
-        copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
-        break;
-    }
-    case 1:
-    {
-        copy(std::begin(p_16), std::end(p_16), back_inserter(m.ROUTE));
-        break;
-    }
-    case 2:
-    {
-        copy(std::begin(p_21), std::end(p_21), back_inserter(m.ROUTE));
-        break;
-    }
-    default:
-    {
-        c_print("[DEBUG]", yellow, P);
-        break;
-    }
-    }
+    copy(std::begin(paths[type]), std::end(paths[type]), back_inserter(m.ROUTE));
     m.DSTS.push_back(dst_vertex[type]);
     m.TOT_DEMAND = (d[type] % 3) + 1;
     m.DEMANDS.push_back((d[type] % 3) + 1);
@@ -193,32 +183,7 @@ void TaskPlanner::u_missions_generator()
             m.PRIORITY = 0;
             m.ITEM.push_back(i % 3);
             // c_print("ah");
-            switch (i % 3)
-            {
-            case 0:
-            {
-                c_print("0");
-                std::copy(std::begin(p_11), std::end(p_11), back_inserter(m.ROUTE));
-                break;
-            }
-            case 1:
-            {
-                c_print("1");
-                copy(std::begin(p_16), std::end(p_16), back_inserter(m.ROUTE));
-                break;
-            }
-            case 2:
-            {
-                c_print("2");
-                copy(std::begin(p_21), std::end(p_21), back_inserter(m.ROUTE));
-                break;
-            }
-            default:
-            {
-                c_print("[DEBUG]", yellow, P);
-                break;
-            }
-            }
+            copy(std::begin(paths[i]), std::end(paths[i]), back_inserter(m.ROUTE));
             m.DSTS.push_back(dst_vertex[i % 3]);
             m.TOT_DEMAND = (j % 3) + 1;
             m.DEMANDS.push_back((j % 3) + 1);

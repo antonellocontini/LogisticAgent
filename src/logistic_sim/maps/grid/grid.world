@@ -1,6 +1,7 @@
 include "../hokuyo.inc"
 include "../crobot.inc"
 include "../floorplan.inc"
+include "../cpoint.inc"
 
 window( 
   size [ 500 500 1]         # Tamanho da janela em pixeis
@@ -26,4 +27,5 @@ floorplan (
 )
 
 include "robots.inc"
+include "points.inc"
 

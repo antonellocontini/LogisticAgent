@@ -15,6 +15,10 @@ void DistrAgent::init(int argc, char **argv)
 
     token_sub = nh.subscribe<logistic_sim::Token>("token", 20, boost::bind(&DistrAgent::token_callback, this, _1));
 
+    std::cout << "mapname: " << mapname << std::endl;
+    src_vertex = map_src[mapname];
+    dsts_vertex = map_dsts[mapname];
+
     init_tw_map();
 }
 

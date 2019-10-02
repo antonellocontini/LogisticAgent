@@ -33,7 +33,7 @@ void Agent::init(int argc, char** argv) {
     /** D.Portugal: needed in case you "rosrun" from another folder **/     
     chdir(PS_path.c_str());
                 
-    std:string mapname = string(argv[2]);
+    mapname = string(argv[2]);
     std::string graph_file = "maps/"+mapname+"/"+mapname+".graph";
     
     //Check Graph Dimension:
