@@ -48,9 +48,9 @@ void TaskPlanner::init(int argc, char **argv)
     GENERATION = argv[4];
 
     src_vertex = map_src[mapname];
-    dsts_vertex = map_dsts[mapname];
+    dst_vertex = map_dsts[mapname];
 
-    for(uint dst : dsts_vertex)
+    for(uint dst : dst_vertex)
     {
         int result[100];
         uint result_size;
@@ -60,7 +60,7 @@ void TaskPlanner::init(int argc, char **argv)
 
     missions_generator(GENERATION);
 
-    // taskset di test
+    // // taskset di test
     // logistic_sim::Mission m;
     // m.DSTS = {18,28};
     // m.DEMANDS = {1,2};
@@ -85,7 +85,7 @@ void TaskPlanner::init(int argc, char **argv)
     // missions.push_back(logistic_sim::Mission(m));
     // m.DSTS = {18};
     // missions.push_back(logistic_sim::Mission(m));
-    // nuovi task
+    // // nuovi task
     // m.DSTS = {28,18};
     // m.DEMANDS = {2,1};
     // m.ITEM = {1,0};
@@ -99,7 +99,7 @@ void TaskPlanner::init(int argc, char **argv)
     // m.ITEM = {1,0};
     // missions.push_back(logistic_sim::Mission(m));
 
-    set_partition();
+    // set_partition();
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 

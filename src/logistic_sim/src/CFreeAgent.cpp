@@ -81,6 +81,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
   else if (msg->STEP)
   {
+    std::cout << "Inizio fase step" << std::endl;
     // static std::vector<logistic_sim::Mission> missions;
     if (!token.MISSION.empty())
     {
@@ -92,6 +93,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       }
       else
       {
+        bool taken = false;
         auto last_mission = missions.back();
         auto min_dst = *std::min_element(last_mission.DSTS.begin(), last_mission.DSTS.end());
         for (int i = 0; i < token.MISSION.size(); i++)
@@ -102,7 +104,16 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             logistic_sim::Mission m1 = token.MISSION[i];
             missions.emplace(missions.begin(), m1);
             token.MISSION.erase(token.MISSION.begin() + i);
+            taken = true;
+            break;
           }
+        }
+
+        if (!taken)
+        {
+          logistic_sim::Mission m = token.MISSION.back();
+          token.MISSION.pop_back();
+          missions.emplace(missions.begin(), m);
         }
       }
 
@@ -123,6 +134,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
       if (ID_ROBOT == TEAM_SIZE - 1)
       {
+        std::cout << "Tutti hanno preso le missioni" << std::endl;
         token.STEP = false;
       }
     }
@@ -131,6 +143,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   {
     if (!path_calculated)
     {
+      std::cout << "Calcolo percorso..." << std::endl;
       uint init_pos = 9;
       std::vector<uint> waypoints = { current_vertex };
       for (logistic_sim::Mission m : missions)
@@ -264,6 +277,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             next_vertex = current_vertex;
             if (TEAM_SIZE - 1 == current_vertex)
             {
+              std::cout << "Abbiamo finito tutti!" << std::endl;
               token.INIT_POS.clear();
             }
           }

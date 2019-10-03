@@ -68,7 +68,7 @@ public:
     uint TEAM_SIZE = 0;
     uint nTask = 0;
     uint id = 0;
-    uint dst_vertex[3] = {18, 23, 28};
+    // uint dst_vertex[3] = {18, 23, 28};
     // per ora statici senza funzioni
     const uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
     const uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
@@ -93,7 +93,7 @@ public:
     std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}};
     std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}};
     uint src_vertex;
-    std::vector<uint> dsts_vertex;
+    std::vector<uint> dst_vertex;
     std::vector<std::vector<uint> > paths;
 
     int compute_cost_of_route(std::vector<uint> &route);
