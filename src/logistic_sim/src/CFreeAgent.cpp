@@ -145,6 +145,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
       std::cout << "Calcolo percorso..." << std::endl;
       uint init_pos = 9;
+      if (mapname == "grid")
+      {
+        init_pos = initial_vertex;
+      }
       std::vector<uint> waypoints = { current_vertex };
       for (logistic_sim::Mission m : missions)
       {
@@ -174,30 +178,33 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       if (defined)
       {
         // fisso la parte finale per tutti i robot
-        std::vector<uint> indices(TEAM_SIZE);
-        std::cout << "Dimensione percorsi\n";
-        for (int i = 0; i < TEAM_SIZE; i++)
+        if (mapname == "model6")
         {
-          std::cout << "robot " << i << ": " << token.TRAILS[i].PATH.size() << std::endl;
-          indices[i] = i;
-        }
-        auto cmp_function = [&](uint lhs, uint rhs) {
-          return token.TRAILS[lhs].PATH.size() < token.TRAILS[rhs].PATH.size();
-        };
-        std::sort(indices.begin(), indices.end(), cmp_function);
-        for (int j = 0; j < indices.size(); j++)
-        {
-          // j indica il nodo home
-          // indices[j] indica il robot assegnato a quel nodo
-          std::cout << "Casa robot " << indices[j] << "\n";
-          int home_vertex = j;
-          for (int i = 5; i >= home_vertex; i--)
+          std::vector<uint> indices(TEAM_SIZE);
+          std::cout << "Dimensione percorsi\n";
+          for (int i = 0; i < TEAM_SIZE; i++)
           {
-            std::cout << i << " ";
-            token.TRAILS[indices[j]].PATH.push_back(i);
+            std::cout << "robot " << i << ": " << token.TRAILS[i].PATH.size() << std::endl;
+            indices[i] = i;
           }
-          std::cout << std::endl;
-        }
+          auto cmp_function = [&](uint lhs, uint rhs) {
+            return token.TRAILS[lhs].PATH.size() < token.TRAILS[rhs].PATH.size();
+          };
+          std::sort(indices.begin(), indices.end(), cmp_function);
+          for (int j = 0; j < indices.size(); j++)
+          {
+            // j indica il nodo home
+            // indices[j] indica il robot assegnato a quel nodo
+            std::cout << "Casa robot " << indices[j] << "\n";
+            int home_vertex = j;
+            for (int i = 5; i >= home_vertex; i--)
+            {
+              std::cout << i << " ";
+              token.TRAILS[indices[j]].PATH.push_back(i);
+            }
+            std::cout << std::endl;
+          }
+        }      
 
         for (int j = 0; j < TEAM_SIZE; j++)
         {
@@ -271,11 +278,19 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
           }
           else
           {
-            // entro qui solo se sono tornato a casa
+            // entro qui solo se sono tornato a casa,
             // sono l'ultimo robot a dover tornare a casa
             // e solamente quando tutti hanno completato il loro goal
             next_vertex = current_vertex;
-            if (TEAM_SIZE - 1 == current_vertex)
+            bool finished = true;
+            for(auto &trail : token.TRAILS)
+            {
+              if (trail.PATH.size() > 1)
+              {
+                finished = false;
+              }
+            }
+            if (finished)
             {
               std::cout << "Abbiamo finito tutti!" << std::endl;
               token.INIT_POS.clear();
