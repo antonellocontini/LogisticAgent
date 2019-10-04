@@ -2,7 +2,7 @@
 
 using namespace cfreeagent;
 
-bool CFreeAgent::token_check_pt(std::vector<uint> &my_path, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT, int *id_vertex_stuck)
+bool CFreeAgent::token_check_pt(std::vector<uint> &my_path, std::vector<logistic_sim::Path> &other_paths, uint CHECK_ID, int *id_vertex_stuck)
 {
 	bool status = true;
 	// controllo che la posizione vicina sia raggiungibile in questo turno
@@ -11,22 +11,24 @@ bool CFreeAgent::token_check_pt(std::vector<uint> &my_path, std::vector<logistic
 
 		for (int i = 0; i < other_paths.size(); i++)
 		{
-			if (i != ID_ROBOT)
+			if (i != CHECK_ID)
 			{
 				const logistic_sim::Path &path = other_paths[i];
-				if (j + 1 < path.PATH.size())
+				if (j + 1 < path.PATH.size() && j + 1 < my_path.size())
 				{
 					int other_pos = path.PATH[j];
 					int other_next_pos = path.PATH[j + 1];
 					if (my_path[j + 1] == other_next_pos)
 					{
+						std::cout << "conflict robot id: " << i << std::endl;
 						*id_vertex_stuck = my_path[j + 1];
-						status = false;
+						return false;
 					}
 					if (my_path[j + 1] == other_pos && my_path[j] == other_next_pos)
 					{
+						std::cout << "conflict robot id: " << i << std::endl;
 						*id_vertex_stuck = my_path[j + 1];
-						status = false;
+						return false;
 					}
 				}
 			}
@@ -237,7 +239,7 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
     throw std::string("Can't find path!!!");
 }
 
-void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths)
+std::vector<uint> CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths)
 {
 	// adatto struttura dijkstra
 	std::vector<std::vector<unsigned int> > graph(dimension);
@@ -254,10 +256,8 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 	{
 		simple_paths[i] = other_paths[i].PATH;
 	}
-	std::vector<uint> path = spacetime_dijkstra(simple_paths, graph, dimension, waypoints);
 	c_print("Fine del space_dijkstra", green,P);
-	other_paths[ID_ROBOT].PATH = path;
-	return;
+	return spacetime_dijkstra(simple_paths, graph, dimension, waypoints);
 
 	// auto waypoints_it = waypoints.begin() + 1;
 	// uint source = waypoints.front();

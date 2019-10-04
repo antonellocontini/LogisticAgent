@@ -60,33 +60,33 @@ void TaskPlanner::init(int argc, char **argv)
         paths.push_back(std::vector<uint>(result, result + result_size));
     }
 
-    missions_generator(GENERATION);
+    // missions_generator(GENERATION);
 
     // // taskset di test
-    // logistic_sim::Mission m;
-    // m.DSTS = {18,28};
-    // m.DEMANDS = {1,2};
-    // m.ITEM = {0,0};
-    // m.TOT_DEMAND = 3;
+    logistic_sim::Mission m;
+    m.DSTS = {18,28};
+    m.DEMANDS = {1,2};
+    m.ITEM = {0,0};
+    m.TOT_DEMAND = 3;
     // missions.push_back(logistic_sim::Mission(m));
     // missions.push_back(logistic_sim::Mission(m));
-    // m.DSTS = {18};
-    // m.DEMANDS = {3};
-    // m.ITEM = {0};
+    m.DSTS = {18};
+    m.DEMANDS = {3};
+    m.ITEM = {0};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {18,23};
+    m.DEMANDS = {1,2};
+    m.ITEM = {0,0};
     // missions.push_back(logistic_sim::Mission(m));
-    // m.DSTS = {18,23};
-    // m.DEMANDS = {1,2};
-    // m.ITEM = {0,0};
     // missions.push_back(logistic_sim::Mission(m));
-    // missions.push_back(logistic_sim::Mission(m));
-    // m.DSTS = {23};
-    // m.DEMANDS = {3};
-    // m.ITEM = {0};
-    // missions.push_back(logistic_sim::Mission(m));
-    // m.DSTS = {28};
-    // missions.push_back(logistic_sim::Mission(m));
-    // m.DSTS = {18};
-    // missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {23};
+    m.DEMANDS = {3};
+    m.ITEM = {0};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {28};
+    missions.push_back(logistic_sim::Mission(m));
+    m.DSTS = {18};
+    missions.push_back(logistic_sim::Mission(m));
     // // nuovi task
     // m.DSTS = {28,18};
     // m.DEMANDS = {2,1};
