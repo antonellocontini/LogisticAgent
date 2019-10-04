@@ -313,7 +313,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     c_print("Ho finito, bye bye", green, P);
     end_simulation = true;
   }
-}  // token_callback()
+} // token_callback()
 
 int main(int argc, char *argv[])
 {

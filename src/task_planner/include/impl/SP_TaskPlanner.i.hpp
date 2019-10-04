@@ -16,20 +16,20 @@ uint SP_TaskPlanner::compute_cycle_dst(logistic_sim::Mission &mission)
     mission.DSTS.erase(unique(mission.DSTS.begin(), mission.DSTS.end()), mission.DSTS.end());
     if (mission.DSTS.size() == 1)
     {
-        if (mission.DSTS[0] == 18)
+        if (mission.DSTS[0] == dst_vertex[0])
             res = 1;
-        else if (mission.DSTS[0] == 23)
+        else if (mission.DSTS[0] == dst_vertex[1])
             res = 2;
         else
             res = 3;
     }
     else if (mission.DSTS.size() == 2)
     {
-        if ((mission.DSTS[0] == 18) && (mission.DSTS[1] == 23))
+        if ((mission.DSTS[0] == dst_vertex[0]) && (mission.DSTS[1] == dst_vertex[1]))
         {
             res = 4;
         }
-        else if ((mission.DSTS[0] == 18) && (mission.DSTS[1] == 28))
+        else if ((mission.DSTS[0] == dst_vertex[0]) && (mission.DSTS[1] == dst_vertex[2]))
         {
             res = 5;
         }
@@ -154,7 +154,7 @@ void SP_TaskPlanner::set_partition()
 
                 candidate.second.V += candidate_subset.V;
 
-                if (candidate_subset.TOT_DEMAND > 3)
+                if (candidate_subset.TOT_DEMAND > TEAM_CAPACITY)
                 {
                     candidate.second.GOOD++;
                 }

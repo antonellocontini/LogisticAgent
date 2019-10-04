@@ -15,7 +15,7 @@ CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=SP_TaskPlanner
-GEN=non-uniform
+GEN=uniform
 DEBUG=false
 
 clear
@@ -57,7 +57,7 @@ sleep 5
 
 tmux new-window -t $SESSION:3 -n 'TaskPlanner'
 
-tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN" C-m
+tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
 echo "Launching TaskPlanner $TP_NAME..."
 sleep 5
 

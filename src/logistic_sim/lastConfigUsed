@@ -1,7 +1,7 @@
 [Config]
-map: model6
-nrobots: 2
-algorithm: SPartAgent
+map: grid
+nrobots: 4
+algorithm: CFreeAgent
 locmode: AMCL
 navmode: ros
 gwait: 0

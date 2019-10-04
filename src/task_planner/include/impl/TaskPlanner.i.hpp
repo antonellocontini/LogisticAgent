@@ -47,6 +47,8 @@ void TaskPlanner::init(int argc, char **argv)
 
     GENERATION = argv[4];
 
+    TEAM_CAPACITY = atoi(argv[5]);
+
     src_vertex = map_src[mapname];
     dst_vertex = map_dsts[mapname];
 

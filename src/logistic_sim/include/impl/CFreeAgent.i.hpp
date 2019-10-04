@@ -255,6 +255,7 @@ void CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints, std::vector<
 		simple_paths[i] = other_paths[i].PATH;
 	}
 	std::vector<uint> path = spacetime_dijkstra(simple_paths, graph, dimension, waypoints);
+	c_print("Fine del space_dijkstra", green,P);
 	other_paths[ID_ROBOT].PATH = path;
 	return;
 
