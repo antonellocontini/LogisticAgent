@@ -2,7 +2,7 @@
 
 #include "Agent.hpp"
 #include "logistic_sim/Token.h"
-
+#include "logistic_sim/RobotReady.h"
 
 using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 namespace logistic_sim

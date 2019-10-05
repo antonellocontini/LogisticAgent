@@ -20,6 +20,13 @@ void DistrAgent::init(int argc, char **argv)
     dsts_vertex = map_dsts[mapname];
 
     init_tw_map();
+
+    // notifico la mia presenza al taskplanner
+    c_print("Notifico presenza al task_planner", green, P);
+    ros::ServiceClient client = nh.serviceClient<logistic_sim::RobotReady>("robot_ready");
+    logistic_sim::RobotReady srv_req;
+    srv_req.request.ID_ROBOT = ID_ROBOT;
+    client.call(srv_req);
 }
 
 void DistrAgent::run()
@@ -55,8 +62,6 @@ void DistrAgent::run()
     init_start_time = ros::Time::now();
     init_wait_time = 13 * ID_ROBOT;
     c_print("[DEBUG]\tAttendo ", init_wait_time, " secondi...", yellow);
-    // sleep(wait_time);
-    // c_print("[DEBUG]\tParto");
 
     // Asynch spinner (non-blocking)
     ros::AsyncSpinner spinner(2); // Use n threads

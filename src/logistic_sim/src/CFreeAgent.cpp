@@ -356,6 +356,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
                   token.MISSION.erase(token.MISSION.begin() + i);
                   taken = true;
                   token.TRAILS[ID_ROBOT].PATH = path;
+                  next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                  token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
                   break;
                 }
                 catch (const std::string& e)
@@ -367,13 +369,15 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
             else if(!go_home)
             {
               std::cout << "Missioni finite, vado a casa" << std::endl;
-              next_vertex = current_vertex;
+              // next_vertex = current_vertex;
               initial_vertex = token.INIT_POS[token.INIT_POS_INDEX];
               token.INIT_POS_INDEX++;
               try
               {
                 std::vector<uint> path = token_dijkstra({ current_vertex, initial_vertex }, token.TRAILS);
                 token.TRAILS[ID_ROBOT].PATH = path;
+                next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
                 go_home = true;
               }
               catch(std::string &e)
@@ -381,16 +385,18 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
                 std::cout << e << std::endl;
               }
             }
+            else if(!reached_home)
+            {
+              next_vertex = current_vertex;
+              token.INIT_POS.pop_back();
+              reached_home = true;
+            }
+            
           }
           c_print("before OnGoal()", magenta);
           c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
           sendGoal(next_vertex);
         }
-      }
-
-      if (current_vertex == initial_vertex && go_home)
-      {
-        token.INIT_POS.pop_back();
       }
     }
   }

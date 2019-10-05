@@ -60,6 +60,12 @@ void TaskPlanner::init(int argc, char **argv)
         paths.push_back(std::vector<uint>(result, result + result_size));
     }
 
+    // avvio servizio
+    robots_ready_status = std::vector<bool>(TEAM_SIZE);
+    ros::NodeHandle nh;
+    ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
+    ros::spinOnce();
+
     // missions_generator(GENERATION);
 
     // // taskset di test
@@ -106,7 +112,12 @@ void TaskPlanner::init(int argc, char **argv)
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
     // aspetto che arrivino gli agenti
-    sleep(10);
+    while (robots_ready_count < TEAM_SIZE)
+    {
+        ros::Duration(1, 0).sleep();
+        ros::spinOnce();
+    }
+    // sleep(10);
 
     // giro di inizializzazione
     logistic_sim::Token token;
@@ -387,6 +398,20 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         ros::shutdown();
         system("./stop_experiment.sh");
     }
+}
+
+bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req,
+                              logistic_sim::RobotReady::Response &res)
+{
+    uint id_robot = req.ID_ROBOT;
+    c_print("Robot ", id_robot, " is ready", green, P);
+    if (!robots_ready_status[id_robot])
+    {
+        robots_ready_status[id_robot] = true;
+        robots_ready_count++;
+    }
+
+    return true;
 }
 
 } // namespace taskplanner

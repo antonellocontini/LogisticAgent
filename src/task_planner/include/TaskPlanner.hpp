@@ -31,6 +31,8 @@
 #include "get_graph.hpp"
 #include "color_cout.hpp"
 
+#include "logistic_sim/RobotReady.h"
+
 namespace taskplanner
 {
 
@@ -86,7 +88,8 @@ public:
 
     vector<MonitorData> robots_data;
     bool first_round = true;
-    int num_robots;
+    int num_robots, robots_ready_count = 0;
+    vector<bool> robots_ready_status;
 
     ros::Time start_time;
 
@@ -110,6 +113,9 @@ public:
     void init(int argc, char **argv);
 
     virtual void token_Callback(const logistic_sim::TokenConstPtr &msg);
+
+    bool robot_ready(logistic_sim::RobotReady::Request &req,
+                     logistic_sim::RobotReady::Response &res);
 
 protected:
     // per l'inizializzazione e il token dei task

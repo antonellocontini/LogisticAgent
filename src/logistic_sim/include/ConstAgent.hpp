@@ -1,5 +1,6 @@
 #pragma once
 #include "DistrAgent.hpp"
+#include "logistic_sim/RobotReady.h"
 
 namespace constagent
 {

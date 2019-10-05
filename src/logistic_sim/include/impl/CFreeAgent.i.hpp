@@ -171,17 +171,28 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 				{
 					if (i != ID_ROBOT)
 					{
-						if (next_time < other_paths[i].size() && other_paths[i][next_time] == v)
+						if (next_time < other_paths[i].size())
 						{
-							good = false;
-							break;
+							if (other_paths[i][next_time] == v)
+							{
+								good = false;
+								break;
+							}
+							if (other_paths[i][next_time] == u
+									&& other_paths[i][time] == v)
+							{
+								good = false;
+								break;
+							}
 						}
-						if (next_time < other_paths[i].size() && other_paths[i][next_time] == u
-								&& other_paths[i][time] == v)
-						{
-							good = false;
-							break;
-						}
+						// else if (!other_paths[i].empty())
+						// {
+						// 	if (other_paths[i].back() == v)
+						// 	{
+						// 		good = false;
+						// 		break;
+						// 	}
+						// }
 					}
 				}
 
@@ -211,11 +222,22 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 			{
 				if (i != ID_ROBOT)
 				{
-					if (next_time < other_paths[i].size() && other_paths[i][next_time] == u)
+					if (next_time < other_paths[i].size())
 					{
-						good = false;
-						break;
+						if (other_paths[i][next_time] == u)
+						{
+							good = false;
+							break;
+						}
 					}
+					// else if (!other_paths[i].empty())
+					// {
+					// 	if (other_paths[i].back() == u)
+					// 	{
+					// 		good = false;
+					// 		break;
+					// 	}
+					// }
 				}
 			}
 
