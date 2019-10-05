@@ -73,6 +73,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.Y_POS.push_back(0.0);
     token.GOAL_STATUS.push_back(0);
     token.TRAILS.push_back(logistic_sim::Path());
+    token.REACHED_HOME.push_back(false);
 
     initialize = false;
     if (ID_ROBOT == TEAM_SIZE - 1)
@@ -312,6 +313,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       if (goal_complete)
       {
         static bool first_time = true;
+        static int home_count = 0, home_steps = 0;
         
         if (first_time)
         {
@@ -335,6 +337,31 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
             token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
           }
           token.GOAL_STATUS[ID_ROBOT]++;
+
+          // controllo se sto andando a casa
+          if (go_home)
+          {
+            home_count++;
+            // sono arrivato
+            if (home_count == home_steps)
+            {
+              token.REACHED_HOME[ID_ROBOT] = true;
+              bool can_exit = true;
+              for(int i=0; i<TEAM_SIZE; i++)
+              {
+                if (!token.REACHED_HOME[i])
+                {
+                  can_exit = false;
+                  break;
+                }
+              }
+              if (can_exit)
+              {
+                token.INIT_POS.clear();
+              }
+            }
+          }
+
           first_time = false;
         }
         current_vertex = next_vertex;
@@ -401,6 +428,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
               try
               {
                 std::vector<uint> path = token_dijkstra({ current_vertex, initial_vertex }, token.TRAILS);
+                home_steps = path.size() - 1;
+                // metto in coda initial_vertex per segnalare
+                // che rimango fermo una volta arrivato a casa
+                path.insert(path.end(), 50, initial_vertex);
                 token.TRAILS[ID_ROBOT].PATH = path;
                 next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
                 go_home = true;

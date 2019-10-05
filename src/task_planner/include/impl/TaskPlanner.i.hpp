@@ -66,7 +66,7 @@ void TaskPlanner::init(int argc, char **argv)
     ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
     ros::spinOnce();
 
-    // missions_generator(GENERATION);
+    missions_generator(GENERATION);
 
     // // taskset di test
     logistic_sim::Mission m;
@@ -79,20 +79,20 @@ void TaskPlanner::init(int argc, char **argv)
     m.DSTS = {18};
     m.DEMANDS = {3};
     m.ITEM = {0};
-    missions.push_back(logistic_sim::Mission(m));
+    // missions.push_back(logistic_sim::Mission(m));
     m.DSTS = {18,23};
     m.DEMANDS = {1,2};
     m.ITEM = {0,0};
     // missions.push_back(logistic_sim::Mission(m));
     // missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {23};
-    m.DEMANDS = {3};
-    m.ITEM = {0};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {28};
-    missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18};
-    missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {23};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {28};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18};
+    // missions.push_back(logistic_sim::Mission(m));
     // // nuovi task
     // m.DSTS = {28,18};
     // m.DEMANDS = {2,1};

@@ -30,6 +30,7 @@ float32[]   TOTAL_DISTANCE
 uint32[]    GOAL_STATUS
 Path[]      TRAILS
 uint32      INIT_POS_INDEX
+bool[]      REACHED_HOME
 
 bool        END_SIMULATION
 

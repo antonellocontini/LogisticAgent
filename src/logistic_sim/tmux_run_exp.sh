@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=model6
+MAP=grid
 NROBOTS=4
 INITPOS=default
 ALG=CFreeAgent
@@ -14,7 +14,7 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=SP_TaskPlanner
+TP_NAME=TaskPlanner
 GEN=uniform
 DEBUG=false
 
@@ -57,7 +57,12 @@ sleep 5
 
 tmux new-window -t $SESSION:3 -n 'TaskPlanner'
 
-tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
+if [ $DEBUG = true ] ; then
+	tmux send-keys "rosrun --prefix 'gdb -ex run --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
+else
+	tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
+fi
+#tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
 echo "Launching TaskPlanner $TP_NAME..."
 sleep 5
 
