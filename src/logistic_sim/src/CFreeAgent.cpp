@@ -313,27 +313,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       {
         static bool first_time = true;
         
-        current_vertex = next_vertex;
         if (first_time)
         {
-          if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
-          {
-            token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
-          }
-          token.GOAL_STATUS[ID_ROBOT]++;
-          first_time = false;
-        }
-
-        bool equal_status = true;
-        int status = token.GOAL_STATUS[0];
-        for (int i = 1; i < TEAM_SIZE; i++)
-        {
-          if (token.GOAL_STATUS[i] != status)
-            equal_status = false;
-        }
-
-        if (equal_status)
-        {
+          // aggiorno distanza percorsa nel token
           uint edge_length = 0;
           if (current_vertex < dimension)
           {
@@ -347,12 +329,31 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
             }
           }
           token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
+
+          if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+          {
+            token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
+          }
+          token.GOAL_STATUS[ID_ROBOT]++;
+          first_time = false;
+        }
+        current_vertex = next_vertex;
+
+        bool equal_status = true;
+        int status = token.GOAL_STATUS[0];
+        for (int i = 1; i < TEAM_SIZE; i++)
+        {
+          if (token.GOAL_STATUS[i] != status)
+            equal_status = false;
+        }
+
+        if (equal_status)
+        {
           first_time = true;
           if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
           {
             goal_complete = false;
             next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
-            // token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
           }
           else
           {
@@ -381,7 +382,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
                   taken = true;
                   token.TRAILS[ID_ROBOT].PATH = path;
                   next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
-                  // token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
                   break;
                 }
                 catch (const std::string& e)
@@ -403,7 +403,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
                 std::vector<uint> path = token_dijkstra({ current_vertex, initial_vertex }, token.TRAILS);
                 token.TRAILS[ID_ROBOT].PATH = path;
                 next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
-                // token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
                 go_home = true;
               }
               catch(std::string &e)
