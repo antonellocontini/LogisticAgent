@@ -196,7 +196,7 @@ void TaskPlanner::u_missions_generator()
             m.PRIORITY = 0;
             m.ITEM.push_back(i % 3);
             // c_print("ah");
-            copy(std::begin(paths[i]), std::end(paths[i]), back_inserter(m.ROUTE));
+            copy(std::begin(paths[i % 3]), std::end(paths[i % 3]), back_inserter(m.ROUTE));
             m.DSTS.push_back(dst_vertex[i % 3]);
             m.TOT_DEMAND = (j % 3) + 1;
             m.DEMANDS.push_back((j % 3) + 1);
