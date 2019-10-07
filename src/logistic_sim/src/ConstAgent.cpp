@@ -216,7 +216,7 @@ void ConstAgent::run()
 
     // TEST: attesa di qualche secondo dalla partenza del precedente
     init_start_time = ros::Time::now();
-    init_wait_time = 13 * ID_ROBOT;
+    init_wait_time = 7 * ID_ROBOT;
     c_print("[DEBUG]\tAttendo ", init_wait_time, " secondi...", yellow);
     // sleep(wait_time);
     // c_print("[DEBUG]\tParto");

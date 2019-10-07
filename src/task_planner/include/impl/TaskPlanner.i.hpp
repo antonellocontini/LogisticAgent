@@ -34,7 +34,7 @@ void TaskPlanner::init(int argc, char **argv)
 {
     srand(time(NULL));
     chdir(PS_path.c_str());
-    string mapname = string(argv[1]);
+    mapname = string(argv[1]);
     string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
     dimension = GetGraphDimension(graph_file.c_str());
     vertex_web = new vertex[dimension];
@@ -68,21 +68,56 @@ void TaskPlanner::init(int argc, char **argv)
 
     missions_generator(GENERATION);
 
+    // test non uniform sp grid
+    // logistic_sim::Mission m;
+    // m.DSTS = {16,16};
+    // m.DEMANDS = {1,2};
+    // m.ITEM = {0,0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {17,17};
+    // m.DEMANDS = {1,1};
+    // m.ITEM = {0,0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18,18};
+    // m.DEMANDS = {1,2};
+    // m.ITEM = {0,0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {17};
+    // m.DEMANDS = {2};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18,18};
+    // m.DEMANDS = {2,1};
+    // m.ITEM = {0,0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {17};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+    // m.DSTS = {18};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
+    // missions.push_back(logistic_sim::Mission(m));
+
     // // taskset di test
-    logistic_sim::Mission m;
-    m.DSTS = {18,28};
-    m.DEMANDS = {1,2};
-    m.ITEM = {0,0};
-    m.TOT_DEMAND = 3;
+    // logistic_sim::Mission m;
+    // m.DSTS = {18,28};
+    // m.DEMANDS = {1,2};
+    // m.ITEM = {0,0};
+    // m.TOT_DEMAND = 3;
     // missions.push_back(logistic_sim::Mission(m));
     // missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18};
-    m.DEMANDS = {3};
-    m.ITEM = {0};
+    // m.DSTS = {18};
+    // m.DEMANDS = {3};
+    // m.ITEM = {0};
     // missions.push_back(logistic_sim::Mission(m));
-    m.DSTS = {18,23};
-    m.DEMANDS = {1,2};
-    m.ITEM = {0,0};
+    // m.DSTS = {18,23};
+    // m.DEMANDS = {1,2};
+    // m.ITEM = {0,0};
     // missions.push_back(logistic_sim::Mission(m));
     // missions.push_back(logistic_sim::Mission(m));
     // m.DSTS = {23};
@@ -107,7 +142,7 @@ void TaskPlanner::init(int argc, char **argv)
     // m.ITEM = {1,0};
     // missions.push_back(logistic_sim::Mission(m));
 
-    // set_partition();
+    set_partition();
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
@@ -221,8 +256,8 @@ void TaskPlanner::u_missions_generator()
 void TaskPlanner::nu_missions_generator()
 {
     uint t1_size = 2; 
-    uint t2_size = 3;  
-    uint t3_size = 4; 
+    uint t2_size = 4;  
+    uint t3_size = 6; 
     static int id = 0;
     while (t1_size > 0 || t2_size > 0 || t3_size > 0)
     {
@@ -362,7 +397,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             std::stringstream conf_dir_name;
-            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0];
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
             {

@@ -21,8 +21,8 @@ window(
 
 # load an environment bitmap
 floorplan (
-  size [25.8 25.8  1]   #metros (a imagem tem 344x344pixeis => 0.075 resolução no .yaml)
-  pose [12.9 12.9 0 0]
+  size [13.76 13.76  1]   #metros (a imagem tem 344x344pixeis => 0.075 resolução no .yaml)
+  pose [6.88 6.88 0 0]
   bitmap "grid.pgm"
 )
 

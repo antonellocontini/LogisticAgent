@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=grid
-NROBOTS=4
+NROBOTS=6
 INITPOS=default
 ALG=CFreeAgent
 LOC=AMCL
@@ -14,8 +14,8 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=TaskPlanner
-GEN=uniform
+TP_NAME=SP_TaskPlanner
+GEN=non-uniform
 DEBUG=false
 
 clear

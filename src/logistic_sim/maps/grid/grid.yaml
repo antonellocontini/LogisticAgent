@@ -1,5 +1,5 @@
 image: grid.pgm
-resolution: 0.075
+resolution: 0.04
 origin: [0.000000, 0.000000, 0.000000]
 negate: 0       #se negate=1 -> preto-free & branco-obstaculos
 occupied_thresh: 0.65

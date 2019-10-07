@@ -62,6 +62,7 @@ public:
 
     vertex *vertex_web;
     uint dimension;
+    string mapname;
 
     std::string ALGORITHM;
     std::string GENERATION;

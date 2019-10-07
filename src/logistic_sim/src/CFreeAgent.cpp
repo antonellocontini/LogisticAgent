@@ -72,7 +72,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.X_POS.push_back(0.0);
     token.Y_POS.push_back(0.0);
     token.GOAL_STATUS.push_back(0);
-    token.TRAILS.push_back(logistic_sim::Path());
+    logistic_sim::Path p;
+    p.PATH = std::vector<uint>(10, initial_vertex);
+    token.TRAILS.push_back(p);
     token.REACHED_HOME.push_back(false);
 
     initialize = false;
@@ -92,19 +94,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
         logistic_sim::Mission m = token.MISSION.back();
         token.MISSION.pop_back();
         missions.emplace(missions.begin(), m);
-        std::vector<uint> waypoints = { initial_vertex, src_vertex };
-        for (auto dst : m.DSTS)
-        {
-          waypoints.push_back(dst);
-        }
-        std::vector<uint> path = token_dijkstra(waypoints, token.TRAILS);
-        token.TRAILS[ID_ROBOT].PATH = path;
-        current_mission = m;
-        for (uint v : token.TRAILS[ID_ROBOT].PATH)
-        {
-          std::cout << setw(2) << v << " ";
-        }
-        std::cout << std::endl;
       }
       else
       {
@@ -116,158 +105,122 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           auto tmp_min_dst = *std::min_element(token.MISSION[i].DSTS.begin(), token.MISSION[i].DSTS.end());
           if (min_dst <= tmp_min_dst)
           {
-            try
-            {
-              logistic_sim::Mission m1 = token.MISSION[i];
-              std::vector<uint> waypoints = { initial_vertex, src_vertex };
-              for (auto dst : m1.DSTS)
-              {
-                waypoints.push_back(dst);
-              }
-              std::vector<uint> path = token_dijkstra(waypoints, token.TRAILS);
-              missions.emplace(missions.begin(), m1);
-              token.MISSION.erase(token.MISSION.begin() + i);
-              current_mission = m1;
-              taken = true;
-              token.TRAILS[ID_ROBOT].PATH = path;
-              for (uint v : token.TRAILS[ID_ROBOT].PATH)
-              {
-                std::cout << setw(2) << v << " ";
-              }
-              std::cout << std::endl;
-              break;
-            }
-            catch (const std::string& e)
-            {
-              std::cerr << e << '\n';
-            }
+            logistic_sim::Mission m1 = token.MISSION[i];
+            missions.emplace(missions.begin(), m1);
+            token.MISSION.erase(token.MISSION.begin() + i);
+            taken = true;
+            break;
           }
         }
 
+        // se l'euristica non va bene prendo un'altra
         if (!taken)
         {
-          for (int i = 0; i < token.MISSION.size(); i++)
-          {
-            try
-            {
-              logistic_sim::Mission m1 = token.MISSION[i];
-              std::vector<uint> waypoints = { initial_vertex, src_vertex };
-              for (auto dst : m1.DSTS)
-              {
-                waypoints.push_back(dst);
-              }
-              std::vector<uint> path = token_dijkstra(waypoints, token.TRAILS);
-              missions.emplace(missions.begin(), m1);
-              token.MISSION.erase(token.MISSION.begin() + i);
-              current_mission = m1;
-              taken = true;
-              token.TRAILS[ID_ROBOT].PATH = path;
-              for (uint v : token.TRAILS[ID_ROBOT].PATH)
-              {
-                std::cout << setw(2) << v << " ";
-              }
-              std::cout << std::endl;
-              break;
-            }
-            catch (const std::string& e)
-            {
-              std::cerr << e << '\n';
-            }
-          }
-        }
-
-        if (!taken)
-        {
-          token.END_SIMULATION = true;
+          logistic_sim::Mission m1 = token.MISSION.back();
+          token.MISSION.pop_back();
+          missions.emplace(missions.begin(), m1);
+          taken = true;
         }
       }
+    }
 
-      // PRINT TOKEN MISSIONS
-      // std::cout << "=======================" << std::endl;
-      // for(auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
-      // {
-      //     const logistic_sim::Mission &m = *it;
-      //     std::cout << "Mission id: " << m.ID << std::endl;
-      //     for(auto jt = m.DSTS.begin(); jt != m.DSTS.end(); jt++)
-      //     {
-      //         std::cout << *jt << " ";
-      //     }
-      //     std::cout << std::endl << std::endl;
-      // }
-      if (ID_ROBOT == TEAM_SIZE - 1)
-      {
-        std::cout << "Tutti hanno preso le missioni" << std::endl;
-        token.STEP = false;
-      }
+    // PRINT TOKEN MISSIONS
+    // std::cout << "=======================" << std::endl;
+    // for(auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
+    // {
+    //     const logistic_sim::Mission &m = *it;
+    //     std::cout << "Mission id: " << m.ID << std::endl;
+    //     for(auto jt = m.DSTS.begin(); jt != m.DSTS.end(); jt++)
+    //     {
+    //         std::cout << *jt << " ";
+    //     }
+    //     std::cout << std::endl << std::endl;
+    // }
+    if (token.MISSION.empty() && ID_ROBOT == TEAM_SIZE - 1)
+    {
+      std::cout << "Tutti hanno preso le missioni" << std::endl;
+      token.STEP = false;
     }
   }
   else
   {
     if (!path_calculated)
     {
-      // std::cout << "Calcolo percorso..." << std::endl;
-      // uint init_pos = 9;
-      // if (mapname == "grid")
-      // {
-      //   init_pos = initial_vertex;
-      // }
-      // std::vector<uint> waypoints = { current_vertex };
-      // for (logistic_sim::Mission m : missions)
-      // {
-      //   waypoints.push_back(src_vertex);
-      //   for (uint dst : m.DSTS)
-      //   {
-      //     waypoints.push_back(dst);
-      //   }
-      // }
-      // waypoints.push_back(init_pos);
-      // token_dijkstra(waypoints, token.TRAILS);
-      // std::cout << "Percorso robot " << ID_ROBOT << std::endl;
-      // for (uint v : token.TRAILS[ID_ROBOT].PATH)
-      // {
-      //   std::cout << setw(2) << v << " ";
-      // }
-      // std::cout << std::endl;
+      std::cout << "Calcolo percorso..." << std::endl;
+      uint init_pos = 9;
+      if (mapname == "grid")
+      {
+        init_pos = initial_vertex;
+      }
+      std::vector<uint> waypoints = { current_vertex };
+      for (logistic_sim::Mission m : missions)
+      {
+        token.MISSIONS_COMPLETED[ID_ROBOT]++;
+        waypoints.push_back(src_vertex);
+        for(uint demands : m.DEMANDS)
+        {
+          token.TASKS_COMPLETED[ID_ROBOT]++;
+        }
+        for (uint dst : m.DSTS)
+        {
+          waypoints.push_back(dst);
+        }
+      }
+      waypoints.push_back(init_pos);
+      try
+      {
+        token.TRAILS[ID_ROBOT].PATH = token_dijkstra(waypoints, token.TRAILS);
+      }
+      catch (std::string& e)
+      {
+        std::cout << e << std::endl;
+        token.END_SIMULATION = true;
+        token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
+        token.TASKS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
+      }
 
-      // controllo se percorsi sono definiti per ritorno a casa
-      // bool defined = true;
-      // for (int i = 0; i < TEAM_SIZE; i++)
-      // {
-      //   if (token.TRAILS[i].PATH.empty())
-      //     defined = false;
-      // }
-      // // entra solo l'ultimo robot a calcolare i percorsi
-      // if (defined)
-      // {
-      //   // fisso la parte finale per tutti i robot
-      //   if (mapname == "model6")
-      //   {
-      //     std::vector<uint> indices(TEAM_SIZE);
-      //     std::cout << "Dimensione percorsi\n";
-      //     for (int i = 0; i < TEAM_SIZE; i++)
-      //     {
-      //       std::cout << "robot " << i << ": " << token.TRAILS[i].PATH.size() << std::endl;
-      //       indices[i] = i;
-      //     }
-      //     auto cmp_function = [&](uint lhs, uint rhs) {
-      //       return token.TRAILS[lhs].PATH.size() < token.TRAILS[rhs].PATH.size();
-      //     };
-      //     std::sort(indices.begin(), indices.end(), cmp_function);
-      //     for (int j = 0; j < indices.size(); j++)
-      //     {
-      //       // j indica il nodo home
-      //       // indices[j] indica il robot assegnato a quel nodo
-      //       std::cout << "Casa robot " << indices[j] << "\n";
-      //       int home_vertex = j;
-      //       for (int i = 5; i >= home_vertex; i--)
-      //       {
-      //         std::cout << i << " ";
-      //         token.TRAILS[indices[j]].PATH.push_back(i);
-      //       }
-      //       std::cout << std::endl;
-      //     }
-      //   }
-      // }
+      std::cout << "Percorso robot " << ID_ROBOT << std::endl;
+      for (uint v : token.TRAILS[ID_ROBOT].PATH)
+      {
+        std::cout << setw(2) << v << " ";
+      }
+      std::cout << std::endl;
+
+      // entra solo l'ultimo robot a calcolare i percorsi per model6
+      if (ID_ROBOT == TEAM_SIZE - 1 && mapname == "model6")
+      {
+        std::vector<uint> indices(TEAM_SIZE);
+        std::cout << "Dimensione percorsi\n";
+        for (int i = 0; i < TEAM_SIZE; i++)
+        {
+          std::cout << "robot " << i << ": " << token.TRAILS[i].PATH.size() << std::endl;
+          indices[i] = i;
+        }
+        auto cmp_function = [&](uint lhs, uint rhs) {
+          return token.TRAILS[lhs].PATH.size() < token.TRAILS[rhs].PATH.size();
+        };
+        std::sort(indices.begin(), indices.end(), cmp_function);
+        for (int j = 0; j < indices.size(); j++)
+        {
+          // j indica il nodo home
+          // indices[j] indica il robot assegnato a quel nodo
+          std::cout << "Casa robot " << indices[j] << "\n";
+          int home_vertex = j;
+          for (int i = 5; i >= home_vertex; i--)
+          {
+            std::cout << i << " ";
+            token.TRAILS[indices[j]].PATH.push_back(i);
+          }
+          token.TRAILS[indices[j]].PATH.insert(token.TRAILS[indices[j]].PATH.end(), 50, home_vertex);
+          std::cout << std::endl;
+        }
+      }
+      else if(mapname != "model6")
+      {
+        // se non siamo in model6 ogni robot si aggiorna il proprio percorso da solo
+        token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), 50, token.TRAILS[ID_ROBOT].PATH.back());
+      }
+
       for (int j = 0; j < TEAM_SIZE; j++)
       {
         std::cout << "Percorso robot " << j << std::endl;
@@ -286,6 +239,12 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     }
     else
     {
+      static bool first_round = true;
+      if (first_round)
+      {
+        home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 50;
+        first_round = false;
+      }
       // aggiorno posizione
       token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
       token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
@@ -313,15 +272,14 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       if (goal_complete)
       {
         static bool first_time = true;
-        static int home_count = 0, home_steps = 0;
-        
+
         if (first_time)
         {
           // aggiorno distanza percorsa nel token
           uint edge_length = 0;
           if (current_vertex < dimension)
           {
-            for(int i=0; i<vertex_web[current_vertex].num_neigh; i++)
+            for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
             {
               if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
               {
@@ -332,33 +290,30 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           }
           token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
 
-          if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+          if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
           {
             token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
           }
           token.GOAL_STATUS[ID_ROBOT]++;
 
           // controllo se sto andando a casa
-          if (go_home)
+          home_count++;
+          // sono arrivato
+          if (home_count == home_steps)
           {
-            home_count++;
-            // sono arrivato
-            if (home_count == home_steps)
+            token.REACHED_HOME[ID_ROBOT] = true;
+            bool can_exit = true;
+            for (int i = 0; i < TEAM_SIZE; i++)
             {
-              token.REACHED_HOME[ID_ROBOT] = true;
-              bool can_exit = true;
-              for(int i=0; i<TEAM_SIZE; i++)
+              if (!token.REACHED_HOME[i])
               {
-                if (!token.REACHED_HOME[i])
-                {
-                  can_exit = false;
-                  break;
-                }
+                can_exit = false;
+                break;
               }
-              if (can_exit)
-              {
-                token.INIT_POS.clear();
-              }
+            }
+            if (can_exit)
+            {
+              token.INIT_POS.clear();
             }
           }
 
@@ -384,76 +339,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           }
           else
           {
-            std::cout << "Missioni rimanenti: " << token.MISSION.size() << std::endl;
-            if (!token.MISSION.empty())
-            {
-              token.MISSIONS_COMPLETED[ID_ROBOT]++;
-              token.TASKS_COMPLETED[ID_ROBOT] += current_mission.DSTS.size();
-              std::cout << "Prendo un'altra missione" << std::endl;
-              bool taken = false;
-              // se il token non è vuoto prendo un altra missione
-              for (int i = 0; i < token.MISSION.size(); i++)
-              {
-                try
-                {
-                  logistic_sim::Mission m1 = token.MISSION[i];
-                  std::vector<uint> waypoints = { current_vertex, src_vertex };
-                  for (auto dst : m1.DSTS)
-                  {
-                    waypoints.push_back(dst);
-                  }
-                  std::vector<uint> path = token_dijkstra(waypoints, token.TRAILS);
-                  missions.emplace(missions.begin(), m1);
-                  token.MISSION.erase(token.MISSION.begin() + i);
-                  current_mission = m1;
-                  taken = true;
-                  token.TRAILS[ID_ROBOT].PATH = path;
-                  next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
-                  break;
-                }
-                catch (const std::string& e)
-                {
-                  std::cout << e << std::endl;
-                }
-              }
-            }
-            else if(!go_home)
-            {
-              token.MISSIONS_COMPLETED[ID_ROBOT]++;
-              token.TASKS_COMPLETED[ID_ROBOT] += current_mission.DSTS.size();
-              std::cout << "Missioni finite, vado a casa" << std::endl;
-              // next_vertex = current_vertex;
-              initial_vertex = token.INIT_POS[token.INIT_POS_INDEX];
-              token.INIT_POS_INDEX++;
-              try
-              {
-                std::vector<uint> path = token_dijkstra({ current_vertex, initial_vertex }, token.TRAILS);
-                home_steps = path.size() - 1;
-                // metto in coda initial_vertex per segnalare
-                // che rimango fermo una volta arrivato a casa
-                path.insert(path.end(), 50, initial_vertex);
-                token.TRAILS[ID_ROBOT].PATH = path;
-                next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
-                go_home = true;
-              }
-              catch(std::string &e)
-              {
-                std::cout << e << std::endl;
-              }
-            }
-            else if(!reached_home)
-            {
-              next_vertex = current_vertex;
-              token.INIT_POS.pop_back();
-              reached_home = true;
-            }
-            else
-            {
-              c_print("[ WARN]Don't know what to do!!!", yellow, P);
-              next_vertex = current_vertex;
-            }
-            
-            
+            c_print("[ WARN]Don't know what to do!!!", yellow, P);
+            next_vertex = current_vertex;
           }
           c_print("before OnGoal()", magenta);
           c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
