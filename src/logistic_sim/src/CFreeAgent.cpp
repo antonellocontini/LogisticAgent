@@ -290,7 +290,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           }
           token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
 
-          if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+          if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
           {
             token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
           }
