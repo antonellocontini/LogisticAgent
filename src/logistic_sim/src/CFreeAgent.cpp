@@ -242,7 +242,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       static bool first_round = true;
       if (first_round)
       {
-        home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 50;
+        home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 49;
         first_round = false;
       }
       // aggiorno posizione
