@@ -397,7 +397,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             std::stringstream conf_dir_name;
-            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
             {
