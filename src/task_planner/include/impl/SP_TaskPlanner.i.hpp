@@ -260,33 +260,37 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
 
   std::vector<unsigned int> path;
 
-  unsigned int ***prev_paths = new unsigned int **[size];
-  unsigned int **path_sizes = new unsigned int *[size];
-  for (unsigned int i = 0; i < size; i++)
-  {
-    prev_paths[i] = new unsigned int *[MAX_TIME];
-    path_sizes[i] = new unsigned int[MAX_TIME];
-    for (unsigned int j = 0; j < MAX_TIME; j++)
-    {
-      prev_paths[i][j] = new unsigned int[MAX_TIME];
-      path_sizes[i][j] = 0;
-    }
-  }
+  std::vector<std::vector<std::vector<uint> > > prev_paths(size, std::vector<std::vector<uint>>(MAX_TIME, std::vector<uint>(size, 0)));
+  std::vector<std::vector<uint> > path_sizes(size, std::vector<uint>(MAX_TIME, 0));
+  // unsigned int ***prev_paths = new unsigned int **[size];
+  // unsigned int **path_sizes = new unsigned int *[size];
+  // for (unsigned int i = 0; i < size; i++)
+  // {
+  //   prev_paths[i] = new unsigned int *[MAX_TIME];
+  //   path_sizes[i] = new unsigned int[MAX_TIME];
+  //   for (unsigned int j = 0; j < MAX_TIME; j++)
+  //   {
+  //     prev_paths[i][j] = new unsigned int[MAX_TIME];
+  //     path_sizes[i][j] = 0;
+  //   }
+  // }
   prev_paths[source][0][0] = source;
   path_sizes[source][0] = 1;
 
-  unsigned int **visited = new unsigned int *[size];
-  for (unsigned int i = 0; i < size; i++)
-  {
-    visited[i] = new unsigned int[MAX_TIME];
-    for (unsigned int j = 0; j < MAX_TIME; j++)
-    {
-      visited[i][j] = WHITE;
-    }
-  }
+  std::vector<std::vector<uint> > visited(size, std::vector<uint>(MAX_TIME, WHITE));
+  // unsigned int **visited = new unsigned int *[size];
+  // for (unsigned int i = 0; i < size; i++)
+  // {
+  //   visited[i] = new unsigned int[MAX_TIME];
+  //   for (unsigned int j = 0; j < MAX_TIME; j++)
+  //   {
+  //     visited[i][j] = WHITE;
+  //   }
+  // }
 
   st_location st(source, 0);
-  st_location *queue = new st_location[MAX_TIME];
+  std::vector<st_location> queue(MAX_TIME, st_location(0, 0));
+  // st_location *queue = new st_location[MAX_TIME];
   queue[0] = st;
   int queue_size = 1;
 
@@ -303,24 +307,25 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
       if (it_waypoints + 1 == waypoints.end())
       {
         std::vector<unsigned int> result =
-            std::vector<unsigned int>(prev_paths[u][time], prev_paths[u][time] + path_sizes[u][time]);
+            // std::vector<unsigned int>(prev_paths[u][time], prev_paths[u][time] + path_sizes[u][time]);
+            std::vector<unsigned int>(prev_paths[u][time].begin(), prev_paths[u][time].begin() + path_sizes[u][time]);
 
         // pulizia heap
-        for (unsigned int i = 0; i < size; i++)
-        {
-          for (unsigned int j = 0; j < MAX_TIME; j++)
-          {
-            delete[] prev_paths[i][j];
-          }
+        // for (unsigned int i = 0; i < size; i++)
+        // {
+        //   for (unsigned int j = 0; j < MAX_TIME; j++)
+        //   {
+        //     delete[] prev_paths[i][j];
+        //   }
 
-          delete[] prev_paths[i];
-          delete[] path_sizes[i];
-          delete[] visited[i];
-        }
-        delete[] prev_paths;
-        delete[] path_sizes;
-        delete[] visited;
-        delete[] queue;
+        //   delete[] prev_paths[i];
+        //   delete[] path_sizes[i];
+        //   delete[] visited[i];
+        // }
+        // delete[] prev_paths;
+        // delete[] path_sizes;
+        // delete[] visited;
+        // delete[] queue;
 
         return result;
       }
@@ -461,6 +466,20 @@ std::vector<uint> SP_TaskPlanner::token_dijkstra(const std::vector<uint> &waypoi
   }
   c_print("Fine del space_dijkstra", green, P);
   return spacetime_dijkstra(simple_paths, graph, dimension, waypoints, ID_ROBOT);
+}
+
+unsigned int SP_TaskPlanner::insertion_sort(std::vector<st_location> &queue, unsigned int size, st_location loc)
+{
+  int i;
+  for (i = size - 1; i >= 0; i--)
+  {
+    if (loc < queue[i])
+      break;
+    queue[i + 1] = queue[i];
+  }
+  queue[i + 1] = loc;
+
+  return size + 1;
 }
 
 unsigned int SP_TaskPlanner::insertion_sort(st_location *queue, unsigned int size, st_location loc)
