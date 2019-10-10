@@ -1,10 +1,10 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=grid
-NROBOTS=6
+MAP=icelab
+NROBOTS=2
 INITPOS=default
-ALG=CFreeAgent
+ALG=ConstAgent
 LOC=AMCL
 NAV=ros
 GWAIT=0
@@ -14,90 +14,122 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=SP_TaskPlanner
+TP_NAME=TaskPlanner
 GEN=non-uniform
 DEBUG=false
+NRUNS=10
 
-clear
-tmux -2 new-session -d -s $SESSION
-tmux bind-key X run-shell "./stop_experiment.sh" \\\; kill-session
+function prepare_tmux {
+	n=$(( NROBOTS - 1 ))
+	tmux -2 new-session -d -s $SESSION
+	tmux bind-key X run-shell "./stop_experiment.sh" \\\; kill-session
+	tmux splitw -h
+	tmux new-window -t $SESSION:1 -n 'Robots'
+	for i in $(seq 0 $n); do
+		tmux splitw
+		tmux select-layout tiled
+	done
+	tmux kill-pane -t $SESSION:1.$NROBOTS
+	tmux new-window -t $SESSION:2 -n 'Agents'
+	for i in $(seq 0 $n); do
+		tmux splitw
+		tmux select-layout tiled
+	done
+	tmux kill-pane -t $SESSION:2.$NROBOTS
+	tmux new-window -t $SESSION:3 -n 'TaskPlanner'
+}
 
-tmux send-keys "roscore &" C-m
-echo "Launching roscore..."
-sleep 3
-echo "Setting ROS parameters..."
-tmux send-keys "rosparam set /use_sim_time True" C-m
-tmux send-keys "rosparam set /goal_reached_wait $GWAIT" C-m
-tmux send-keys "rosparam set /communication_delay $COMMDELAY" C-m
-tmux send-keys "rosparam set /navigation_module $NAV" C-m
-tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
-IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
-tmux send-keys "./setinitposes.py $MAP 	\"$IPOSES\"" C-m
-tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP" C-m
-echo "Launching Stage..."
-sleep 3
+function launch_ros {
+	tmux selectw -t $SESSION:0
+	tmux selectp -t $SESSION:0.0
+	tmux send-keys "roscore &" C-m
+	echo "Launching roscore..."
+	sleep 3
+	echo "Setting ROS parameters..."
+	tmux send-keys "rosparam set /use_sim_time True" C-m
+	tmux send-keys "rosparam set /goal_reached_wait $GWAIT" C-m
+	tmux send-keys "rosparam set /communication_delay $COMMDELAY" C-m
+	tmux send-keys "rosparam set /navigation_module $NAV" C-m
+	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
+	IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
+	tmux send-keys "./setinitposes.py $MAP 	\"$IPOSES\"" C-m
+}
 
-tmux new-window -t $SESSION:1 -n 'Robots'
-echo "Launching robots..."
+function launch_stage {
+	tmux selectw -t $SESSION:0
+	tmux selectp -t $SESSION:0.0
+	tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP" C-m
+	echo "Launching Stage..."
+	sleep 3
+}
 
-n=$(( NROBOTS - 1 ))
-for i in $(seq 0 $n); do
-	tmux splitw
-	tmux select-pane -t $SESSION:1.$i
-	tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true" C-m
+function launch_robots {
+	tmux selectw -t $SESSION:1
+	n=$(( NROBOTS - 1 ))
+	for i in $(seq 0 $n); do
+		tmux selectp -t $SESSION:1.$i
+		tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true" C-m
+		echo "Robot $i launched"
+		sleep 1
+	done
 	tmux select-layout tiled
-	echo "Robot $i launched"
-	sleep 1
-done
-tmux kill-pane -t $SESSION:1.$NROBOTS
-tmux select-layout tiled
 
-echo "Waiting for robots to get ready..."
-sleep 5
+	echo "Waiting for robots to get ready..."
+	sleep 5
+}
 
-tmux new-window -t $SESSION:3 -n 'TaskPlanner'
-
-if [ $DEBUG = true ] ; then
-	tmux send-keys "rosrun --prefix 'gdb -ex run --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
-else
-	tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
-fi
-#tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
-echo "Launching TaskPlanner $TP_NAME..."
-sleep 5
-
-tmux new-window -t $SESSION:2 -n 'Agents'
-
-echo "Launching agents..."
-if [ $DEBUG = true ] ; then
-	echo "Debug mode activated, running into gdb..."
-fi
-for i in $(seq 0 $n); do
-	tmux splitw
-	tmux select-pane -t $SESSION:2.$i
+function launch_taskplanner {
+	tmux selectw -t $SESSION:3
 	if [ $DEBUG = true ] ; then
-		if [ -f "commands_$i.txt" ] ; then
-			tmux send-keys "rosrun --prefix 'gdb -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-		else
-			tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-		fi
+		tmux send-keys "rosrun --prefix 'gdb -ex run --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
 	else
-		tmux send-keys "rosrun logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+		tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
 	fi
+
+	echo "Launching TaskPlanner $TP_NAME..."
+	sleep 5
+}
+
+function launch_agents {
+	tmux selectw -t $SESSION:2
+	echo "Launching agents..."
+	if [ $DEBUG = true ] ; then
+		echo "Debug mode activated, running into gdb..."
+	fi
+	for i in $(seq 0 $n); do
+		tmux selectp -t $SESSION:2.$i
+		if [ $DEBUG = true ] ; then
+			if [ -f "commands_$i.txt" ] ; then
+				tmux send-keys "rosrun --prefix 'gdb -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+			else
+				tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+			fi
+		else
+			tmux send-keys "rosrun logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+		fi
+		echo "$ALG $i launched"
+		sleep 1
+	done
 	tmux select-layout tiled
-	echo "$ALG $i launched"
-	sleep 1
-done
-tmux kill-pane -t $SESSION:2.$NROBOTS
-tmux select-layout tiled
+}
 
-tmux select-window -t $SESSION:0
+function set_footprints {
+	tmux selectw -t $SESSION:0
+	tmux selectw -t $SESSION:0.1
+	echo "Setting stage footprints..."
+	tmux send-keys "rostopic pub /stageGUIRequest std_msgs/String \"data: 'footprints'\" --once" C-m
+	tmux send-keys "rostopic pub /stageGUIRequest std_msgs/String \"data: 'speedup_$SPEEDUP'\" --once" C-m
+	tmux selectw -t $SESSION:2
+}
 
-echo "Setting stage footprints..."
-tmux splitw -h
-tmux send-keys "rostopic pub /stageGUIRequest std_msgs/String \"data: 'footprints'\" --once" C-m
-tmux send-keys "rostopic pub /stageGUIRequest std_msgs/String \"data: 'speedup_$SPEEDUP'\" --once" C-m
-
-tmux select-window -t $SESSION:2
-
+prepare_tmux
+launch_ros
+launch_stage
+launch_robots
+launch_taskplanner
+launch_agents
+set_footprints
+date
 tmux -2 attach-session -t $SESSION
+echo ""
+sleep 1
