@@ -7,6 +7,11 @@ void TaskPlanner::set_partition()
   c_print("set_partition on TP Base", red);
 }
 
+std::vector<logistic_sim::Path> TaskPlanner::path_partition()
+{
+  c_print("path_partition on TP Base", red);
+}
+
 //------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {

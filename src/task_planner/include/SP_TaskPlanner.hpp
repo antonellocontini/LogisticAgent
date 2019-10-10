@@ -98,6 +98,19 @@ void print_coalition(const t_coalition &coalition)
 // uguali
 class SP_TaskPlanner : public TaskPlanner
 {
+private:
+    struct st_location
+    {
+        unsigned int vertex;
+        unsigned int time;
+
+        st_location(unsigned int vertex = 0, unsigned int time = 0) : vertex(vertex), time(time) { }
+        st_location(const st_location &ref) : vertex(ref.vertex), time(ref.time) { }
+        bool operator<(const st_location &loc) const
+        {
+            return time < loc.time;
+        }
+    };
 public:
     SP_TaskPlanner(ros::NodeHandle &nh_);
     ~SP_TaskPlanner(){};
@@ -105,6 +118,10 @@ public:
     uint compute_cycle_dst(logistic_sim::Mission &mission);
     void compute_route(uint id, logistic_sim::Mission &mission);
     void set_partition() override;
+    std::vector<logistic_sim::Path> path_partition() override;
+    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, const std::vector<unsigned int> &waypoints, uint ID_ROBOT);
+    std::vector<uint> token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT);
+    unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc);
 };
 
 } // namespace SP_TaskPlanner

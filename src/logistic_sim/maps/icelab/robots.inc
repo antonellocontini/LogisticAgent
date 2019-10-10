@@ -1,2 +1,6 @@
-crobot( pose [ 20.0  20.0  0  0 ]   name "robot0"  color "blue")
-crobot( pose [ 40.0  40.0  0  0 ]   name "robot1"  color "red")
+crobot( pose [ 1.53  5.06  0  0 ]   name "robot0"  color "blue")
+crobot( pose [ 1.53  3.09  0  0 ]   name "robot1"  color "red")
+crobot( pose [ 1.53  1.13  0  0 ]   name "robot2"  color "cyan")
+crobot( pose [ 23.13  5.06  0  0 ]   name "robot3"  color "magenta")
+crobot( pose [ 23.13  3.09  0  0 ]   name "robot4"  color "blue")
+crobot( pose [ 23.13  1.13  0  0 ]   name "robot5"  color "red")

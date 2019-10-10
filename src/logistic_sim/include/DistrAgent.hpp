@@ -58,8 +58,9 @@ protected:
     bool init_wait_done = false;
 
     uint init_next_vertex;
-    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}};
-    std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}};
+    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}};
+    std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}
+                                                                                , {"icelab", {10,13,16}}};
     uint src_vertex;
     std::vector<uint> dsts_vertex;
 

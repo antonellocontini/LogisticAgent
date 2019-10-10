@@ -12,8 +12,8 @@ window(
 )
 
 floorplan (
-  size [18.290 4.500  1.000] 
-  pose [9.145 2.250 0.000 0.000]
+  size [24.000 5.900  1.000] 
+  pose [12.000 2.950 0.000 0.000]
   bitmap "icelab.pgm"
 )
 

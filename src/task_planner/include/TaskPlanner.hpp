@@ -94,8 +94,9 @@ public:
 
     ros::Time start_time;
 
-    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}};
-    std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}};
+    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}};
+    std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}
+                                                                                , {"icelab", {10,13,16}}};
     uint src_vertex;
     std::vector<uint> dst_vertex;
     std::vector<std::vector<uint> > paths;
@@ -110,6 +111,7 @@ public:
     logistic_sim::Mission create_mission(uint type, int id);
     
     virtual void set_partition();
+    virtual std::vector<logistic_sim::Path> path_partition();
 
     void init(int argc, char **argv);
 

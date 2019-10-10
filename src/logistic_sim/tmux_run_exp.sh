@@ -2,9 +2,9 @@
 
 SESSION=log_sim
 MAP=icelab
-NROBOTS=2
+NROBOTS=6
 INITPOS=default
-ALG=ConstAgent
+ALG=CFreeAgent
 LOC=AMCL
 NAV=ros
 GWAIT=0
@@ -14,8 +14,8 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=TaskPlanner
-GEN=non-uniform
+TP_NAME=SP_TaskPlanner
+GEN=uniform
 DEBUG=false
 NRUNS=10
 

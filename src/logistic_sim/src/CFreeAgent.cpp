@@ -148,7 +148,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     {
       std::cout << "Calcolo percorso..." << std::endl;
       uint init_pos = 9;
-      if (mapname == "grid")
+      if (mapname != "model6")
       {
         init_pos = initial_vertex;
       }
