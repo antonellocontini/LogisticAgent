@@ -185,7 +185,7 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
 {
   try
   {
-    c_print(missions.size());
+    c_print("Missions number: ", missions.size());
     partition::iterator it(missions.size());
     int id_partition = 0;
 
@@ -194,19 +194,25 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
       std::vector<std::vector<logistic_sim::Mission>> partitions = *it[missions];
       std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
       auto n_subsets = it.subsets();
-      if (n_subsets >= TEAM_SIZE)
+      if (n_subsets == TEAM_SIZE)
       {
         for (int i = 0; i < n_subsets; i++)
         {
+          std::cout << "Robot " << i << "\n";
           std::vector<uint> waypoints;
+          waypoints.push_back(home_vertex[i % TEAM_SIZE]);
           for (logistic_sim::Mission &m : partitions[i])
           {
+            std::cout << src_vertex << " ";
             waypoints.push_back(src_vertex);
             for (uint v : m.DSTS)
             {
+              std::cout << v << " ";
               waypoints.push_back(v);
             }
           }
+          waypoints.push_back(home_vertex[i % TEAM_SIZE]);
+          std::cout << "\n";
           try
           {
             std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE);
@@ -216,6 +222,7 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
           {
           }
         }
+        std::cout << std::endl;
 
         // check for empty path
         int empty_paths = 0;
@@ -228,6 +235,18 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
         }
         if (empty_paths == 0)
         {
+          int dump;
+          std::cout << "Trovato!" << std::endl;
+          for(int i=0; i < TEAM_SIZE; i++)
+          {
+            std::cout << "Percorso robot " << i << "\n";
+            for(uint v : other_paths[i].PATH)
+            {
+              std::cout << v << " ";
+            }
+            std::cout << "\n" << std::endl;
+          }
+          std::cin >> dump;
           return other_paths;
         }
       }
@@ -247,12 +266,12 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
                                                              const graph_type &graph, unsigned int size,
                                                              const std::vector<unsigned int> &waypoints, uint ID_ROBOT)
 {
-  std::cout << "WAYPOINTS:";
-  for (int i = 0; i < waypoints.size(); i++)
-  {
-    std::cout << " " << waypoints[i];
-  }
-  std::cout << std::endl;
+  // std::cout << "WAYPOINTS:";
+  // for (int i = 0; i < waypoints.size(); i++)
+  // {
+  //   std::cout << " " << waypoints[i];
+  // }
+  // std::cout << std::endl;
 
   const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 512U;
   unsigned int source = waypoints.front();
@@ -260,8 +279,16 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
 
   std::vector<unsigned int> path;
 
-  std::vector<std::vector<std::vector<uint> > > prev_paths(size, std::vector<std::vector<uint>>(MAX_TIME, std::vector<uint>(size, 0)));
-  std::vector<std::vector<uint> > path_sizes(size, std::vector<uint>(MAX_TIME, 0));
+  static std::vector<std::vector<std::vector<uint>>> prev_paths(
+      size, std::vector<std::vector<uint>>(MAX_TIME, std::vector<uint>(size, 0)));
+  static std::vector<std::vector<uint>> path_sizes(size, std::vector<uint>(MAX_TIME, 0));
+  for (unsigned int i = 0; i < size; i++)
+  {
+    for (unsigned int j = 0; j < MAX_TIME; j++)
+    {
+      path_sizes[i][j] = 0;
+    }
+  }
   // unsigned int ***prev_paths = new unsigned int **[size];
   // unsigned int **path_sizes = new unsigned int *[size];
   // for (unsigned int i = 0; i < size; i++)
@@ -277,7 +304,14 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
   prev_paths[source][0][0] = source;
   path_sizes[source][0] = 1;
 
-  std::vector<std::vector<uint> > visited(size, std::vector<uint>(MAX_TIME, WHITE));
+  static std::vector<std::vector<uint>> visited(size, std::vector<uint>(MAX_TIME, WHITE));
+  for (unsigned int i = 0; i < size; i++)
+  {
+    for (unsigned int j = 0; j < MAX_TIME; j++)
+    {
+      visited[i][j] = WHITE;
+    }
+  }
   // unsigned int **visited = new unsigned int *[size];
   // for (unsigned int i = 0; i < size; i++)
   // {
@@ -289,7 +323,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
   // }
 
   st_location st(source, 0);
-  std::vector<st_location> queue(MAX_TIME, st_location(0, 0));
+  static std::vector<st_location> queue(MAX_TIME, st_location(0, 0));
   // st_location *queue = new st_location[MAX_TIME];
   queue[0] = st;
   int queue_size = 1;
@@ -464,7 +498,7 @@ std::vector<uint> SP_TaskPlanner::token_dijkstra(const std::vector<uint> &waypoi
   {
     simple_paths[i] = other_paths[i].PATH;
   }
-  c_print("Fine del space_dijkstra", green, P);
+  // c_print("Fine del space_dijkstra", green, P);
   return spacetime_dijkstra(simple_paths, graph, dimension, waypoints, ID_ROBOT);
 }
 
