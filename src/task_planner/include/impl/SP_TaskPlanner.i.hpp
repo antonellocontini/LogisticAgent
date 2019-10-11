@@ -1,4 +1,5 @@
 #pragma once
+#include "permutations.hpp"
 
 namespace sp_taskplanner
 {
@@ -196,58 +197,69 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
       auto n_subsets = it.subsets();
       if (n_subsets == TEAM_SIZE)
       {
-        for (int i = 0; i < n_subsets; i++)
+        perm_iterator<std::vector<logistic_sim::Mission>> jt(partitions);
+        try
         {
-          std::cout << "Robot " << i << "\n";
-          std::vector<uint> waypoints;
-          waypoints.push_back(home_vertex[i % TEAM_SIZE]);
-          for (logistic_sim::Mission &m : partitions[i])
+          while (true)
           {
-            std::cout << src_vertex << " ";
-            waypoints.push_back(src_vertex);
-            for (uint v : m.DSTS)
+            std::vector<std::vector<logistic_sim::Mission>> permutation = *jt;
+            for (int i = 0; i < n_subsets; i++)
             {
-              std::cout << v << " ";
-              waypoints.push_back(v);
+              std::cout << "Robot " << i << "\n";
+              std::vector<uint> waypoints;
+              waypoints.push_back(home_vertex[i % TEAM_SIZE]);
+              for (logistic_sim::Mission &m : permutation[i])
+              {
+                std::cout << src_vertex << " ";
+                waypoints.push_back(src_vertex);
+                for (uint v : m.DSTS)
+                {
+                  std::cout << v << " ";
+                  waypoints.push_back(v);
+                }
+              }
+              std::cout << home_vertex[i % TEAM_SIZE] << " ";
+              waypoints.push_back(home_vertex[i % TEAM_SIZE]);
+              std::cout << "\n";
+              try
+              {
+                std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE);
+                other_paths[i % TEAM_SIZE].PATH = path;
+              }
+              catch (std::string &e)
+              {
+              }
             }
-          }
-          waypoints.push_back(home_vertex[i % TEAM_SIZE]);
-          std::cout << "\n";
-          try
-          {
-            std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE);
-            other_paths[i % TEAM_SIZE].PATH = path;
-          }
-          catch (std::string &e)
-          {
-          }
-        }
-        std::cout << std::endl;
+            std::cout << std::endl;
 
-        // check for empty path
-        int empty_paths = 0;
-        for (int i = 0; i < TEAM_SIZE; i++)
-        {
-          if (other_paths[i].PATH.empty())
-          {
-            empty_paths++;
+            // check for empty path
+            int empty_paths = 0;
+            for (int i = 0; i < TEAM_SIZE; i++)
+            {
+              if (other_paths[i].PATH.empty())
+              {
+                empty_paths++;
+              }
+            }
+            if (empty_paths == 0)
+            {
+              std::cout << "Trovato!" << std::endl;
+              // for (int i = 0; i < TEAM_SIZE; i++)
+              // {
+              //   std::cout << "Percorso robot " << i << "\n";
+              //   for (uint v : other_paths[i].PATH)
+              //   {
+              //     std::cout << v << " ";
+              //   }
+              //   std::cout << "\n" << std::endl;
+              // }
+              return other_paths;
+            }
+            ++jt;
           }
         }
-        if (empty_paths == 0)
+        catch (std::overflow_error &e)
         {
-          int dump;
-          std::cout << "Trovato!" << std::endl;
-          for(int i=0; i < TEAM_SIZE; i++)
-          {
-            std::cout << "Percorso robot " << i << "\n";
-            for(uint v : other_paths[i].PATH)
-            {
-              std::cout << v << " ";
-            }
-            std::cout << "\n" << std::endl;
-          }
-          std::cin >> dump;
-          return other_paths;
         }
       }
       ++it;

@@ -159,7 +159,7 @@ void TaskPlanner::init(int argc, char **argv)
     // missions.push_back(logistic_sim::Mission(m));
 
     c_print("Calculating partitions", green, P);
-    // set_partition();
+    set_partition();
     c_print("Calculating distribution", green, P);
     auto result = path_partition();
     for(int i=0; i<TEAM_SIZE; i++)
@@ -242,7 +242,7 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 
 void TaskPlanner::u_missions_generator()
 {
-    int size = 2;
+    int size = 5;
     int size_2 = 3;
     int d = 1;
 
