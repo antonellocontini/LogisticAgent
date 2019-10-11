@@ -162,16 +162,16 @@ void TaskPlanner::init(int argc, char **argv)
     set_partition();
     c_print("Calculating distribution", green, P);
     auto result = path_partition();
-    for(int i=0; i<TEAM_SIZE; i++)
-    {
-        std::cout << "Robot " << i << " path:\n";
-        for (uint v : result[i].PATH)
-        {
-            std::cout << setw(2) << v << " ";
-        }
-        std::cout << "\n\n";
-    }
-    std::cout << std::endl;
+    // for(int i=0; i<TEAM_SIZE; i++)
+    // {
+    //     std::cout << "Robot " << i << " path:\n";
+    //     for (uint v : result[i].PATH)
+    //     {
+    //         std::cout << setw(2) << v << " ";
+    //     }
+    //     std::cout << "\n\n";
+    // }
+    // std::cout << std::endl;
 
     c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
 
