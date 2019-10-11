@@ -51,6 +51,7 @@ void TaskPlanner::init(int argc, char **argv)
 
     src_vertex = map_src[mapname];
     dst_vertex = map_dsts[mapname];
+    home_vertex = map_homes[mapname];
 
     for(uint dst : dst_vertex)
     {
@@ -241,7 +242,7 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 
 void TaskPlanner::u_missions_generator()
 {
-    int size = 4;
+    int size = 2;
     int size_2 = 3;
     int d = 1;
 

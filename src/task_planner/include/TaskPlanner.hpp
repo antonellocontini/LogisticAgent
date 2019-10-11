@@ -94,11 +94,13 @@ public:
 
     ros::Time start_time;
 
+    std::map<std::string, std::vector<uint>> map_homes = {{"model6", {0,1,2,3,4,5}}, {"grid", {1,2,3,21,22,23}}, {{"icelab"}, {0,1,2,26,27,28}}};
     std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}};
     std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}}
                                                                                 , {"icelab", {10,13,16}}};
     uint src_vertex;
     std::vector<uint> dst_vertex;
+    std::vector<uint> home_vertex;
     std::vector<std::vector<uint> > paths;
 
     int compute_cost_of_route(std::vector<uint> &route);
