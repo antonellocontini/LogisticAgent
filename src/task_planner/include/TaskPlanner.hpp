@@ -114,7 +114,7 @@ public:
     logistic_sim::Mission create_mission(uint type, int id);
     
     virtual void set_partition();
-    virtual std::vector<logistic_sim::Path> path_partition();
+    virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token);
 
     void init(int argc, char **argv);
 

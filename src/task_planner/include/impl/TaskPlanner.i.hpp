@@ -163,14 +163,16 @@ void TaskPlanner::init(int argc, char **argv)
     // m.ITEM = {1,0};
     // missions.push_back(logistic_sim::Mission(m));
 
+    logistic_sim::Token token;
+
     c_print("Calculating partitions", green, P);
     set_partition();
-    std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
+    static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
     c_print("PERMUTATIONS: ", PERMUTATIONS, green, P);
     if (PERMUTATIONS)
     {
         c_print("Calculating distribution", green, P);
-        paths = path_partition();
+        paths = path_partition(token);
     }
     // for(int i=0; i<TEAM_SIZE; i++)
     // {
@@ -194,7 +196,6 @@ void TaskPlanner::init(int argc, char **argv)
     // sleep(10);
 
     // giro di inizializzazione
-    logistic_sim::Token token;
     token.ID_SENDER = TASK_PLANNER_ID;
     token.ID_RECEIVER = 0;
     token.INIT = true;
@@ -450,7 +451,8 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             std::stringstream conf_dir_name;
-            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
+            std::string global = PERMUTATIONS ? "global" : "local";
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_" << global << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
             {

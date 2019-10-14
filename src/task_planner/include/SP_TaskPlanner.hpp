@@ -118,9 +118,9 @@ public:
     uint compute_cycle_dst(logistic_sim::Mission &mission);
     void compute_route(uint id, logistic_sim::Mission &mission);
     void set_partition() override;
-    std::vector<logistic_sim::Path> path_partition() override;
-    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, const std::vector<unsigned int> &waypoints, uint ID_ROBOT);
-    std::vector<uint> token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT);
+    std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token) override;
+    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, std::vector<unsigned int> &waypoints, uint ID_ROBOT);
+    std::vector<uint> token_dijkstra(std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT);
     unsigned int insertion_sort(std::vector<st_location> &queue, unsigned int size, st_location loc);
     unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc);
 };

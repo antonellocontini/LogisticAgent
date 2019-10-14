@@ -182,7 +182,7 @@ void SP_TaskPlanner::set_partition()
   missions = ele.first;
 }
 
-std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
+std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition(logistic_sim::Token &token)
 {
   try
   {
@@ -212,10 +212,11 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
       std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
     }
 
+    std::vector<uint> waypoints;
+    std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
     while (true)
     {
       std::vector<std::vector<logistic_sim::Mission>> partitions = *it[missions];
-      std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
       auto n_subsets = it.subsets();
       if (n_subsets == TEAM_SIZE)
       {
@@ -225,13 +226,24 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
           while (true)
           {
             std::vector<std::vector<logistic_sim::Mission>> permutation = *jt;
+            for(int j=0; j<TEAM_SIZE; j++)
+            {
+              other_paths[j].PATH.clear();
+            }
+            token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
+            token.TASKS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
             for (int i = 0; i < n_subsets; i++)
             {
+              waypoints.clear();
               std::cout << "Robot " << i << "\n";
-              std::vector<uint> waypoints;
               waypoints.push_back(init_vertex[i % TEAM_SIZE]);
               for (logistic_sim::Mission &m : permutation[i])
               {
+                token.MISSIONS_COMPLETED[i % TEAM_SIZE]++;
+                for (uint d : m.DEMANDS)
+                {
+                  token.TASKS_COMPLETED[i % TEAM_SIZE]++;
+                }
                 std::cout << src_vertex << " ";
                 waypoints.push_back(src_vertex);
                 for (uint v : m.DSTS)
@@ -240,17 +252,29 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
                   waypoints.push_back(v);
                 }
               }
-              std::cout << init_vertex[i % TEAM_SIZE] << " ";
-              waypoints.push_back(init_vertex[i % TEAM_SIZE]);
+              if (mapname != "model6")
+              {
+                std::cout << init_vertex[i % TEAM_SIZE] << " ";
+                waypoints.push_back(init_vertex[i % TEAM_SIZE]);
+              }
+              else
+              {
+                std::cout << 9 << " ";
+                waypoints.push_back(9);
+              }
               std::cout << "\n";
               try
               {
                 std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE);
-                path.insert(path.end(), 50, init_vertex[i % TEAM_SIZE]);
+                if (mapname != "model6")
+                {
+                  // path.insert(path.end(), 50, init_vertex[i % TEAM_SIZE]);
+                }
                 other_paths[i % TEAM_SIZE].PATH = path;
               }
               catch (std::string &e)
               {
+                other_paths[i % TEAM_SIZE].PATH.clear();
               }
             }
             std::cout << std::endl;
@@ -266,6 +290,35 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
             }
             if (empty_paths == 0)
             {
+              // percorso corridoio per model6
+              if (mapname == "model6")
+              {
+                std::vector<uint> indices(TEAM_SIZE);
+                std::cout << "Dimensione percorsi\n";
+                for (int i = 0; i < TEAM_SIZE; i++)
+                {
+                  std::cout << "robot " << i << ": " << other_paths[i].PATH.size() << std::endl;
+                  indices[i] = i;
+                }
+                auto cmp_function = [&](uint lhs, uint rhs) {
+                  return other_paths[lhs].PATH.size() < other_paths[rhs].PATH.size();
+                };
+                std::sort(indices.begin(), indices.end(), cmp_function);
+                for (int j = 0; j < indices.size(); j++)
+                {
+                  // j indica il nodo home
+                  // indices[j] indica il robot assegnato a quel nodo
+                  std::cout << "Casa robot " << indices[j] << "\n";
+                  int home_vertex = j;
+                  for (int i = 5; i >= home_vertex; i--)
+                  {
+                    std::cout << i << " ";
+                    other_paths[indices[j]].PATH.push_back(i);
+                  }
+                  // other_paths[indices[j]].PATH.insert(other_paths[indices[j]].PATH.end(), 50, home_vertex);
+                  std::cout << std::endl;
+                }
+              }
               std::cout << "Trovato!" << std::endl;
               for (int i = 0; i < TEAM_SIZE; i++)
               {
@@ -299,7 +352,7 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
 using graph_type = std::vector<std::vector<unsigned int>>;
 std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<std::vector<unsigned int>> &other_paths,
                                                              const graph_type &graph, unsigned int size,
-                                                             const std::vector<unsigned int> &waypoints, uint ID_ROBOT)
+                                                             std::vector<unsigned int> &waypoints, uint ID_ROBOT)
 {
   // std::cout << "WAYPOINTS:";
   // for (int i = 0; i < waypoints.size(); i++)
@@ -311,57 +364,68 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
   const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 512U;
   unsigned int source = waypoints.front();
   auto it_waypoints = waypoints.begin() + 1;
+  int k = 1;
 
   std::vector<unsigned int> path;
 
-  static std::vector<std::vector<std::vector<uint>>> prev_paths(
-      size, std::vector<std::vector<uint>>(MAX_TIME, std::vector<uint>(size, 0)));
-  static std::vector<std::vector<uint>> path_sizes(size, std::vector<uint>(MAX_TIME, 0));
-  for (unsigned int i = 0; i < size; i++)
-  {
-    for (unsigned int j = 0; j < MAX_TIME; j++)
-    {
-      path_sizes[i][j] = 0;
-    }
-  }
-  // unsigned int ***prev_paths = new unsigned int **[size];
-  // unsigned int **path_sizes = new unsigned int *[size];
+  // static std::vector<std::vector<std::vector<uint>>> prev_paths(
+  //     size, std::vector<std::vector<uint>>(MAX_TIME, std::vector<uint>(size, 0)));
+  // static std::vector<std::vector<uint>> path_sizes(size, std::vector<uint>(MAX_TIME, 0));
   // for (unsigned int i = 0; i < size; i++)
   // {
-  //   prev_paths[i] = new unsigned int *[MAX_TIME];
-  //   path_sizes[i] = new unsigned int[MAX_TIME];
   //   for (unsigned int j = 0; j < MAX_TIME; j++)
   //   {
-  //     prev_paths[i][j] = new unsigned int[MAX_TIME];
   //     path_sizes[i][j] = 0;
   //   }
   // }
+  unsigned int ***prev_paths = new unsigned int **[size];
+  unsigned int **path_sizes = new unsigned int *[size];
+  for (unsigned int i = 0; i < size; i++)
+  {
+    prev_paths[i] = new unsigned int *[MAX_TIME];
+    path_sizes[i] = new unsigned int[MAX_TIME];
+    for (unsigned int j = 0; j < MAX_TIME; j++)
+    {
+      prev_paths[i][j] = new unsigned int[MAX_TIME];
+      path_sizes[i][j] = 0;
+    }
+  }
   prev_paths[source][0][0] = source;
   path_sizes[source][0] = 1;
 
-  static std::vector<std::vector<uint>> visited(size, std::vector<uint>(MAX_TIME, WHITE));
-  for (unsigned int i = 0; i < size; i++)
-  {
-    for (unsigned int j = 0; j < MAX_TIME; j++)
-    {
-      visited[i][j] = WHITE;
-    }
-  }
-  // unsigned int **visited = new unsigned int *[size];
+  // static std::vector<std::vector<uint>> visited(size, std::vector<uint>(MAX_TIME, WHITE));
   // for (unsigned int i = 0; i < size; i++)
   // {
-  //   visited[i] = new unsigned int[MAX_TIME];
   //   for (unsigned int j = 0; j < MAX_TIME; j++)
   //   {
   //     visited[i][j] = WHITE;
   //   }
   // }
+  unsigned int **visited = new unsigned int *[size];
+  for (unsigned int i = 0; i < size; i++)
+  {
+    visited[i] = new unsigned int[MAX_TIME];
+    for (unsigned int j = 0; j < MAX_TIME; j++)
+    {
+      visited[i][j] = WHITE;
+    }
+  }
 
   st_location st(source, 0);
-  static std::vector<st_location> queue(MAX_TIME, st_location(0, 0));
-  // st_location *queue = new st_location[MAX_TIME];
+  // static std::vector<st_location> queue(MAX_TIME, st_location(0, 0));
+  st_location *queue = new st_location[MAX_TIME];
   queue[0] = st;
   int queue_size = 1;
+
+  uint max_path_size = 0;
+  for(int i=0; i<TEAM_SIZE; i++)
+  {
+    if (i != ID_ROBOT && other_paths[i].size() > max_path_size)
+    {
+      max_path_size = other_paths[i].size();
+    }
+  }
+  std::cout << "Max path size: " << max_path_size << std::endl;
 
   while (queue_size > 0)
   {
@@ -369,48 +433,109 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
     unsigned int u = current_st.vertex;
     unsigned int time = current_st.time;
 
+    std::cout << "current vertex: " << u << std::endl;
+    std::cout << "current time: " << time << std::endl;
+
     visited[u][time] = BLACK;
 
-    if (u == *it_waypoints)
+    if (u == waypoints[k])
+    // if (u == *it_waypoints)
     {
-      if (it_waypoints + 1 == waypoints.end())
+      if (k+1 == waypoints.size() && time + 1 >= max_path_size)
+      // if (it_waypoints + 1 == waypoints.end() && time + 1 >= max_path_size)
       {
-        std::vector<unsigned int> result =
-            // std::vector<unsigned int>(prev_paths[u][time], prev_paths[u][time] + path_sizes[u][time]);
-            std::vector<unsigned int>(prev_paths[u][time].begin(), prev_paths[u][time].begin() + path_sizes[u][time]);
+        // std::vector<unsigned int> result(prev_paths[u][time].begin(), prev_paths[u][time].begin() + time + 1);
+        std::vector<unsigned int> result(prev_paths[u][time], prev_paths[u][time] + path_sizes[u][time]);
+
 
         // pulizia heap
-        // for (unsigned int i = 0; i < size; i++)
-        // {
-        //   for (unsigned int j = 0; j < MAX_TIME; j++)
-        //   {
-        //     delete[] prev_paths[i][j];
-        //   }
+        for (unsigned int i = 0; i < size; i++)
+        {
+          for (unsigned int j = 0; j < MAX_TIME; j++)
+          {
+            delete[] prev_paths[i][j];
+          }
 
-        //   delete[] prev_paths[i];
-        //   delete[] path_sizes[i];
-        //   delete[] visited[i];
-        // }
-        // delete[] prev_paths;
-        // delete[] path_sizes;
-        // delete[] visited;
-        // delete[] queue;
+          delete[] prev_paths[i];
+          delete[] path_sizes[i];
+          delete[] visited[i];
+        }
+        delete[] prev_paths;
+        delete[] path_sizes;
+        delete[] visited;
+        delete[] queue;
 
         return result;
       }
       else
       {
-        for (int i = 0; i < queue_size; i++)
+        if (k + 1 < waypoints.size())
         {
-          st_location temp_st = queue[i];
-          unsigned int temp_v = temp_st.vertex;
-          unsigned int temp_t = temp_st.time;
-          visited[temp_v][temp_t] = WHITE;
+          for (int i = 0; i < queue_size; i++)
+          {
+            st_location temp_st = queue[i];
+            unsigned int temp_v = temp_st.vertex;
+            unsigned int temp_t = temp_st.time;
+            visited[temp_v][temp_t] = WHITE;
+          }
+          queue_size = 0;
         }
-        queue_size = 0;
+
+        if (k + 1 == waypoints.size() && time + 1 < max_path_size)
+        {
+          std::cout << "aspetto gli altri robot" << std::endl;
+          std::cout << "location corrente: " << u << std::endl;
+          std::cout << "istante corrente: " << time <<std::endl;
+          waypoints.push_back(u);
+        }
       }
 
-      it_waypoints++;
+      k++;
+      // it_waypoints++;
+    }
+
+    // considero l'attesa sul posto
+    unsigned int next_time = time + 1;
+    if (visited[u][next_time] == WHITE)
+    {
+      bool good = true;
+      for (int i = 0; i < TEAM_SIZE; i++)
+      {
+        if (i != ID_ROBOT)
+        {
+          if (next_time < other_paths[i].size())
+          {
+            if (other_paths[i][next_time] == u)
+            {
+              good = false;
+              break;
+            }
+          }
+          // else if (!other_paths[i].empty())
+          // {
+          // 	if (other_paths[i].back() == u)
+          // 	{
+          // 		good = false;
+          // 		break;
+          // 	}
+          // }
+        }
+      }
+
+      if (good)
+      {
+        st_location next_st(u, next_time);
+        queue_size = insertion_sort(queue, queue_size, next_st);
+        visited[u][next_time] = GRAY;
+
+        unsigned int psize = path_sizes[u][time];
+        for (unsigned int i = 0; i < psize; i++)
+        {
+          prev_paths[u][next_time][i] = prev_paths[u][time][i];
+        }
+        prev_paths[u][next_time][psize] = u;
+        path_sizes[u][next_time] = path_sizes[u][time] + 1;
+      }
     }
 
     // considero i vicini
@@ -466,66 +591,27 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
         }
       }
     }
-
-    // considero l'attesa sul posto
-    unsigned int next_time = time + 1;
-    if (visited[u][next_time] == WHITE)
-    {
-      bool good = true;
-      for (int i = 0; i < TEAM_SIZE; i++)
-      {
-        if (i != ID_ROBOT)
-        {
-          if (next_time < other_paths[i].size())
-          {
-            if (other_paths[i][next_time] == u)
-            {
-              good = false;
-              break;
-            }
-          }
-          // else if (!other_paths[i].empty())
-          // {
-          // 	if (other_paths[i].back() == u)
-          // 	{
-          // 		good = false;
-          // 		break;
-          // 	}
-          // }
-        }
-      }
-
-      if (good)
-      {
-        st_location next_st(u, next_time);
-        queue_size = insertion_sort(queue, queue_size, next_st);
-        visited[u][next_time] = GRAY;
-
-        unsigned int psize = path_sizes[u][time];
-        for (unsigned int i = 0; i < psize; i++)
-        {
-          prev_paths[u][next_time][i] = prev_paths[u][time][i];
-        }
-        prev_paths[u][next_time][psize] = u;
-        path_sizes[u][next_time] = path_sizes[u][time] + 1;
-      }
-    }
   }
 
   throw std::string("Can't find path!!!");
 }
 
-std::vector<uint> SP_TaskPlanner::token_dijkstra(const std::vector<uint> &waypoints,
+std::vector<uint> SP_TaskPlanner::token_dijkstra(std::vector<uint> &waypoints,
                                                  std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT)
 {
   // adatto struttura dijkstra
-  std::vector<std::vector<unsigned int>> graph(dimension);
-  for (int i = 0; i < dimension; i++)
+  static bool initialize = true;
+  static std::vector<std::vector<unsigned int>> graph(dimension);
+  if(initialize)
   {
-    for (int j = 0; j < vertex_web[i].num_neigh; j++)
+    for (int i = 0; i < dimension; i++)
     {
-      graph[i].push_back(vertex_web[i].id_neigh[j]);
+      for (int j = 0; j < vertex_web[i].num_neigh; j++)
+      {
+        graph[i].push_back(vertex_web[i].id_neigh[j]);
+      }
     }
+    initialize = false;
   }
 
   std::vector<std::vector<uint>> simple_paths(TEAM_SIZE);

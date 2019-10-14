@@ -65,8 +65,14 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.MISSION_START_TIME.push_back(ros::Time::now());
     token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
     token.INTERFERENCE_COUNTER.push_back(0);
-    token.MISSIONS_COMPLETED.push_back(0);
-    token.TASKS_COMPLETED.push_back(0);
+    if (token.MISSIONS_COMPLETED.size() <= ID_ROBOT)
+    {
+      token.MISSIONS_COMPLETED.push_back(0);
+    }
+    if (token.TASKS_COMPLETED.size() <= ID_ROBOT)
+    {
+      token.TASKS_COMPLETED.push_back(0);
+    }
     token.TOTAL_DISTANCE.push_back(0.0f);
     token.INTERFERENCE_STATUS.push_back(0);
     token.X_POS.push_back(0.0);
@@ -87,7 +93,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     {
       goal_complete = true;
       path_calculated = true;
-      home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 50;
+      home_steps = token.TRAILS[ID_ROBOT].PATH.size();
     }
     
     token.REACHED_HOME.push_back(false);
@@ -252,8 +258,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     {
       static bool first_round = true;
       if (first_round)
-      {
-        home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 49;
+      { if (home_steps == -1)
+        {
+          home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 49;
+        }
         first_round = false;
       }
       // aggiorno posizione
