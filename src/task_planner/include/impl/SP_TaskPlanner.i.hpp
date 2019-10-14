@@ -186,9 +186,31 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
 {
   try
   {
-    c_print("Missions number: ", missions.size());
+    c_print("Missions number: ", missions.size(), green, P);
     partition::iterator it(missions.size());
     int id_partition = 0;
+
+    // individuo vertici iniziali degli agenti
+    ros::NodeHandle nh;
+    std::vector<double> list;
+    std::vector<uint> init_vertex;
+    nh.getParam("initial_pos", list);
+    
+    if (list.empty()){
+     ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+     ros::shutdown();
+     exit(-1);
+    }
+
+    // dalle coordinate degli agenti individuo il nodo del grafo
+    for(int value=0; value<TEAM_SIZE; value++)
+    {      
+      double initial_x = list[2*value];
+      double initial_y = list[2*value+1];
+      uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+      init_vertex.push_back(v);
+      std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
+    }
 
     while (true)
     {
@@ -207,7 +229,7 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
             {
               std::cout << "Robot " << i << "\n";
               std::vector<uint> waypoints;
-              waypoints.push_back(home_vertex[i % TEAM_SIZE]);
+              waypoints.push_back(init_vertex[i % TEAM_SIZE]);
               for (logistic_sim::Mission &m : permutation[i])
               {
                 std::cout << src_vertex << " ";
@@ -218,12 +240,13 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
                   waypoints.push_back(v);
                 }
               }
-              std::cout << home_vertex[i % TEAM_SIZE] << " ";
-              waypoints.push_back(home_vertex[i % TEAM_SIZE]);
+              std::cout << init_vertex[i % TEAM_SIZE] << " ";
+              waypoints.push_back(init_vertex[i % TEAM_SIZE]);
               std::cout << "\n";
               try
               {
                 std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE);
+                path.insert(path.end(), 50, init_vertex[i % TEAM_SIZE]);
                 other_paths[i % TEAM_SIZE].PATH = path;
               }
               catch (std::string &e)
@@ -244,15 +267,15 @@ std::vector<logistic_sim::Path> SP_TaskPlanner::path_partition()
             if (empty_paths == 0)
             {
               std::cout << "Trovato!" << std::endl;
-              // for (int i = 0; i < TEAM_SIZE; i++)
-              // {
-              //   std::cout << "Percorso robot " << i << "\n";
-              //   for (uint v : other_paths[i].PATH)
-              //   {
-              //     std::cout << v << " ";
-              //   }
-              //   std::cout << "\n" << std::endl;
-              // }
+              for (int i = 0; i < TEAM_SIZE; i++)
+              {
+                std::cout << "Percorso robot " << i << "\n";
+                for (uint v : other_paths[i].PATH)
+                {
+                  std::cout << v << " ";
+                }
+                std::cout << "\n" << std::endl;
+              }
               return other_paths;
             }
             ++jt;

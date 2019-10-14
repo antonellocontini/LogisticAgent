@@ -89,6 +89,7 @@ public:
 
     vector<MonitorData> robots_data;
     bool first_round = true;
+    bool PERMUTATIONS;
     int num_robots, robots_ready_count = 0;
     vector<bool> robots_ready_status;
 

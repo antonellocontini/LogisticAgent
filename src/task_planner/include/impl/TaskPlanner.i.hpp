@@ -48,6 +48,11 @@ void TaskPlanner::init(int argc, char **argv)
     GENERATION = argv[4];
 
     TEAM_CAPACITY = atoi(argv[5]);
+    std::stringstream ss(argv[6]);
+    if (!(ss >> std::boolalpha >> PERMUTATIONS))
+    {
+        c_print("Manca booleano PERMUTATIONS", red, P);
+    }
 
     src_vertex = map_src[mapname];
     dst_vertex = map_dsts[mapname];
@@ -160,12 +165,17 @@ void TaskPlanner::init(int argc, char **argv)
 
     c_print("Calculating partitions", green, P);
     set_partition();
-    c_print("Calculating distribution", green, P);
-    auto result = path_partition();
+    std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
+    c_print("PERMUTATIONS: ", PERMUTATIONS, green, P);
+    if (PERMUTATIONS)
+    {
+        c_print("Calculating distribution", green, P);
+        paths = path_partition();
+    }
     // for(int i=0; i<TEAM_SIZE; i++)
     // {
     //     std::cout << "Robot " << i << " path:\n";
-    //     for (uint v : result[i].PATH)
+    //     for (uint v : paths[i].PATH)
     //     {
     //         std::cout << setw(2) << v << " ";
     //     }
@@ -188,6 +198,20 @@ void TaskPlanner::init(int argc, char **argv)
     token.ID_SENDER = TASK_PLANNER_ID;
     token.ID_RECEIVER = 0;
     token.INIT = true;
+    // se il task planner ha calcolato i percorsi li metto nel token
+    bool paths_ready = true;
+    for(int i=0; i<TEAM_SIZE; i++)
+    {
+        if (paths[i].PATH.empty())
+        {
+            paths_ready = false;
+            break;
+        }
+    }
+    if (paths_ready)
+    {
+        token.TRAILS = paths;
+    }
 
     pub_token.publish(token);
     ros::spinOnce();
@@ -242,7 +266,7 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 
 void TaskPlanner::u_missions_generator()
 {
-    int size = 5;
+    int size = 4;
     int size_2 = 3;
     int d = 1;
 

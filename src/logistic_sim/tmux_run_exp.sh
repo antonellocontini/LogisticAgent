@@ -4,7 +4,7 @@ SESSION=log_sim
 MAP=icelab
 NROBOTS=6
 INITPOS=default
-ALG=ConstAgent
+ALG=CFreeAgent
 LOC=AMCL
 NAV=ros
 GWAIT=0
@@ -14,8 +14,9 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=TaskPlanner
+TP_NAME=SP_TaskPlanner
 GEN=uniform
+PERM=true
 DEBUG=false
 NRUNS=10
 
@@ -81,9 +82,9 @@ function launch_robots {
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
 	if [ $DEBUG = true ] ; then
-		tmux send-keys "rosrun --prefix 'gdb -ex run --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
+		tmux send-keys "rosrun --prefix 'gdb -ex run --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM" C-m
 	else
-		tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY" C-m
+		tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM" C-m
 	fi
 
 	echo "Launching TaskPlanner $TP_NAME..."

@@ -72,16 +72,27 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.X_POS.push_back(0.0);
     token.Y_POS.push_back(0.0);
     token.GOAL_STATUS.push_back(0);
-    logistic_sim::Path p;
-    p.PATH = std::vector<uint>(10, initial_vertex);
-    token.TRAILS.push_back(p);
+    // se il percorso non è già stato calcolato dal taskplanner inserisco initial_vertex
+    if (token.TRAILS.size() <= ID_ROBOT)
+    {
+      logistic_sim::Path p;
+      p.PATH = std::vector<uint>(10, initial_vertex);
+      token.TRAILS.push_back(p);
+      if (ID_ROBOT == TEAM_SIZE - 1)
+      {
+        token.STEP = true;
+      }
+    }
+    else
+    {
+      goal_complete = true;
+      path_calculated = true;
+      home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 50;
+    }
+    
     token.REACHED_HOME.push_back(false);
 
     initialize = false;
-    if (ID_ROBOT == TEAM_SIZE - 1)
-    {
-      token.STEP = true;
-    }
   }
   else if (msg->STEP)
   {

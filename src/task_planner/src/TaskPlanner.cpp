@@ -10,7 +10,7 @@ void TaskPlanner::set_partition()
 std::vector<logistic_sim::Path> TaskPlanner::path_partition()
 {
   c_print("path_partition on TP Base", red);
-  return std::vector<logistic_sim::Path>();
+  return std::vector<logistic_sim::Path>(TEAM_SIZE, logistic_sim::Path());
 }
 
 //------------------------------------------------------------------------------
