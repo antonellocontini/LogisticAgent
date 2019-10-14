@@ -1,5 +1,5 @@
-image: icelab.pgm
-resolution: 0.003
+image: icelab_small.pgm
+resolution: 0.012
 origin: [0.000000,  0.000000, 0.000000]
 negate: 0
 occupied_thresh: 0.65

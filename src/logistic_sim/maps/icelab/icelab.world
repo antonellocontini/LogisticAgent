@@ -7,14 +7,14 @@ window(
   size   [ 460 180 1 ]         
   rotate [ 0.000 0.000 ]    
   center [ 11.500 4.000 ]   
-  scale 20.000
+  scale 17.000
   show_data 1
 )
 
 floorplan (
   size [24.000 5.900  1.000] 
   pose [12.000 2.950 0.000 0.000]
-  bitmap "icelab.pgm"
+  bitmap "icelab_small.pgm"
 )
 
 include "point.inc"
