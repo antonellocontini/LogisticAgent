@@ -50,12 +50,29 @@ struct st_location
     }
 };
 
-unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc)
+unsigned int insertion_sort(unsigned int **next_waypoint, st_location *queue, unsigned int size, st_location loc)
 {
+	auto cmp_function = [&](const st_location &lhs, const st_location &rhs)
+	{
+		if (lhs.time < rhs.time)
+		{
+			return true;
+		}
+		else if (lhs.time == rhs.time)
+		{
+			if (next_waypoint[lhs.vertex][lhs.time] > next_waypoint[rhs.vertex][rhs.time])
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
     int i;
     for(i=size-1; i>=0; i--)
     {
-        if (loc < queue[i])
+        // if (loc < queue[i])
+		if (cmp_function(loc, queue[i]))
             break;
         queue[i+1] = queue[i];
     }
@@ -96,12 +113,15 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
     path_sizes[source][0] = 1;
 
     unsigned int **visited = new unsigned int*[size];
+	unsigned int **next_waypoint = new unsigned int*[size];
     for(unsigned int i=0; i<size; i++)
     {
         visited[i] = new unsigned int[MAX_TIME];
+		next_waypoint[i] = new unsigned int[MAX_TIME];
         for(unsigned int j=0; j<MAX_TIME; j++)
         {
             visited[i][j] = WHITE;
+			next_waypoint[i][j] = 1;
         }
     }
 
@@ -115,12 +135,15 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
         st_location current_st = queue[--queue_size];
         unsigned int u = current_st.vertex;
         unsigned int time = current_st.time;
+		unsigned int next_next_waypoint = next_waypoint[u][time];
         
         visited[u][time] = BLACK;
 
-        if (u == *it_waypoints)
+		if (u == waypoints[next_waypoint[u][time]])
+        // if (u == *it_waypoints)
         {
-            if (it_waypoints+1 == waypoints.end())
+			if (next_waypoint[u][time]+1 == waypoints.size())
+            // if (it_waypoints+1 == waypoints.end())
             {
 				std::vector<unsigned int> result = std::vector<unsigned int>(prev_paths[u][time], prev_paths[u][time] + path_sizes[u][time]);
 				
@@ -135,27 +158,30 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 					delete[] prev_paths[i];
 					delete[] path_sizes[i];
 					delete[] visited[i];
+					delete[] next_waypoint[i];
 				}
 				delete[] prev_paths;
 				delete[] path_sizes;
 				delete[] visited;
+				delete[] next_waypoint;
 				delete[] queue;
 
                 return result;
             }
-            else
-            {
-                for(int i=0; i<queue_size; i++)
-                {
-                    st_location temp_st = queue[i];
-                    unsigned int temp_v = temp_st.vertex;
-                    unsigned int temp_t = temp_st.time;
-                    visited[temp_v][temp_t] = WHITE;
-                }
-                queue_size = 0;
-            }
+            // else
+            // {
+            //     for(int i=0; i<queue_size; i++)
+            //     {
+            //         st_location temp_st = queue[i];
+            //         unsigned int temp_v = temp_st.vertex;
+            //         unsigned int temp_t = temp_st.time;
+            //         visited[temp_v][temp_t] = WHITE;
+            //     }
+            //     queue_size = 0;
+            // }
 
-            it_waypoints++;
+            // it_waypoints++;
+			next_next_waypoint++;
         }
 
         // considero i vicini
@@ -199,7 +225,8 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 				if (good)
 				{
 					st_location next_st(v, next_time);
-					queue_size = insertion_sort(queue, queue_size, next_st);
+					next_waypoint[v][next_time] = next_next_waypoint;
+					queue_size = insertion_sort(next_waypoint, queue, queue_size, next_st);
 					visited[v][next_time] = GRAY;
 
 					unsigned int psize = path_sizes[u][time];
@@ -244,7 +271,8 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 			if(good)
 			{
 				st_location next_st(u, next_time);
-				queue_size = insertion_sort(queue, queue_size, next_st);
+				next_waypoint[u][next_time] = next_next_waypoint;
+				queue_size = insertion_sort(next_waypoint, queue, queue_size, next_st);
 				visited[u][next_time] = GRAY;
 
 				unsigned int psize = path_sizes[u][time];
