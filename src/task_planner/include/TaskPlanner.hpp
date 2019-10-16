@@ -54,6 +54,17 @@ ostream &operator<<(ostream &os, const MonitorData &md);
 
 ostream &operator<<(ostream &os, const vector<MonitorData> &v);
 
+// override operatori per lettura e scrittura missioni su file
+ostream &operator<<(ostream &os, const logistic_sim::Mission &m);
+ostream &operator<<(ostream &os, const vector<logistic_sim::Mission> &v);
+
+ifstream &operator>>(ifstream &is, logistic_sim::Mission &m);
+ifstream &operator>>(ifstream &is, vector<logistic_sim::Mission> &v);
+
+// confronto per test
+bool operator==(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs);
+bool operator!=(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs);
+
 class TaskPlanner
 {
 public:

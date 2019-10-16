@@ -22,6 +22,182 @@ ostream &operator<<(ostream &os, const vector<MonitorData> &v)
     return os;
 }
 
+ostream &operator<<(ostream &os, const logistic_sim::Mission &m)
+{
+    os << m.ID << "\n";
+    os << m.PRIORITY << "\n";
+
+    os << m.ITEM.size() << "\n";
+    for(auto &d : m.ITEM)
+    {
+        os << d << "\n";
+    }
+
+    os << m.ROUTE.size() << "\n";
+    for(auto &d : m.ROUTE)
+    {
+        os << d << "\n";
+    }
+
+    os << m.DSTS.size() << "\n";
+    for(auto &d : m.DSTS)
+    {
+        os << d << "\n";
+    }
+
+    os << m.DEMANDS.size() << "\n";
+    for(auto &d : m.DEMANDS)
+    {
+        os << d << "\n";
+    }
+
+    os << m.V << "\n";
+    os << m.TOT_DEMAND << "\n";
+    os << m.PATH_DISTANCE << "\n";
+    os << m.GOOD << "\n";
+
+    os << flush;
+    return os;
+}
+
+ostream &operator<<(ostream &os, const vector<logistic_sim::Mission> &v)
+{
+    os << v.size() << "\n\n";
+    for(auto &m : v)
+    {
+        os << m << "\n";
+    }
+
+    os << flush;
+    return os;
+}
+
+ifstream &operator>>(ifstream &is, logistic_sim::Mission &m)
+{
+    int n;
+
+    is >> m.ID;
+    is >> m.PRIORITY;
+
+    // is >> m.ITEM.size();
+    is >> n;
+    m.ITEM.clear();
+    for(int i=0; i<n; i++)
+    {
+        uint v;
+        is >> v;
+        m.ITEM.push_back(v);
+    }
+
+    // is >> m.ROUTE.size();
+    is >> n;
+    m.ROUTE.clear();
+    for(int i=0; i<n; i++)
+    {
+        uint v;
+        is >> v;
+        m.ROUTE.push_back(v);
+    }
+
+    // is >> m.DSTS.size();
+    is >> n;
+    m.DSTS.clear();
+    for(int i=0; i<n; i++)
+    {
+        uint v;
+        is >> v;
+        m.DSTS.push_back(v);
+    }
+
+    // is >> m.DEMANDS.size();
+    is >> n;
+    m.DEMANDS.clear();
+    for(int i=0; i<n; i++)
+    {
+        uint v;
+        is >> v;
+        m.DEMANDS.push_back(v);
+    }
+
+    is >> m.V;
+    is >> m.TOT_DEMAND;
+    is >> m.PATH_DISTANCE;
+    is >> m.GOOD;
+
+    return is;
+}
+
+ifstream &operator>>(ifstream &is, vector<logistic_sim::Mission> &v)
+{
+    int n;
+    is >> n;
+    v.clear();
+
+    for(int i=0; i<n; i++)
+    {
+        logistic_sim::Mission m;
+        is >> m;
+        v.push_back(m);
+    }
+    return is;
+}
+
+bool operator==(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs)
+{
+    auto cmp_double = [](double lhs, double rhs)
+    {
+        double diff = fabs(lhs - rhs);
+        lhs = fabs(lhs);
+        rhs = fabs(rhs);
+        double largest = (rhs > lhs) ? rhs : lhs;
+        if (diff <= largest * 25*FLT_EPSILON)
+            return true;
+        return false;
+    };
+
+    if (lhs.ITEM.size() != rhs.ITEM.size())
+        return false;
+
+    for (int i=0; i<lhs.ITEM.size(); i++)
+        if (lhs.ITEM[i] != rhs.ITEM[i])
+            return false;
+
+    if (lhs.ROUTE.size() != rhs.ROUTE.size())
+        return false;
+
+    for (int i=0; i<lhs.ROUTE.size(); i++)
+        if (lhs.ROUTE[i] != rhs.ROUTE[i])
+            return false;
+
+    if (lhs.DSTS.size() != rhs.DSTS.size())
+        return false;
+
+    for (int i=0; i<lhs.DSTS.size(); i++)
+        if (lhs.DSTS[i] != rhs.DSTS[i])
+            return false;
+
+    if (lhs.DEMANDS.size() != rhs.DEMANDS.size())
+        return false;
+
+    for (int i=0; i<lhs.DEMANDS.size(); i++)
+        if (lhs.DEMANDS[i] != rhs.DEMANDS[i])
+            return false;
+
+    // std::cout << lhs.V << " " << rhs.V << std::endl;
+    return lhs.ID == rhs.ID &&
+           lhs.PRIORITY == rhs.PRIORITY &&
+        //    lhs.V == rhs.V &&
+           cmp_double(lhs.V, rhs.V) &&
+           lhs.TOT_DEMAND == rhs.TOT_DEMAND &&
+           lhs.PATH_DISTANCE == rhs.PATH_DISTANCE &&
+           lhs.GOOD == rhs.GOOD;
+}
+
+bool operator!=(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs)
+{
+    return !(lhs == rhs);
+}
+
 TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(name)
 {
     sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_Callback, this);
@@ -237,6 +413,38 @@ void TaskPlanner::init(int argc, char **argv)
     logistic_sim::Token token;
 
     set_partition();
+    
+    // test scrittura su file
+    ofstream missions_file("missions_file.txt");
+    missions_file << missions;
+    missions_file.close();
+    // test lettura
+    vector<logistic_sim::Mission> test_vector;
+    ifstream test_file("missions_file.txt");
+    test_file >> test_vector;
+    test_file.close();
+    bool result = true;
+    if (missions.size() != test_vector.size())
+    {
+        c_print("Size mismatch!!!", red, P);
+        result = false;
+    }
+
+    for(int i=0; i<missions.size() && result; i++)
+    {
+        if (missions[i] != test_vector[i])
+        {
+            c_print("Missioni in posizione ", i, " non coincidono!!!", red, P);
+            result = false;
+        }
+    }
+
+    if (result)
+        c_print("Missioni scritte e lette correttamente!", green, P);
+    else
+        c_print("Errore scrittura/lettura missioni!!!", red, P);
+    
+
     static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
     paths = path_partition(token);
     // for(int i=0; i<TEAM_SIZE; i++)
