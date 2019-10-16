@@ -11,7 +11,7 @@ printf "2..."
 sleep 1
 printf "1..."
 sleep 1
-kill $(ps aux | grep ros | grep -v grep | awk '{print $2}')
+kill $(ps aux | grep ros | grep -v grep | grep -v Microsoft | awk '{print $2}')
 sleep 1
 printf "Experiment terminated!\n"
 
