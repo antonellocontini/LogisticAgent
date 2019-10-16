@@ -1,9 +1,9 @@
 #pragma once
-#include "TaskPlanner.hpp"
+#include "SP_TaskPlanner.hpp"
 
-namespace sp_taskplanner
+namespace globaltaskplanner
 {
-using namespace taskplanner;
+using namespace sp_taskplanner;
 
 using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
 
@@ -96,35 +96,16 @@ void print_coalition(const t_coalition &coalition)
 // un taskplanner che genera missioni per la casistica
 // nella quale i tipi di oggetti non sono in proporzioni
 // uguali
-class SP_TaskPlanner : public TaskPlanner
+class GlobalTaskPlanner : public SP_TaskPlanner
 {
-private:
-    struct st_location
-    {
-        unsigned int vertex;
-        unsigned int time;
-
-        st_location(unsigned int vertex = 0, unsigned int time = 0) : vertex(vertex), time(time) { }
-        st_location(const st_location &ref) : vertex(ref.vertex), time(ref.time) { }
-        bool operator<(const st_location &loc) const
-        {
-            return time < loc.time;
-        }
-    };
 public:
-    SP_TaskPlanner(ros::NodeHandle &nh_, const std::string &name = "SP_TaskPlanner");
-    ~SP_TaskPlanner(){};
+    GlobalTaskPlanner(ros::NodeHandle &nh_);
+    ~GlobalTaskPlanner(){};
 
-    uint compute_cycle_dst(logistic_sim::Mission &mission);
-    void compute_route(uint id, logistic_sim::Mission &mission);
-    void set_partition() override;
-    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, std::vector<unsigned int> &waypoints, uint ID_ROBOT);
-    std::vector<uint> token_dijkstra(std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT);
-    unsigned int insertion_sort(std::vector<st_location> &queue, unsigned int size, st_location loc);
-    unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc);
+    std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token) override;
 };
 
-} // namespace SP_TaskPlanner
+} // namespace GlobalTaskPlanner
 
 
-#include "impl/SP_TaskPlanner.i.hpp"
+#include "impl/GlobalTaskPlanner.i.hpp"

@@ -185,6 +185,12 @@ add_dependencies(CFreeAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPOR
 ## Specify libraries to link a library or executable target against
 target_link_libraries(CFreeAgent Agent DistrAgentLib ${catkin_LIBRARIES})
 
+## Declare a cpp executable 
+add_executable(GlobalAgent src/GlobalAgent.cpp)
+add_dependencies(GlobalAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(GlobalAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+
 
 ########################################################################################################################
 

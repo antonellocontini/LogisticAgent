@@ -65,37 +65,20 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.MISSION_START_TIME.push_back(ros::Time::now());
     token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
     token.INTERFERENCE_COUNTER.push_back(0);
-    if (token.MISSIONS_COMPLETED.size() <= ID_ROBOT)
-    {
-      token.MISSIONS_COMPLETED.push_back(0);
-    }
-    if (token.TASKS_COMPLETED.size() <= ID_ROBOT)
-    {
-      token.TASKS_COMPLETED.push_back(0);
-    }
+    token.MISSIONS_COMPLETED.push_back(0);
+    token.TASKS_COMPLETED.push_back(0);
     token.TOTAL_DISTANCE.push_back(0.0f);
     token.INTERFERENCE_STATUS.push_back(0);
     token.X_POS.push_back(0.0);
     token.Y_POS.push_back(0.0);
     token.GOAL_STATUS.push_back(0);
-    // se il percorso non è già stato calcolato dal taskplanner inserisco initial_vertex
-    if (token.TRAILS.size() <= ID_ROBOT)
+    logistic_sim::Path p;
+    p.PATH = std::vector<uint>(10, initial_vertex);
+    token.TRAILS.push_back(p);
+    if (ID_ROBOT == TEAM_SIZE - 1)
     {
-      logistic_sim::Path p;
-      p.PATH = std::vector<uint>(10, initial_vertex);
-      token.TRAILS.push_back(p);
-      if (ID_ROBOT == TEAM_SIZE - 1)
-      {
-        token.STEP = true;
-      }
+      token.STEP = true;
     }
-    else
-    {
-      goal_complete = true;
-      path_calculated = true;
-      home_steps = token.TRAILS[ID_ROBOT].PATH.size();
-    }
-    
     token.REACHED_HOME.push_back(false);
 
     initialize = false;
@@ -174,7 +157,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       {
         token.MISSIONS_COMPLETED[ID_ROBOT]++;
         waypoints.push_back(src_vertex);
-        for(uint demands : m.DEMANDS)
+        for (uint demands : m.DEMANDS)
         {
           token.TASKS_COMPLETED[ID_ROBOT]++;
         }
@@ -232,7 +215,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           std::cout << std::endl;
         }
       }
-      else if(mapname != "model6")
+      else if (mapname != "model6")
       {
         // se non siamo in model6 ogni robot si aggiorna il proprio percorso da solo
         token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), 50, token.TRAILS[ID_ROBOT].PATH.back());
@@ -258,10 +241,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     {
       static bool first_round = true;
       if (first_round)
-      { if (home_steps == -1)
-        {
-          home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 49;
-        }
+      {
+        home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1 - 49;
         first_round = false;
       }
       // aggiorno posizione

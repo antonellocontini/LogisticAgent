@@ -138,6 +138,11 @@ add_dependencies(SP_TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXP
  ## Specify libraries to link a library or executable target against
 target_link_libraries(SP_TaskPlanner libTaskPlanner ${catkin_LIBRARIES})
 
+add_executable(GlobalTaskPlanner src/GlobalTaskPlanner.cpp)
+add_dependencies(GlobalTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ ## Specify libraries to link a library or executable target against
+target_link_libraries(GlobalTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+
 #add_executable(Part src/test_part.cpp)
 #add_dependencies(Part ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## ## Specify libraries to link a library or executable target against

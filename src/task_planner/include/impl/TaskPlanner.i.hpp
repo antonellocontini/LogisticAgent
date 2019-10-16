@@ -74,6 +74,76 @@ void TaskPlanner::init(int argc, char **argv)
 
     missions_generator(GENERATION);
 
+    // test uniform icelab
+    // logistic_sim::Mission m;
+    // if (GENERATION == "uniform")
+    // {
+    //     m.DSTS = {10};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {13};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {16};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {10};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    // }
+    // else // test non-uniform icelab
+    // {
+    //     m.DSTS = {10,13};
+    //     m.DEMANDS = {1,1};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {13};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {16};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {10};
+    //     m.DEMANDS = {2};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {13};
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {16};
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {16};
+    //     m.DEMANDS = {1,2};
+    //     m.ITEM = {0,0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    //     m.DSTS = {16};
+    //     m.DEMANDS = {3};
+    //     m.ITEM = {0};
+    //     missions.push_back(logistic_sim::Mission(m));
+    // }
+
+    /*
     // test non uniform sp grid
     // logistic_sim::Mission m;
     // if (GENERATION == "non-uniform")
@@ -162,18 +232,13 @@ void TaskPlanner::init(int argc, char **argv)
     // m.DEMANDS = {2,1};
     // m.ITEM = {1,0};
     // missions.push_back(logistic_sim::Mission(m));
+    */
 
     logistic_sim::Token token;
 
-    c_print("Calculating partitions", green, P);
     set_partition();
     static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
-    c_print("PERMUTATIONS: ", PERMUTATIONS, green, P);
-    if (PERMUTATIONS)
-    {
-        c_print("Calculating distribution", green, P);
-        paths = path_partition(token);
-    }
+    paths = path_partition(token);
     // for(int i=0; i<TEAM_SIZE; i++)
     // {
     //     std::cout << "Robot " << i << " path:\n";

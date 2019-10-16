@@ -1,6 +1,7 @@
 // CPP program to print all permutations using 
 // Johnson and Trotter algorithm. 
 #include <bits/stdc++.h> 
+#pragma once
 
 template<class T>
 class perm_iterator

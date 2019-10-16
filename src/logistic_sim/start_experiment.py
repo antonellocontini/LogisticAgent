@@ -41,10 +41,11 @@ Alg_names = [
         [ 'DistrAgent', 'DistrAgent'],
         [ 'ConstAgent', 'ConstAgent'],
         [ 'SPartAgent','SPartAgent'],
-        [ 'CFreeAgent','CFreeAgent']
+        [ 'CFreeAgent','CFreeAgent'],
+        [ 'GlobalAgent','GlobalAgent']
      ]
 
-TaskPlanner_names = [ 'TaskPlanner', 'SP_TaskPlanner' ]
+TaskPlanner_names = [ 'TaskPlanner', 'SP_TaskPlanner', 'GlobalTaskPlanner' ]
 
 TaskGeneration_names = ['uniform', 'non-uniform']
 
