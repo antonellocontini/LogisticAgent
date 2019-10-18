@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=model6
-NROBOTS=6
+MAP=icelab_black
+NROBOTS=2
 INITPOS=default
 ALG=CFreeAgent
 LOC=AMCL
@@ -18,7 +18,7 @@ TP_NAME=SP_TaskPlanner
 GEN=uniform
 PERM=true
 DEBUG=false
-NRUNS=10
+NRUNS=1
 
 function prepare_tmux {
 	n=$(( NROBOTS - 1 ))

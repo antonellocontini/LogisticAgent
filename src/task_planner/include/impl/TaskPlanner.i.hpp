@@ -286,7 +286,6 @@ void TaskPlanner::init(int argc, char **argv)
 
     src_vertex = map_src[mapname];
     dst_vertex = map_dsts[mapname];
-    home_vertex = map_homes[mapname];
 
     for(uint dst : dst_vertex)
     {
@@ -302,7 +301,7 @@ void TaskPlanner::init(int argc, char **argv)
     ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
     ros::spinOnce();
 
-    // missions_generator(GENERATION);
+    missions_generator(GENERATION);
 
     // test uniform icelab
     // logistic_sim::Mission m;
