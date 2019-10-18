@@ -9,6 +9,7 @@ GlobalTaskPlanner::GlobalTaskPlanner(ros::NodeHandle &nh_) : SP_TaskPlanner(nh_,
 
 std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::Token &token)
 {
+  ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
   try
   {
@@ -146,8 +147,11 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
                 }
               }
               std::cout << "Trovato!" << std::endl;
+              stats_file << TEAM_SIZE << "\n\n";
               for (int i = 0; i < TEAM_SIZE; i++)
               {
+                stats_file << token.MISSIONS_COMPLETED[i] << "\n";
+                stats_file << token.TASKS_COMPLETED[i] << "\n\n";
                 std::cout << "Percorso robot " << i << "\n";
                 for (uint v : other_paths[i].PATH)
                 {
@@ -155,6 +159,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
                 }
                 std::cout << "\n" << std::endl;
               }
+              stats_file.close();
               return other_paths;
             }
             ++jt;

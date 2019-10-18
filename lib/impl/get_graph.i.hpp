@@ -80,7 +80,7 @@ void GetGraphInfo(vertex *vertex_web, uint dimension, const char *graph_file)
 
       r = fscanf(file, "%u", &vertex_web[i].num_neigh);
 
-      // printf("cpoint( pose [%f %f 0 0] name \"point%u\" color \"black\") \n", vertex_web[i].x, vertex_web[i].y, vertex_web[i].id);
+      printf("cpoint( pose [%f %f 0 0] name \"point%u\" color \"black\") \n", vertex_web[i].x, vertex_web[i].y, vertex_web[i].id);
 
       for (j = 0; j < vertex_web[i].num_neigh; j++)
       {

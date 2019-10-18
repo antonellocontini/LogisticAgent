@@ -576,7 +576,39 @@ void TaskPlanner::init(int argc, char **argv)
 
         ifstream paths_file(filename);
         paths_file >> paths;
+        if (paths.size() != TEAM_SIZE)
+        {
+            c_print("Numero robot incoerente!!! TEAMSIZE: ", TEAM_SIZE, " file: ", paths.size(), red, P);
+        }
         paths_file.close();
+
+        // prendo statistiche per token
+        filename = "stats_file.txt";
+        boost::filesystem::path stats_path(filename);
+        if (!boost::filesystem::exists(stats_path))
+        {
+            c_print("File statistiche ", filename, " non esistente!!!", red, P);
+            sleep(1);
+            ros::shutdown();
+            system("./stop_experiment.sh");
+        }
+
+        ifstream stats_file(filename);
+        int n;
+        stats_file >> n;
+        if (n != TEAM_SIZE)
+        {
+            c_print("Numero robot incoerente!!! TEAMSIZE: ", TEAM_SIZE, " file: ", n, red, P);
+        }
+        for(int i=0; i<TEAM_SIZE; i++)
+        {
+            uint m, t;
+            stats_file >> m;
+            stats_file >> t;
+            token.MISSIONS_COMPLETED.push_back(m);
+            token.TASKS_COMPLETED.push_back(t);
+        }
+        stats_file.close();
     }
     // for(int i=0; i<TEAM_SIZE; i++)
     // {
@@ -877,7 +909,7 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 
             std::stringstream conf_dir_name;
             std::string global = PERMUTATIONS ? "global" : "local";
-            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_" << global << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots << "capacity" << CAPACITY[0] << "_" << mapname;
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
             {
