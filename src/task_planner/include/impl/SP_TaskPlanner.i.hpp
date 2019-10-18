@@ -259,7 +259,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
       max_path_size = other_paths[i].size();
     }
   }
-  std::cout << "Max path size: " << max_path_size << std::endl;
+  // std::cout << "Max path size: " << max_path_size << std::endl;
 
   while (queue_size > 0)
   {
@@ -267,8 +267,8 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
     unsigned int u = current_st.vertex;
     unsigned int time = current_st.time;
 
-    std::cout << "current vertex: " << u << std::endl;
-    std::cout << "current time: " << time << std::endl;
+    // std::cout << "current vertex: " << u << std::endl;
+    // std::cout << "current time: " << time << std::endl;
 
     visited[u][time] = BLACK;
 
@@ -317,9 +317,9 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<s
 
         if (k + 1 == waypoints.size() && time + 1 < max_path_size)
         {
-          std::cout << "aspetto gli altri robot" << std::endl;
-          std::cout << "location corrente: " << u << std::endl;
-          std::cout << "istante corrente: " << time <<std::endl;
+          // std::cout << "aspetto gli altri robot" << std::endl;
+          // std::cout << "location corrente: " << u << std::endl;
+          // std::cout << "istante corrente: " << time <<std::endl;
           waypoints.push_back(u);
         }
       }

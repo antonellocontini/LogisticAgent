@@ -302,7 +302,7 @@ void TaskPlanner::init(int argc, char **argv)
     ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
     ros::spinOnce();
 
-    missions_generator(GENERATION);
+    // missions_generator(GENERATION);
 
     // test uniform icelab
     // logistic_sim::Mission m;
@@ -448,6 +448,80 @@ void TaskPlanner::init(int argc, char **argv)
     //     m.ITEM = {0};
     //     missions.push_back(logistic_sim::Mission(m));
     // }
+    // model6
+        logistic_sim::Mission m;
+    if (GENERATION == "non-uniform")
+    {
+        m.DSTS = {18};
+        m.DEMANDS = {1,2};
+        m.ITEM = {0,0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {23,28};
+        m.DEMANDS = {1,1};
+        m.ITEM = {0,0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {23};
+        m.DEMANDS = {2,1};
+        m.ITEM = {0,0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {28};
+        m.DEMANDS = {2};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {23};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {28};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {28};
+        m.DEMANDS = {1,2};
+        m.ITEM = {0,0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {28};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+    }
+    else
+    {
+        // test uniform sp grid
+        m.DSTS = {18,28};
+        m.DEMANDS = {1,2};
+        m.ITEM = {0,0};
+        m.TOT_DEMAND = 3;
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {18,28};
+        m.DEMANDS = {2,1};
+        m.ITEM = {0,0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {18};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {18,23};
+        m.DEMANDS = {1,2};
+        m.ITEM = {0,0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {18,23};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {23};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {28};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+        m.DSTS = {18};
+        m.DEMANDS = {3};
+        m.ITEM = {0};
+        missions.push_back(logistic_sim::Mission(m));
+    }
 
     // // nuovi task
     // m.DSTS = {28,18};

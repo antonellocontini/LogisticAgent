@@ -49,7 +49,7 @@ TaskPlanner_names = [ 'TaskPlanner', 'SP_TaskPlanner', 'GlobalTaskPlanner' ]
 
 TaskGeneration_names = ['uniform', 'non-uniform']
 
-Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1','model1','model2','model3','model4','model5','model6','icelab']   
+Map_names = ['cumberland','example','grid','1r5','broughton','DIAG_labs','DIAG_floor1','model1','model2','model3','model4','model5','model6','icelab','icelab_black']   
 
 NRobots_list = ['1','2','4','6','8','10','12']
 
