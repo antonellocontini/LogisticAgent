@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=2
+NROBOTS=4
 INITPOS=default
 ALG=CFreeAgent
 LOC=AMCL
@@ -14,10 +14,10 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=SP_TaskPlanner
+TP_NAME=TaskPlanner
 GEN=uniform
 PERM=true
-DEBUG=false
+DEBUG=true
 NRUNS=1
 
 function prepare_tmux {

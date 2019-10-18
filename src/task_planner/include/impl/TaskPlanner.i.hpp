@@ -265,18 +265,16 @@ void TaskPlanner::init(int argc, char **argv)
     srand(time(NULL));
     chdir(PS_path.c_str());
     mapname = string(argv[1]);
-    string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
+    std::string graph_file = "maps/"+mapname+"/"+mapname+".graph";
     dimension = GetGraphDimension(graph_file.c_str());
     vertex_web = new vertex[dimension];
     GetGraphInfo(vertex_web, dimension, graph_file.c_str());
     uint nedges = GetNumberEdges(vertex_web, dimension);
     printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
 
-    TEAM_SIZE = atoi(argv[3]);
     ALGORITHM = argv[2];
-
+    TEAM_SIZE = atoi(argv[3]);
     GENERATION = argv[4];
-
     TEAM_CAPACITY = atoi(argv[5]);
     std::stringstream ss(argv[6]);
     if (!(ss >> std::boolalpha >> PERMUTATIONS))
