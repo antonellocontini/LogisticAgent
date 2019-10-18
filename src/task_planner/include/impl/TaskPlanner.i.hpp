@@ -72,7 +72,7 @@ ostream &operator<<(ostream &os, const vector<logistic_sim::Mission> &v)
     return os;
 }
 
-ifstream &operator>>(ifstream &is, logistic_sim::Mission &m)
+istream &operator>>(istream &is, logistic_sim::Mission &m)
 {
     int n;
 
@@ -127,7 +127,7 @@ ifstream &operator>>(ifstream &is, logistic_sim::Mission &m)
     return is;
 }
 
-ifstream &operator>>(ifstream &is, vector<logistic_sim::Mission> &v)
+istream &operator>>(istream &is, vector<logistic_sim::Mission> &v)
 {
     int n;
     is >> n;
@@ -197,6 +197,60 @@ bool operator!=(const logistic_sim::Mission &lhs, const logistic_sim::Mission &r
 {
     return !(lhs == rhs);
 }
+
+ostream &operator<<(ostream &os, const logistic_sim::Path &p)
+{
+    os << p.PATH.size() << "\n";
+    for(auto &v : p.PATH)
+    {
+        os << v << "\n";
+    }
+    os << flush;
+    return os;
+}
+
+ostream &operator<<(ostream &os, const vector<logistic_sim::Path> &v)
+{
+    os << v.size() << "\n\n";
+    for(auto &p: v)
+    {
+        os << p << "\n";
+    }
+    os << flush;
+    return os;
+}
+
+istream &operator>>(istream &is, logistic_sim::Path &p)
+{
+    p.PATH.clear();
+    int n;
+    is >> n;
+    for(int i=0; i<n; i++)
+    {
+        uint v;
+        is >> v;
+        p.PATH.push_back(v);
+    }
+
+    return is;
+}
+
+istream &operator>>(istream &is, vector<logistic_sim::Path> &v)
+{
+    v.clear();
+    int n;
+    is >> n;
+    for(int i=0; i<n; i++)
+    {
+        logistic_sim::Path p;
+        is >> p;
+        v.push_back(p);
+    }
+
+    return is;
+}
+
+
 
 TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(name)
 {
@@ -412,41 +466,47 @@ void TaskPlanner::init(int argc, char **argv)
 
     logistic_sim::Token token;
 
-    set_partition();
-    
-    // test scrittura su file
-    ofstream missions_file("missions_file.txt");
-    missions_file << missions;
-    missions_file.close();
-    // test lettura
-    vector<logistic_sim::Mission> test_vector;
-    ifstream test_file("missions_file.txt");
-    test_file >> test_vector;
-    test_file.close();
-    bool result = true;
-    if (missions.size() != test_vector.size())
+    // GENERAZIONE PARTIZIONI
+    // se non leggo da file scrivo su disco le partizioni generate
+    if (GENERATION != "file")
     {
-        c_print("Size mismatch!!!", red, P);
-        result = false;
-    }
-
-    for(int i=0; i<missions.size() && result; i++)
-    {
-        if (missions[i] != test_vector[i])
+        set_partition();
+        // scrivo le partizioni generate su file
+        std::string filename("missions_file.txt");
+        ofstream missions_file(filename);
+        if (missions_file.fail())
         {
-            c_print("Missioni in posizione ", i, " non coincidono!!!", red, P);
-            result = false;
+            c_print("Impossibile scrivere missioni su disco!!!", red, P);
         }
+        else
+        {
+            missions_file << missions;
+        }
+        missions_file.close();
     }
 
-    if (result)
-        c_print("Missioni scritte e lette correttamente!", green, P);
-    else
-        c_print("Errore scrittura/lettura missioni!!!", red, P);
-    
-
+    // GENERAZIONE PERCORSI
     static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
-    paths = path_partition(token);
+    if (GENERATION != "file")
+    {
+        paths = path_partition(token);
+    }
+    else if (name == "GlobalTaskPlanner")   // se leggo da file e uso algoritmo global leggo i percorsi da disco
+    {
+        std::string filename("paths_file.txt");
+        boost::filesystem::path paths_path(filename);
+        if (!boost::filesystem::exists(paths_path))
+        {
+            c_print("File percorsi ", filename, " non esistente!!!", red, P);
+            sleep(1);
+            ros::shutdown();
+            system("./stop_experiment.sh");
+        }
+
+        ifstream paths_file(filename);
+        paths_file >> paths;
+        paths_file.close();
+    }
     // for(int i=0; i<TEAM_SIZE; i++)
     // {
     //     std::cout << "Robot " << i << " path:\n";
@@ -473,18 +533,24 @@ void TaskPlanner::init(int argc, char **argv)
     token.ID_RECEIVER = 0;
     token.INIT = true;
     // se il task planner ha calcolato i percorsi li metto nel token
-    bool paths_ready = true;
-    for(int i=0; i<TEAM_SIZE; i++)
-    {
-        if (paths[i].PATH.empty())
-        {
-            paths_ready = false;
-            break;
-        }
-    }
-    if (paths_ready)
+    if (name == "GlobalTaskPlanner")
     {
         token.TRAILS = paths;
+        // se ho generato i percorsi li scrivo su disco
+        if (GENERATION != "file")
+        {
+            std::string filename("paths_file.txt");
+            ofstream paths_file(filename);
+            if (!paths_file.fail())
+            {
+                paths_file << paths;
+            }
+            else
+            {
+                c_print("Impossibile scrivere percorsi su disco!!!", red, P);
+            }
+            paths_file.close();
+        }
     }
 
     pub_token.publish(token);
@@ -631,6 +697,21 @@ void TaskPlanner::missions_generator(std::string &type_gen)
     else if(type_gen == "non-uniform")
     {
         nu_missions_generator();
+    }
+    else if(type_gen == "file")
+    {
+        std::string filename("missions_file.txt");
+        boost::filesystem::path missions_path(filename);
+        if (!boost::filesystem::exists(missions_path))
+        {
+            c_print("File missioni ", filename, " non esistente!!!", red, P);
+            sleep(1);
+            ros::shutdown();
+            system("./stop_experiment.sh");
+        }
+        ifstream missions_file(filename);
+        missions_file >> missions;
+        missions_file.close();
     }
     else
     {

@@ -58,12 +58,19 @@ ostream &operator<<(ostream &os, const vector<MonitorData> &v);
 ostream &operator<<(ostream &os, const logistic_sim::Mission &m);
 ostream &operator<<(ostream &os, const vector<logistic_sim::Mission> &v);
 
-ifstream &operator>>(ifstream &is, logistic_sim::Mission &m);
-ifstream &operator>>(ifstream &is, vector<logistic_sim::Mission> &v);
+istream &operator>>(istream &is, logistic_sim::Mission &m);
+istream &operator>>(istream &is, vector<logistic_sim::Mission> &v);
 
 // confronto per test
 bool operator==(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs);
 bool operator!=(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs);
+
+// override operatori per lettura e scrittura percorsi su file
+ostream &operator<<(ostream &os, const logistic_sim::Path &p);
+ostream &operator<<(ostream &os, const vector<logistic_sim::Path> &v);
+
+istream &operator>>(istream &is, logistic_sim::Path &p);
+istream &operator>>(istream &is, vector<logistic_sim::Path> &v);
 
 class TaskPlanner
 {
