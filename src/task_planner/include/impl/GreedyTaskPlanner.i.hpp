@@ -1,15 +1,14 @@
 #pragma once
 #include "permutations.hpp"
 
-namespace globaltaskplanner
+namespace greedytaskplanner
 {
-GlobalTaskPlanner::GlobalTaskPlanner(ros::NodeHandle &nh_) : SP_TaskPlanner(nh_, "GlobalTaskPlanner")
+GreedyTaskPlanner::GreedyTaskPlanner(ros::NodeHandle &nh_) : SP_TaskPlanner(nh_, "GreedyTaskPlanner")
 {
 }
 
-std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::Token &token)
+std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::Token &token)
 {
-  c_print("TODO: Global Algorithm!!!", red, P);
   ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
   try

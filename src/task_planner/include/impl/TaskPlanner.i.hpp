@@ -562,7 +562,7 @@ void TaskPlanner::init(int argc, char **argv)
     {
         paths = path_partition(token);
     }
-    else if (name == "GlobalTaskPlanner")   // se leggo da file e uso algoritmo global leggo i percorsi da disco
+    else if (name == "GlobalTaskPlanner" || name == "GreedyTaskPlanner")   // se leggo da file e uso algoritmo global leggo i percorsi da disco
     {
         std::string filename("paths_file.txt");
         boost::filesystem::path paths_path(filename);
@@ -636,7 +636,7 @@ void TaskPlanner::init(int argc, char **argv)
     token.ID_RECEIVER = 0;
     token.INIT = true;
     // se il task planner ha calcolato i percorsi li metto nel token
-    if (name == "GlobalTaskPlanner")
+    if (name == "GlobalTaskPlanner" || name == "GreedyTaskPlanner")
     {
         token.TRAILS = paths;
         // se ho generato i percorsi li scrivo su disco
