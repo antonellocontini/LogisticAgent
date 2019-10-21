@@ -200,9 +200,11 @@ void SP_TaskPlanner::allocate_memory()
   }
 
   visited = new unsigned int *[dimension];
+  next_waypoint = new unsigned int*[dimension];
   for (unsigned int i = 0; i < dimension; i++)
   {
     visited[i] = new unsigned int[MAX_TIME];
+    next_waypoint[i] = new unsigned int[MAX_TIME];
   }
 
   queue = new st_location[MAX_TIME];
@@ -211,7 +213,7 @@ void SP_TaskPlanner::allocate_memory()
 using graph_type = std::vector<std::vector<unsigned int>>;
 std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<logistic_sim::Path> &other_paths,
                                                              const graph_type &graph, unsigned int size,
-                                                             std::vector<unsigned int> &waypoints, uint ID_ROBOT)
+                                                             std::vector<unsigned int> &waypoints, const std::vector<bool> &still_robots, uint ID_ROBOT)
 {
   // std::cout << "WAYPOINTS:";
   // for (int i = 0; i < waypoints.size(); i++)
@@ -240,6 +242,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
     for (unsigned int j = 0; j < MAX_TIME; j++)
     {
       visited[i][j] = WHITE;
+      next_waypoint[i][j] = 1;
     }
   }
 
@@ -262,16 +265,17 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
     st_location current_st = queue[--queue_size];
     unsigned int u = current_st.vertex;
     unsigned int time = current_st.time;
+    unsigned int next_next_waypoint = next_waypoint[u][time];
 
     // std::cout << "current vertex: " << u << std::endl;
     // std::cout << "current time: " << time << std::endl;
 
     visited[u][time] = BLACK;
 
-    if (u == waypoints[k])
+    if (u == waypoints[next_waypoint[u][time]])
     // if (u == *it_waypoints)
     {
-      if (k+1 == waypoints.size() && time + 1 >= max_path_size)
+      if (next_waypoint[u][time]+1 == waypoints.size() && time + 1 >= max_path_size)
       // if (it_waypoints + 1 == waypoints.end() && time + 1 >= max_path_size)
       {
         // std::vector<unsigned int> result(prev_paths[u][time].begin(), prev_paths[u][time].begin() + time + 1);
@@ -292,17 +296,17 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
           queue_size = 0;
         }
 
-        if (k + 1 == waypoints.size() && time + 1 < max_path_size)
+        if (next_waypoint[u][time] + 1 == waypoints.size() && time + 1 < max_path_size)
         {
           // std::cout << "aspetto gli altri robot" << std::endl;
           // std::cout << "location corrente: " << u << std::endl;
           // std::cout << "istante corrente: " << time <<std::endl;
           // waypoints.push_back(u);
-          k--;
+          next_next_waypoint--;
         }
       }
 
-      k++;
+      next_next_waypoint++;
       // it_waypoints++;
     }
 
@@ -323,21 +327,22 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
               break;
             }
           }
-          // else if (!other_paths[i].empty())
-          // {
-          // 	if (other_paths[i].back() == u)
-          // 	{
-          // 		good = false;
-          // 		break;
-          // 	}
-          // }
+          else if (!other_paths[i].PATH.empty() && still_robots[i])
+          {
+          	if (other_paths[i].PATH.back() == u)
+          	{
+          		good = false;
+          		break;
+          	}
+          }
         }
       }
 
       if (good)
       {
         st_location next_st(u, next_time);
-        queue_size = insertion_sort(queue, queue_size, next_st);
+        next_waypoint[u][next_time] = next_next_waypoint;
+        queue_size = insertion_sort(next_waypoint, queue, queue_size, next_st);
         visited[u][next_time] = GRAY;
 
         unsigned int psize = path_sizes[u][time];
@@ -376,21 +381,22 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
                 break;
               }
             }
-            // else if (!other_paths[i].empty())
-            // {
-            // 	if (other_paths[i].back() == v)
-            // 	{
-            // 		good = false;
-            // 		break;
-            // 	}
-            // }
+            else if (!other_paths[i].PATH.empty() && still_robots[i])
+            {
+            	if (other_paths[i].PATH.back() == v)
+            	{
+            		good = false;
+            		break;
+            	}
+            }
           }
         }
 
         if (good)
         {
           st_location next_st(v, next_time);
-          queue_size = insertion_sort(queue, queue_size, next_st);
+          next_waypoint[v][next_time] = next_next_waypoint;
+          queue_size = insertion_sort(next_waypoint, queue, queue_size, next_st);
           visited[v][next_time] = GRAY;
 
           unsigned int psize = path_sizes[u][time];
@@ -409,7 +415,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
 }
 
 std::vector<uint> SP_TaskPlanner::token_dijkstra(std::vector<uint> &waypoints,
-                                                 std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT)
+                                                 std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT, const std::vector<bool> &still_robots = std::vector<bool>())
 {
   // adatto struttura dijkstra
   static bool initialize = true;
@@ -432,7 +438,14 @@ std::vector<uint> SP_TaskPlanner::token_dijkstra(std::vector<uint> &waypoints,
   //   simple_paths[i] = other_paths[i].PATH;
   // }
   // c_print("Fine del space_dijkstra", green, P);
-  return spacetime_dijkstra(other_paths, graph, dimension, waypoints, ID_ROBOT);
+  if (!still_robots.empty())
+  {
+    return spacetime_dijkstra(other_paths, graph, dimension, waypoints, still_robots, ID_ROBOT);
+  }
+  else
+  {
+    return spacetime_dijkstra(other_paths, graph, dimension, waypoints, std::vector<bool>(TEAM_SIZE, false), ID_ROBOT);
+  }
 }
 
 unsigned int SP_TaskPlanner::insertion_sort(std::vector<st_location> &queue, unsigned int size, st_location loc)
@@ -461,6 +474,37 @@ unsigned int SP_TaskPlanner::insertion_sort(st_location *queue, unsigned int siz
   queue[i + 1] = loc;
 
   return size + 1;
+}
+
+unsigned int SP_TaskPlanner::insertion_sort(unsigned int **next_waypoint, st_location *queue, unsigned int size, st_location loc)
+{
+	auto cmp_function = [&](const st_location &lhs, const st_location &rhs)
+	{
+		if (lhs.time < rhs.time)
+		{
+			return true;
+		}
+		else if (lhs.time == rhs.time)
+		{
+			if (next_waypoint[lhs.vertex][lhs.time] > next_waypoint[rhs.vertex][rhs.time])
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
+    int i;
+    for(i=size-1; i>=0; i--)
+    {
+        // if (loc < queue[i])
+		if (cmp_function(loc, queue[i]))
+            break;
+        queue[i+1] = queue[i];
+    }
+    queue[i+1] = loc;
+
+    return size+1;
 }
 
 }  // namespace nonuniformtaskplanner

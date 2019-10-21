@@ -115,6 +115,7 @@ private:
     unsigned int ***prev_paths;
     unsigned int **path_sizes;
     unsigned int **visited;
+    unsigned int **next_waypoint;
     st_location *queue;
 public:
     SP_TaskPlanner(ros::NodeHandle &nh_, const std::string &name = "SP_TaskPlanner");
@@ -130,17 +131,23 @@ public:
           delete[] prev_paths[i];
           delete[] path_sizes[i];
           delete[] visited[i];
+          delete[] next_waypoint[i];
         }
+        delete[] prev_paths;
+        delete[] path_sizes;
+        delete[] visited;
+        delete[] next_waypoint;
         delete[] queue;
     };
 
     uint compute_cycle_dst(logistic_sim::Mission &mission);
     void compute_route(uint id, logistic_sim::Mission &mission);
     void set_partition() override;
-    std::vector<unsigned int> spacetime_dijkstra(const std::vector<logistic_sim::Path > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, std::vector<unsigned int> &waypoints, uint ID_ROBOT);
-    std::vector<uint> token_dijkstra(std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT);
+    std::vector<unsigned int> spacetime_dijkstra(const std::vector<logistic_sim::Path > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, std::vector<unsigned int> &waypoints, const std::vector<bool> &still_robots, uint ID_ROBOT);
+    std::vector<uint> token_dijkstra(std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT, const std::vector<bool> &still_robots);
     unsigned int insertion_sort(std::vector<st_location> &queue, unsigned int size, st_location loc);
     unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc);
+    unsigned int insertion_sort(unsigned int **next_waypoint, st_location *queue, unsigned int size, st_location loc);
     void allocate_memory() override;
 };
 
