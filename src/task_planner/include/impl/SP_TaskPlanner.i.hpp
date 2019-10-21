@@ -284,7 +284,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
       }
       else
       {
-        if (k + 1 < waypoints.size())
+        if (next_waypoint[u][time] + 1 < waypoints.size())
         {
           for (int i = 0; i < queue_size; i++)
           {

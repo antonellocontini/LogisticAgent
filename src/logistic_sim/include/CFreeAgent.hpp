@@ -13,9 +13,12 @@ protected:
 public:
     bool token_check_pt(std::vector<uint> &my_path, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT, int * id_vertex_stuck);
     void token_callback(const logistic_sim::TokenConstPtr &msg) override;
-    std::vector<unsigned int> token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths);
-    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, const std::vector<unsigned int> &waypoints);
-
+    std::vector<unsigned int> token_dijkstra(const std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths,
+                                    const std::vector<bool> &still_robots = std::vector<bool>());
+    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths,
+                                    const std::vector<std::vector<unsigned int> > &graph,
+                                    unsigned int size, const std::vector<unsigned int> &waypoints,
+                                    const std::vector<bool> &still_robots);
 };
 } // namespace spartagent
 

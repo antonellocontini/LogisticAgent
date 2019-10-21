@@ -636,6 +636,10 @@ void TaskPlanner::init(int argc, char **argv)
     token.ID_SENDER = TASK_PLANNER_ID;
     token.ID_RECEIVER = 0;
     token.INIT = true;
+    token.GOOD_PATHS = true;
+    token.CALCULATE_PATHS = false;
+    // ros bool diventa uint8_t nei messaggi
+    token.TAKEN_MISSION = std::vector<int>(missions.size(), -1);
     // se il task planner ha calcolato i percorsi li metto nel token
     if (name == "GlobalTaskPlanner" || name == "GreedyTaskPlanner")
     {
