@@ -9,6 +9,10 @@ build/
 
 src/logistic_sim/experiments.txt
 src/logistic_sim/rostime.txt
+src/logistic_sim/paths_file.txt
+src/logistic_sim/stats_file.txt
+src/logistic_sim/missions_file.txt
+src/logistic_sim/commands_*.txt
 
 *.csv
 src/logistic_sim/results/**/*.png
