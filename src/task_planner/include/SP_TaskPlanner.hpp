@@ -93,9 +93,8 @@ void print_coalition(const t_coalition &coalition)
 }
 
 
-// un taskplanner che genera missioni per la casistica
-// nella quale i tipi di oggetti non sono in proporzioni
-// uguali
+// un taskplanner che genera missioni
+// con l'algoritmo set partition
 class SP_TaskPlanner : public TaskPlanner
 {
 private:
@@ -111,17 +110,38 @@ private:
             return time < loc.time;
         }
     };
+    // for dijkstra
+    const int MAX_TIME = 128;
+    unsigned int ***prev_paths;
+    unsigned int **path_sizes;
+    unsigned int **visited;
+    st_location *queue;
 public:
     SP_TaskPlanner(ros::NodeHandle &nh_, const std::string &name = "SP_TaskPlanner");
-    ~SP_TaskPlanner(){};
+    ~SP_TaskPlanner()
+    {
+        for (unsigned int i = 0; i < dimension; i++)
+        {
+          for (unsigned int j = 0; j < MAX_TIME; j++)
+          {
+            delete[] prev_paths[i][j];
+          }
+
+          delete[] prev_paths[i];
+          delete[] path_sizes[i];
+          delete[] visited[i];
+        }
+        delete[] queue;
+    };
 
     uint compute_cycle_dst(logistic_sim::Mission &mission);
     void compute_route(uint id, logistic_sim::Mission &mission);
     void set_partition() override;
-    std::vector<unsigned int> spacetime_dijkstra(const std::vector<std::vector<unsigned int> > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, std::vector<unsigned int> &waypoints, uint ID_ROBOT);
+    std::vector<unsigned int> spacetime_dijkstra(const std::vector<logistic_sim::Path > &other_paths, const std::vector<std::vector<unsigned int> > &graph, unsigned int size, std::vector<unsigned int> &waypoints, uint ID_ROBOT);
     std::vector<uint> token_dijkstra(std::vector<uint> &waypoints, std::vector<logistic_sim::Path> &other_paths, uint ID_ROBOT);
     unsigned int insertion_sort(std::vector<st_location> &queue, unsigned int size, st_location loc);
     unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc);
+    void allocate_memory() override;
 };
 
 } // namespace SP_TaskPlanner

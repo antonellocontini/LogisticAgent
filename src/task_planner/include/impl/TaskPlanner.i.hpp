@@ -299,6 +299,7 @@ void TaskPlanner::init(int argc, char **argv)
     ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
     ros::spinOnce();
 
+    allocate_memory();
     missions_generator(GENERATION);
 
     // test uniform icelab

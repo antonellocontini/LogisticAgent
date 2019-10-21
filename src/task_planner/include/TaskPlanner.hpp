@@ -141,6 +141,8 @@ public:
     bool robot_ready(logistic_sim::RobotReady::Request &req,
                      logistic_sim::RobotReady::Response &res);
 
+    virtual void allocate_memory() { }
+
 protected:
     // per l'inizializzazione e il token dei task
     ros::Subscriber sub_token;
