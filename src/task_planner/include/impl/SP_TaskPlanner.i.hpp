@@ -277,8 +277,8 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
       max_path_size = other_paths[i].PATH.size();
     }
   }
-  std::cout << "Max path size: " << max_path_size << std::endl;
-  std::cout << "waypoints number: " << waypoints.size() << std::endl;
+  // std::cout << "Max path size: " << max_path_size << std::endl;
+  // std::cout << "waypoints number: " << waypoints.size() << std::endl;
 
   while (queue_size > 0)
   {
@@ -301,7 +301,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
     if (u == waypoints[current_waypoint])
     // if (u == *it_waypoints)
     {
-      std::cout << "vertex " << u << " waypoint index: " << current_waypoint << std::endl;
+      // std::cout << "vertex " << u << " waypoint index: " << current_waypoint << std::endl;
       if (current_waypoint+1 == waypoints.size())
       {
         if (time + 1 >= max_path_size)
@@ -309,7 +309,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
         {
           // std::vector<unsigned int> result(prev_paths[u][time].begin(), prev_paths[u][time].begin() + time + 1);
           int size = path_sizes[u][time][current_waypoint];
-          std::cout << "path size: " << size << std::endl;
+          // std::cout << "path size: " << size << std::endl;
           std::vector<unsigned int> result(size);
           std::copy(prev_paths[u][time][current_waypoint], prev_paths[u][time][current_waypoint] + size, result.begin());
           return result;
@@ -317,13 +317,13 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
         else /* if (time + 1 < max_path_size) */
         {
           // next_next_waypoint--;
-          std::cout << "last waypoint!!!" << std::endl;
+          // std::cout << "last waypoint!!!" << std::endl;
           next_next_waypoint = current_waypoint;
         }
       }
       else
       {
-        std::cout <<"prossimo waypoint!!! " << current_waypoint+1 <<std::endl;
+        // std::cout <<"prossimo waypoint!!! " << current_waypoint+1 <<std::endl;
         next_next_waypoint = current_waypoint + 1;
         // if (next_waypoint[u][time] + 1 < waypoints.size())
         // {
@@ -386,7 +386,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
       if (good)
       {
         st_location next_st(u, next_time, next_next_waypoint);
-        std::cout << "aggiungo alla coda stato(" << u << "," << next_time  << ") con next_next_w" << next_next_waypoint << std::endl;
+        // std::cout << "aggiungo alla coda stato(" << u << "," << next_time  << ") con next_next_w" << next_next_waypoint << std::endl;
         // next_waypoint[u][next_time] = next_next_waypoint;
         queue_size = insertion_sort(queue, queue_size, next_st);
         visited[u][next_time][next_next_waypoint] = GRAY;
@@ -441,7 +441,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
         if (good)
         {
           st_location next_st(v, next_time, next_next_waypoint);
-          std::cout << "aggiungo alla coda stato(" << v << "," << next_time  << ") con next_next_w" << next_next_waypoint << std::endl;
+          // std::cout << "aggiungo alla coda stato(" << v << "," << next_time  << ") con next_next_w" << next_next_waypoint << std::endl;
           // next_waypoint[u][next_time] = next_next_waypoint;
           queue_size = insertion_sort(queue, queue_size, next_st);
           visited[v][next_time][next_next_waypoint] = GRAY;

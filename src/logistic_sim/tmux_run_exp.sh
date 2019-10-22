@@ -1,10 +1,10 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=icelab_black
-NROBOTS=4
+MAP=grid
+NROBOTS=6
 INITPOS=default
-ALG=CFreeAgent
+ALG=GlobalAgent
 LOC=AMCL
 NAV=ros
 GWAIT=0
@@ -14,10 +14,11 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=TaskPlanner
-GEN=uniform
+TP_NAME=GlobalTaskPlanner
+GEN=rand
 PERM=true
 DEBUG=true
+MISSIONS_FILE=1.txt
 NRUNS=1
 
 function prepare_tmux {
@@ -82,9 +83,9 @@ function launch_robots {
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
 	if [ $DEBUG = true ] ; then
-		tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM" C-m
+		tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM $MISSIONS_FILE" C-m
 	else
-		tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM" C-m
+		tmux send-keys "rosrun task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM $MISSIONS_FILE" C-m
 	fi
 
 	echo "Launching TaskPlanner $TP_NAME..."

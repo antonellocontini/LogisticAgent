@@ -280,7 +280,7 @@ void TaskPlanner::init(int argc, char **argv)
     }
 
     // PARAMETRO TASKSET 
-    std::string task_set_file = argv[7];
+    task_set_file = argv[7];
 
     src_vertex = map_src[mapname];
     dst_vertex = map_dsts[mapname];
@@ -544,8 +544,42 @@ void TaskPlanner::init(int argc, char **argv)
     {
         set_partition();
         // scrivo le partizioni generate su file
-        std::string filename("missions_file.txt");
-        ofstream missions_file(filename);
+        boost::filesystem::path results_directory("results");
+        if (!boost::filesystem::exists(results_directory))
+        {
+            boost::filesystem::create_directory(results_directory);
+        }
+
+        std::stringstream conf_dir_name;
+        std::string global = PERMUTATIONS ? "global" : "local";
+        conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
+        boost::filesystem::path conf_directory(conf_dir_name.str());
+        if (!boost::filesystem::exists(conf_directory))
+        {
+            boost::filesystem::create_directory(conf_directory);
+        }
+
+        conf_dir_name << "/missions";
+        conf_directory = boost::filesystem::path(conf_dir_name.str());
+        if (!boost::filesystem::exists(conf_directory))
+        {
+            boost::filesystem::create_directory(conf_directory);
+        }
+
+        int run_number = 1;
+        std::stringstream filename;
+        std::ifstream check_new;
+        // loop per controllare se il file già esiste
+        do
+        {
+            filename.str(""); // cancella la stringa
+            filename << conf_dir_name.str() << "/" << run_number << ".txt";
+            check_new = std::ifstream(filename.str());
+            run_number++;
+        } while (check_new);
+        check_new.close();
+
+        ofstream missions_file(filename.str());
         if (missions_file.fail())
         {
             c_print("Impossibile scrivere missioni su disco!!!", red, P);
@@ -559,7 +593,8 @@ void TaskPlanner::init(int argc, char **argv)
 
     // GENERAZIONE PERCORSI
     static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
-    if (GENERATION != "file")
+    // if (GENERATION != "file")
+    if (true)
     {
         paths = path_partition(token);
     }
@@ -716,30 +751,30 @@ int TaskPlanner::my_random(int n)
     return rand() % n + 1;
 }
 
-std::vector<logistic_sim::Mission> TaskPlanner::random_mission(uint n_missions)
+void TaskPlanner::random_mission(uint n_missions)
 {
 
     std::vector<logistic_sim::Mission> r;
-    logistic_sim::Mission m;
     uint id_m = 0;
     for (int i = 0; i < n_missions; i++)
     {
+        logistic_sim::Mission m;
         auto type = my_random(3);
         m.ID = id_m;
         m.PICKUP = false;
         m.DEMANDS.push_back(my_random(3));
         m.DSTS.push_back(dst_vertex[type - 1]);
-        m.TOT_DEMAND = m.DEMANDS;
+        m.TOT_DEMAND = m.DEMANDS.front();
         m.PRIORITY = 0;
         m.ITEM.push_back(type);
-        copy(std::begin(paths[type]), std::end(paths[type]), back_inserter(m.ROUTE));
+        copy(std::begin(paths[type - 1]), std::end(paths[type - 1]), back_inserter(m.ROUTE));
         id_m++;
         m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
         m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
-        r.push_back(m);
+        std::cout << m << std::endl;
+        missions.push_back(m);
     }
-
-    return r;
+    nTask = missions.size();
 }
 
 void TaskPlanner::u_missions_generator()
@@ -836,7 +871,13 @@ void TaskPlanner::missions_generator(std::string &type_gen)
     }
     else if (type_gen == "file")
     {
-        std::string filename("missions_file.txt");
+        std::stringstream taskset_dir_name;
+        taskset_dir_name << "results/" << name << "_" << ALGORITHM
+        // TODO: lettura da cartella diversa da rand!!!
+                         << "_" << "rand" << "_teamsize" << TEAM_SIZE
+                         << "capacity" << TEAM_CAPACITY << "_" << mapname
+                         << "/missions/" << task_set_file;
+        std::string filename(taskset_dir_name.str());
         boost::filesystem::path missions_path(filename);
         if (!boost::filesystem::exists(missions_path))
         {
@@ -851,7 +892,8 @@ void TaskPlanner::missions_generator(std::string &type_gen)
     }
     else if (type_gen == "rand")
     {
-       missions = random_mission(12);
+        c_print("creating random mission");
+       random_mission(9);
     }
     else
     {

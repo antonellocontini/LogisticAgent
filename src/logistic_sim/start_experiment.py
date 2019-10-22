@@ -509,7 +509,7 @@ def main():
     root.geometry("300x430+0+0")
     root.mainloop()  
 
-  elif (len(sys.argv)<15):
+  elif (len(sys.argv)<16):
     print "Use: ",sys.argv[0]
     print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <capacity> <tp_name> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
 
@@ -530,6 +530,7 @@ def main():
     TP_NAME = sys.argv[14]
     GEN = sys.argv[15]
     PERM = sys.argv[16]
+    MISSIONS_FILE = sys.argv[17]
 
     # MAP = model5
     # NROBOTS = 2
@@ -552,9 +553,9 @@ def main():
     # if (len(sys.argv)>=13):
     #   SPEEDUP = float(sys.argv[12])
 
-    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY,TP_NAME,GEN,PERM
+    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY,TP_NAME,GEN,PERM,MISSIONS_FILE
     
-    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, PERM)
+    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, PERM, MISSIONS_FILE)
 
  
 

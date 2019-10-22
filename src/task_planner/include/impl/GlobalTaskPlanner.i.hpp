@@ -41,7 +41,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
       double initial_y = list[2*value+1];
       uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
       init_vertex.push_back(v);
-      std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
+      // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
     }
 
     std::vector<uint> waypoints;
@@ -54,7 +54,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
       auto n_subsets = it.subsets();
       if (n_subsets <= TEAM_SIZE)
       {
-        std::cout << "partition for " << n_subsets << " robots" << std::endl; 
+        // std::cout << "partition for " << n_subsets << " robots" << std::endl; 
         // per i robot fermi
         if (n_subsets < TEAM_SIZE)
         {
@@ -87,7 +87,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
               temp_token.TASKS_COMPLETED[i % TEAM_SIZE] = 0;
               if (!permutation[i].empty())
               {
-                std::cout << "Robot " << i << " WAYPOINTS\n";
+                // std::cout << "Robot " << i << " WAYPOINTS\n";
                 waypoints.clear();
                 waypoints.push_back(init_vertex[i % TEAM_SIZE]);
                 for (logistic_sim::Mission &m : permutation[i])
@@ -114,9 +114,9 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
 
                 for(auto &w : waypoints)
                 {
-                  std::cout << w << " ";
+                  // std::cout << w << " ";
                 }
-                std::cout << "\n" << std::endl;
+                // std::cout << "\n" << std::endl;
                 try
                 {
                   std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE, still_robots);
@@ -128,7 +128,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
                 }
                 catch (std::string &e)
                 {
-                  std::cout << "can't find path, trying another one..." << std::endl;
+                  // std::cout << "can't find path, trying another one..." << std::endl;
                   other_paths[i % TEAM_SIZE].PATH.clear();
                 }
               }

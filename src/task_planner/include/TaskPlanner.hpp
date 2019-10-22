@@ -121,6 +121,8 @@ public:
     std::vector<uint> home_vertex;
     std::vector<std::vector<uint>> paths;
 
+    std::string task_set_file;
+
     int compute_cost_of_route(std::vector<uint> &route);
 
     void missions_generator(std::string &gen_type);
@@ -128,9 +130,9 @@ public:
     void u_missions_generator();
     void nu_missions_generator();
 
-    std::vector<logistic_sim::Mission> random_mission(uint n_missions);
+    void random_mission(uint n_missions);
 
-    int TaskPlanner::my_random(int n);
+    int my_random(int n);
 
     logistic_sim::Mission create_mission(uint type, int id);
 
