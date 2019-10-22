@@ -221,14 +221,16 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 		  {
 			if (other_paths[i][next_time] == u)
 			{
+			  std::cout << "can't stand in " << u << " at time " << time << std::endl;
 			  good = false;
 			  break;
 			}
 		  }
-		  else if (!other_paths[i].empty() && still_robots[i])
+		  else if (!other_paths[i].empty() /* && still_robots[i] */)
 		  {
 			if (other_paths[i].back() == u)
 			{
+			  std::cout << "can't stand in " << u << " at time " << time << std::endl;
 			  good = false;
 			  break;
 			}
@@ -270,19 +272,22 @@ std::vector<unsigned int> CFreeAgent::spacetime_dijkstra(const std::vector<std::
 			{
 			  if (other_paths[i][next_time] == v)
 			  {
+				  std::cout << "can't go in " << v << " at time " << time << std::endl;
 				good = false;
 				break;
 			  }
 			  if (other_paths[i][next_time] == u && other_paths[i][time] == v)
 			  {
+				  std::cout << "can't go in " << v << " at time " << time << std::endl;
 				good = false;
 				break;
 			  }
 			}
-			else if (!other_paths[i].empty() && still_robots[i])
+			else if (!other_paths[i].empty()  /* && still_robots[i] */)
 			{
 			  if (other_paths[i].back() == v)
 			  {
+				  std::cout << "can't go in " << v << " at time " << time << ", there is a still robot" << std::endl;
 				good = false;
 				break;
 			  }

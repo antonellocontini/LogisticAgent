@@ -327,7 +327,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
               break;
             }
           }
-          else if (!other_paths[i].PATH.empty() && still_robots[i])
+          else if (!other_paths[i].PATH.empty() /* && still_robots[i] */)
           {
           	if (other_paths[i].PATH.back() == u)
           	{
@@ -381,7 +381,7 @@ std::vector<unsigned int> SP_TaskPlanner::spacetime_dijkstra(const std::vector<l
                 break;
               }
             }
-            else if (!other_paths[i].PATH.empty() && still_robots[i])
+            else if (!other_paths[i].PATH.empty() /* && still_robots[i] */)
             {
             	if (other_paths[i].PATH.back() == v)
             	{

@@ -84,7 +84,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.Y_POS.push_back(0.0);
     token.GOAL_STATUS.push_back(0);
     logistic_sim::Path p;
-    p.PATH = std::vector<uint>(10, initial_vertex);
+    // p.PATH = std::vector<uint>(10, initial_vertex);
     token.TRAILS.push_back(p);
     if (ID_ROBOT == TEAM_SIZE - 1)
     {
@@ -209,10 +209,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
         try
         {
           // preparo vettore robot inattivi per dijkstra
-          std::vector<bool> still_robots(TEAM_SIZE, false);
+          std::vector<bool> still_robots(TEAM_SIZE, true);
           for (int i = 0; i < token.ACTIVE_ROBOTS; i++)
           {
-            still_robots[i] = true;
+            still_robots[i] = false;
           }
           token.TRAILS[ID_ROBOT].PATH = token_dijkstra(waypoints, token.TRAILS, still_robots);
           std::cout << "Percorso robot " << ID_ROBOT << std::endl;
@@ -332,7 +332,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       static bool first_round = true;
       if (first_round)
       {
-        home_steps = token.TRAILS[ID_ROBOT].PATH.size() - 1; /* - 49; */
+        home_steps = token.TRAILS[ID_ROBOT].PATH.size(); /* - 1 - 49; */
         first_round = false;
       }
       // aggiorno posizione
