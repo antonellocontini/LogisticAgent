@@ -113,15 +113,13 @@ public:
 
     ros::Time start_time;
 
-    std::map<std::string, std::vector<uint>> map_homes = {{"model6", {0,1,2,3,4,5}}, {"grid", {1,2,3,21,22,23}}, {{"icelab"}, {0,1,2,26,27,28}}, {"model5", {0,1,2,25,26,27}}};
-    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22} , {"icelab_black", 18}, {"model5", 6}};
-    std::map<std::string, std::vector<uint> > map_dsts = {{"model6", {18,23,28}}, {"grid", {16,17,18}},
-                                                          {"icelab", {10,13,16}}, {"icelab_black", {26,33,42}},
-                                                          {"model5", {11,16,21}}};
+    std::map<std::string, std::vector<uint>> map_homes = {{"model6", {0, 1, 2, 3, 4, 5}}, {"grid", {1, 2, 3, 21, 22, 23}}, {{"icelab"}, {0, 1, 2, 26, 27, 28}}, {"model5", {0, 1, 2, 25, 26, 27}}};
+    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}, {"icelab_black", 18}, {"model5", 6}};
+    std::map<std::string, std::vector<uint>> map_dsts = {{"model6", {18, 23, 28}}, {"grid", {16, 17, 18}}, {"icelab", {10, 13, 16}}, {"icelab_black", {26, 33, 42}}, {"model5", {11, 16, 21}}};
     uint src_vertex;
     std::vector<uint> dst_vertex;
     std::vector<uint> home_vertex;
-    std::vector<std::vector<uint> > paths;
+    std::vector<std::vector<uint>> paths;
 
     int compute_cost_of_route(std::vector<uint> &route);
 
@@ -130,9 +128,13 @@ public:
     void u_missions_generator();
     void nu_missions_generator();
 
+    std::vector<logistic_sim::Mission> random_mission(uint n_missions);
+
+    int TaskPlanner::my_random(int n);
+
     logistic_sim::Mission create_mission(uint type, int id);
-    
-    virtual void set_partition();
+
+    virtual void set_partition(); 
     virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token);
 
     void init(int argc, char **argv);
@@ -142,7 +144,7 @@ public:
     bool robot_ready(logistic_sim::RobotReady::Request &req,
                      logistic_sim::RobotReady::Response &res);
 
-    virtual void allocate_memory() { }
+    virtual void allocate_memory() {}
 
 protected:
     // per l'inizializzazione e il token dei task

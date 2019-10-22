@@ -16,7 +16,7 @@
 # CUSTOM_STAGE: flag if custom version of Stage is used: true, false
 # SPEEDUP: simulator speedup (if Custom Stage is used)
 
-MAP=icelab_black
+MAP=model5
 NROBOTS=2
 INITPOS=default
 ALG=GlobalAgent

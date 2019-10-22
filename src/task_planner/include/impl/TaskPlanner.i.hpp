@@ -28,25 +28,25 @@ ostream &operator<<(ostream &os, const logistic_sim::Mission &m)
     os << m.PRIORITY << "\n";
 
     os << m.ITEM.size() << "\n";
-    for(auto &d : m.ITEM)
+    for (auto &d : m.ITEM)
     {
         os << d << "\n";
     }
 
     os << m.ROUTE.size() << "\n";
-    for(auto &d : m.ROUTE)
+    for (auto &d : m.ROUTE)
     {
         os << d << "\n";
     }
 
     os << m.DSTS.size() << "\n";
-    for(auto &d : m.DSTS)
+    for (auto &d : m.DSTS)
     {
         os << d << "\n";
     }
 
     os << m.DEMANDS.size() << "\n";
-    for(auto &d : m.DEMANDS)
+    for (auto &d : m.DEMANDS)
     {
         os << d << "\n";
     }
@@ -63,7 +63,7 @@ ostream &operator<<(ostream &os, const logistic_sim::Mission &m)
 ostream &operator<<(ostream &os, const vector<logistic_sim::Mission> &v)
 {
     os << v.size() << "\n\n";
-    for(auto &m : v)
+    for (auto &m : v)
     {
         os << m << "\n";
     }
@@ -82,7 +82,7 @@ istream &operator>>(istream &is, logistic_sim::Mission &m)
     // is >> m.ITEM.size();
     is >> n;
     m.ITEM.clear();
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         uint v;
         is >> v;
@@ -92,7 +92,7 @@ istream &operator>>(istream &is, logistic_sim::Mission &m)
     // is >> m.ROUTE.size();
     is >> n;
     m.ROUTE.clear();
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         uint v;
         is >> v;
@@ -102,7 +102,7 @@ istream &operator>>(istream &is, logistic_sim::Mission &m)
     // is >> m.DSTS.size();
     is >> n;
     m.DSTS.clear();
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         uint v;
         is >> v;
@@ -112,7 +112,7 @@ istream &operator>>(istream &is, logistic_sim::Mission &m)
     // is >> m.DEMANDS.size();
     is >> n;
     m.DEMANDS.clear();
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         uint v;
         is >> v;
@@ -133,7 +133,7 @@ istream &operator>>(istream &is, vector<logistic_sim::Mission> &v)
     is >> n;
     v.clear();
 
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         logistic_sim::Mission m;
         is >> m;
@@ -144,13 +144,12 @@ istream &operator>>(istream &is, vector<logistic_sim::Mission> &v)
 
 bool operator==(const logistic_sim::Mission &lhs, const logistic_sim::Mission &rhs)
 {
-    auto cmp_double = [](double lhs, double rhs)
-    {
+    auto cmp_double = [](double lhs, double rhs) {
         double diff = fabs(lhs - rhs);
         lhs = fabs(lhs);
         rhs = fabs(rhs);
         double largest = (rhs > lhs) ? rhs : lhs;
-        if (diff <= largest * 25*FLT_EPSILON)
+        if (diff <= largest * 25 * FLT_EPSILON)
             return true;
         return false;
     };
@@ -158,35 +157,35 @@ bool operator==(const logistic_sim::Mission &lhs, const logistic_sim::Mission &r
     if (lhs.ITEM.size() != rhs.ITEM.size())
         return false;
 
-    for (int i=0; i<lhs.ITEM.size(); i++)
+    for (int i = 0; i < lhs.ITEM.size(); i++)
         if (lhs.ITEM[i] != rhs.ITEM[i])
             return false;
 
     if (lhs.ROUTE.size() != rhs.ROUTE.size())
         return false;
 
-    for (int i=0; i<lhs.ROUTE.size(); i++)
+    for (int i = 0; i < lhs.ROUTE.size(); i++)
         if (lhs.ROUTE[i] != rhs.ROUTE[i])
             return false;
 
     if (lhs.DSTS.size() != rhs.DSTS.size())
         return false;
 
-    for (int i=0; i<lhs.DSTS.size(); i++)
+    for (int i = 0; i < lhs.DSTS.size(); i++)
         if (lhs.DSTS[i] != rhs.DSTS[i])
             return false;
 
     if (lhs.DEMANDS.size() != rhs.DEMANDS.size())
         return false;
 
-    for (int i=0; i<lhs.DEMANDS.size(); i++)
+    for (int i = 0; i < lhs.DEMANDS.size(); i++)
         if (lhs.DEMANDS[i] != rhs.DEMANDS[i])
             return false;
 
     // std::cout << lhs.V << " " << rhs.V << std::endl;
     return lhs.ID == rhs.ID &&
            lhs.PRIORITY == rhs.PRIORITY &&
-        //    lhs.V == rhs.V &&
+           //    lhs.V == rhs.V &&
            cmp_double(lhs.V, rhs.V) &&
            lhs.TOT_DEMAND == rhs.TOT_DEMAND &&
            lhs.PATH_DISTANCE == rhs.PATH_DISTANCE &&
@@ -201,7 +200,7 @@ bool operator!=(const logistic_sim::Mission &lhs, const logistic_sim::Mission &r
 ostream &operator<<(ostream &os, const logistic_sim::Path &p)
 {
     os << p.PATH.size() << "\n";
-    for(auto &v : p.PATH)
+    for (auto &v : p.PATH)
     {
         os << v << "\n";
     }
@@ -212,7 +211,7 @@ ostream &operator<<(ostream &os, const logistic_sim::Path &p)
 ostream &operator<<(ostream &os, const vector<logistic_sim::Path> &v)
 {
     os << v.size() << "\n\n";
-    for(auto &p: v)
+    for (auto &p : v)
     {
         os << p << "\n";
     }
@@ -225,7 +224,7 @@ istream &operator>>(istream &is, logistic_sim::Path &p)
     p.PATH.clear();
     int n;
     is >> n;
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         uint v;
         is >> v;
@@ -240,7 +239,7 @@ istream &operator>>(istream &is, vector<logistic_sim::Path> &v)
     v.clear();
     int n;
     is >> n;
-    for(int i=0; i<n; i++)
+    for (int i = 0; i < n; i++)
     {
         logistic_sim::Path p;
         is >> p;
@@ -249,8 +248,6 @@ istream &operator>>(istream &is, vector<logistic_sim::Path> &v)
 
     return is;
 }
-
-
 
 TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(name)
 {
@@ -265,7 +262,7 @@ void TaskPlanner::init(int argc, char **argv)
     srand(time(NULL));
     chdir(PS_path.c_str());
     mapname = string(argv[1]);
-    std::string graph_file = "maps/"+mapname+"/"+mapname+".graph";
+    std::string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
     dimension = GetGraphDimension(graph_file.c_str());
     vertex_web = new vertex[dimension];
     GetGraphInfo(vertex_web, dimension, graph_file.c_str());
@@ -282,10 +279,13 @@ void TaskPlanner::init(int argc, char **argv)
         c_print("Manca booleano PERMUTATIONS", red, P);
     }
 
+    // PARAMETRO TASKSET 
+    std::string task_set_file = argv[7];
+
     src_vertex = map_src[mapname];
     dst_vertex = map_dsts[mapname];
 
-    for(uint dst : dst_vertex)
+    for (uint dst : dst_vertex)
     {
         int result[100];
         uint result_size;
@@ -563,7 +563,7 @@ void TaskPlanner::init(int argc, char **argv)
     {
         paths = path_partition(token);
     }
-    else if (name == "GlobalTaskPlanner" || name == "GreedyTaskPlanner")   // se leggo da file e uso algoritmo global leggo i percorsi da disco
+    else if (name == "GlobalTaskPlanner" || name == "GreedyTaskPlanner") // se leggo da file e uso algoritmo global leggo i percorsi da disco
     {
         std::string filename("paths_file.txt");
         boost::filesystem::path paths_path(filename);
@@ -601,7 +601,7 @@ void TaskPlanner::init(int argc, char **argv)
         {
             c_print("Numero robot incoerente!!! TEAMSIZE: ", TEAM_SIZE, " file: ", n, red, P);
         }
-        for(int i=0; i<TEAM_SIZE; i++)
+        for (int i = 0; i < TEAM_SIZE; i++)
         {
             uint m, t;
             stats_file >> m;
@@ -680,7 +680,7 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
         for (int j = 0; j < vertex_web[anterior].num_neigh; j++)
         {
             if (vertex_web[anterior].id_neigh[j] == proximo)
-     
+
             {
                 custo_final += vertex_web[anterior].cost[j];
                 break;
@@ -689,7 +689,6 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
     }
     return custo_final;
 }
-
 
 logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 {
@@ -710,6 +709,37 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
     m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
 
     return m;
+}
+
+int TaskPlanner::my_random(int n)
+{
+    return rand() % n + 1;
+}
+
+std::vector<logistic_sim::Mission> TaskPlanner::random_mission(uint n_missions)
+{
+
+    std::vector<logistic_sim::Mission> r;
+    logistic_sim::Mission m;
+    uint id_m = 0;
+    for (int i = 0; i < n_missions; i++)
+    {
+        auto type = my_random(3);
+        m.ID = id_m;
+        m.PICKUP = false;
+        m.DEMANDS.push_back(my_random(3));
+        m.DSTS.push_back(dst_vertex[type - 1]);
+        m.TOT_DEMAND = m.DEMANDS;
+        m.PRIORITY = 0;
+        m.ITEM.push_back(type);
+        copy(std::begin(paths[type]), std::end(paths[type]), back_inserter(m.ROUTE));
+        id_m++;
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
+        r.push_back(m);
+    }
+
+    return r;
 }
 
 void TaskPlanner::u_missions_generator()
@@ -750,15 +780,13 @@ void TaskPlanner::u_missions_generator()
     {
         cout << missions[i].TOT_DEMAND << " \n";
     }
-
-} 
-
+}
 
 void TaskPlanner::nu_missions_generator()
 {
-    uint t1_size = 2; 
-    uint t2_size = 4;  
-    uint t3_size = 6; 
+    uint t1_size = 2;
+    uint t2_size = 4;
+    uint t3_size = 6;
     static int id = 0;
     while (t1_size > 0 || t2_size > 0 || t3_size > 0)
     {
@@ -802,11 +830,11 @@ void TaskPlanner::missions_generator(std::string &type_gen)
     {
         u_missions_generator();
     }
-    else if(type_gen == "non-uniform")
+    else if (type_gen == "non-uniform")
     {
         nu_missions_generator();
     }
-    else if(type_gen == "file")
+    else if (type_gen == "file")
     {
         std::string filename("missions_file.txt");
         boost::filesystem::path missions_path(filename);
@@ -821,12 +849,15 @@ void TaskPlanner::missions_generator(std::string &type_gen)
         missions_file >> missions;
         missions_file.close();
     }
+    else if (type_gen == "rand")
+    {
+       missions = random_mission(12);
+    }
     else
     {
         c_print("ERR GEN TYPE", red, P);
     }
 }
-
 
 void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -844,9 +875,9 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
         token.HEADER.seq = 1;
         CAPACITY = msg->CAPACITY;
         token.INIT = false;
-        for(auto m : missions)
+        for (auto m : missions)
         {
-            for (auto dst : m.DSTS )
+            for (auto dst : m.DSTS)
             {
                 std::cout << dst << " ";
             }
@@ -965,7 +996,5 @@ bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req,
 
     return true;
 }
-
-
 
 } // namespace taskplanner
