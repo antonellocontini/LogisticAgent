@@ -13,7 +13,7 @@ TrajectoryPlannerROS:
  holonomic_robot: false
  #yaw_goal_tolerance: 0.05
  yaw_goal_tolerance: 6.28
- xy_goal_tolerance: 0.40
+ xy_goal_tolerance: 0.20
 
 #~<name>/pdist_scale (double, default: 0.6)
 #    The weighting for how much the controller should stay close to the path it was given 

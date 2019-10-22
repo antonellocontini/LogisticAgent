@@ -9,7 +9,6 @@ GlobalTaskPlanner::GlobalTaskPlanner(ros::NodeHandle &nh_) : SP_TaskPlanner(nh_,
 
 std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::Token &token)
 {
-  c_print("TODO: Global Algorithm!!!", red, P);
   ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
   std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
@@ -55,6 +54,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
       auto n_subsets = it.subsets();
       if (n_subsets <= TEAM_SIZE)
       {
+        std::cout << "partition for " << n_subsets << " robots" << std::endl; 
         // per i robot fermi
         if (n_subsets < TEAM_SIZE)
         {
@@ -87,8 +87,8 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
               temp_token.TASKS_COMPLETED[i % TEAM_SIZE] = 0;
               if (!permutation[i].empty())
               {
+                std::cout << "Robot " << i << " WAYPOINTS\n";
                 waypoints.clear();
-                // std::cout << "Robot " << i << "\n";
                 waypoints.push_back(init_vertex[i % TEAM_SIZE]);
                 for (logistic_sim::Mission &m : permutation[i])
                 {
@@ -97,31 +97,29 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
                   {
                     temp_token.TASKS_COMPLETED[i % TEAM_SIZE]++;
                   }
-                  // std::cout << src_vertex << " ";
                   waypoints.push_back(src_vertex);
                   for (uint v : m.DSTS)
                   {
-                    // std::cout << v << " ";
                     waypoints.push_back(v);
                   }
                 }
                 if (mapname != "model6")
                 {
-                  // std::cout << init_vertex[i % TEAM_SIZE] << " ";
                   waypoints.push_back(init_vertex[i % TEAM_SIZE]);
                 }
                 else
                 {
-                  // std::cout << 9 << " ";
                   waypoints.push_back(9);
                 }
-                // std::cout << "\n";
+
+                for(auto &w : waypoints)
+                {
+                  std::cout << w << " ";
+                }
+                std::cout << "\n" << std::endl;
                 try
                 {
-                  // static int count = 1;
                   std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE, still_robots);
-                  // std::cout << "dijkstra done " << count++ << std::endl;
-                  // std::vector<uint> path;
                   if (mapname != "model6")
                   {
                     // path.insert(path.end(), 50, init_vertex[i % TEAM_SIZE]);
@@ -130,6 +128,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
                 }
                 catch (std::string &e)
                 {
+                  std::cout << "can't find path, trying another one..." << std::endl;
                   other_paths[i % TEAM_SIZE].PATH.clear();
                 }
               }
@@ -200,7 +199,7 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
 
               if (max_length < best_paths_length[n_subsets - 1])
               {
-                std::cout << "new best with " << n_subsets << " robots: " << max_length << std::endl;
+                c_print("new best with ", n_subsets, " robots: ", max_length, green, P);
                 best_paths_length[n_subsets - 1] = max_length;
                 best_paths[n_subsets - 1] = other_paths;
                 possible_paths_found[n_subsets - 1] = true;

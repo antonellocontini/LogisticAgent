@@ -102,19 +102,32 @@ private:
     {
         unsigned int vertex;
         unsigned int time;
+        unsigned int waypoint;
 
-        st_location(unsigned int vertex = 0, unsigned int time = 0) : vertex(vertex), time(time) { }
-        st_location(const st_location &ref) : vertex(ref.vertex), time(ref.time) { }
+        st_location(unsigned int vertex = 0, unsigned int time = 0, unsigned int next_waypoint = 0) : vertex(vertex), time(time)
+                                                                                        , waypoint(next_waypoint) { }
+        st_location(const st_location &ref) : vertex(ref.vertex), time(ref.time), waypoint(ref.waypoint) { }
         bool operator<(const st_location &loc) const
         {
-            return time < loc.time;
+            if (time < loc.time)
+            {
+                return true;
+            }
+            else if(time == loc.time)
+            {
+                if(waypoint > loc.waypoint)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     };
     // for dijkstra
-    const int MAX_TIME = 128;
-    unsigned int ***prev_paths;
-    unsigned int **path_sizes;
-    unsigned int **visited;
+    const int MAX_TIME = 128, MAX_WAYPOINTS=64;
+    unsigned int ****prev_paths;
+    unsigned int ***path_sizes;
+    unsigned int ***visited;
     unsigned int **next_waypoint;
     st_location *queue;
 public:
@@ -125,7 +138,13 @@ public:
         {
           for (unsigned int j = 0; j < MAX_TIME; j++)
           {
+            for(unsigned int k=0; k < MAX_WAYPOINTS; k++)
+            {
+                delete[] prev_paths[i][j][k];
+            }
             delete[] prev_paths[i][j];
+            delete[] path_sizes[i][j];
+            delete[] visited[i][j];
           }
 
           delete[] prev_paths[i];

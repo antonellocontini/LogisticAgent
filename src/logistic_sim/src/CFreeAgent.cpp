@@ -56,6 +56,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
 
   if (msg->INIT)
   {
+    allocate_memory();
     token.CAPACITY.push_back(CAPACITY);
     // all avvio indico quale arco i robot vorrebbero attraversare
     // serve a forzare la partenza nella stessa direzione
