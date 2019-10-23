@@ -11,38 +11,39 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
 {
   ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
-  try
+  c_print("Missions number: ", missions.size(), green, P);
+  partition::iterator it(missions.size());
+  int id_partition = 0;
+
+  // individuo vertici iniziali degli agenti
+  ros::NodeHandle nh;
+  std::vector<double> list;
+  std::vector<uint> init_vertex;
+  nh.getParam("initial_pos", list);
+
+  if (list.empty())
   {
-    c_print("Missions number: ", missions.size(), green, P);
-    partition::iterator it(missions.size());
-    int id_partition = 0;
+    ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+    ros::shutdown();
+    exit(-1);
+  }
 
-    // individuo vertici iniziali degli agenti
-    ros::NodeHandle nh;
-    std::vector<double> list;
-    std::vector<uint> init_vertex;
-    nh.getParam("initial_pos", list);
+  // dalle coordinate degli agenti individuo il nodo del grafo
+  for (int value = 0; value < TEAM_SIZE; value++)
+  {
+    double initial_x = list[2 * value];
+    double initial_y = list[2 * value + 1];
+    uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+    init_vertex.push_back(v);
+    // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
+  }
 
-    if (list.empty())
-    {
-      ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
-      ros::shutdown();
-      exit(-1);
-    }
-
-    // dalle coordinate degli agenti individuo il nodo del grafo
-    for (int value = 0; value < TEAM_SIZE; value++)
-    {
-      double initial_x = list[2 * value];
-      double initial_y = list[2 * value + 1];
-      uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
-      init_vertex.push_back(v);
-      // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
-    }
-
-    std::vector<uint> waypoints;
-    std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
-    for (int current_team_size = TEAM_SIZE; current_team_size >= 1; current_team_size--)
+  std::vector<uint> waypoints;
+  std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
+  for (int current_team_size = TEAM_SIZE; current_team_size >= 1; current_team_size--)
+  {
+    std::cout << "ricerca percorso con " << current_team_size << " robot" << std::endl;
+    try
     {
       while (true)
       {
@@ -50,6 +51,7 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
         auto n_subsets = it.subsets();
         if (n_subsets == current_team_size)
         {
+          std::cout << "partizione da " << n_subsets << " robot" << std::endl;
           // metto missioni vuote per i robot che stanno fermi
           if (n_subsets < TEAM_SIZE)
           {
@@ -206,14 +208,16 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
           }
           catch (std::overflow_error &e)
           {
+            std::cout << "fine permutazioni per partizioni corrente" << std::endl;
           }
         }
         ++it;
       }
     }
-  }
-  catch (std::overflow_error &)
-  {
+    catch (std::overflow_error &)
+    {
+      std::cout << "fine partizioni" << std::endl;
+    }
   }
 
   c_print("[ERROR]Can't find solution!!!", red, P);
