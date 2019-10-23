@@ -108,17 +108,24 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       token.END_SIMULATION = true;
       token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
       token.TASKS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
+      token.INIT_POS.clear();
     }
-    else if (ID_ROBOT < token.ACTIVE_ROBOTS)
+    else if (ID_ROBOT < token.ACTIVE_ROBOTS) // guardo se sono tra i robot attivi
     {
+      
       int count = 0;
       for (int i = 0; i < token.MISSION.size(); i++)
       {
         if (token.TAKEN_MISSION[i] == ID_ROBOT)
           count++;
       }
+      // se non ho preso missioni pulisco il mio vettore di missioni
       if (count == 0)
+      {
         missions.clear();
+      }
+
+      // guardo se ci sono ancora missioni da prendere
       if (taken_missions_count(token) < token.MISSION.size())
       {
         logistic_sim::Mission m;
@@ -131,9 +138,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
             break;
           }
         }
+        missions.emplace(missions.begin(), m);
         // logistic_sim::Mission m = token.MISSION.back();
         // token.MISSION.pop_back();
-        missions.emplace(missions.begin(), m);
         // if (missions.empty())
         // {
         // }
@@ -171,7 +178,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       token.TRAILS[ID_ROBOT].PATH = std::vector<uint>(1, current_vertex);
     }
 
-    if (ID_ROBOT == TEAM_SIZE - 1)
+    if (taken_missions_count(token) == token.MISSION.size() && ID_ROBOT == TEAM_SIZE - 1)
     {
       std::cout << "Tutti hanno preso le missioni" << std::endl;
       token.STEP = false;
@@ -183,8 +190,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
   {
     if (token.GOOD_PATHS)
     {
+      // se sono tra i robot attivi
       if (ID_ROBOT < token.ACTIVE_ROBOTS)
       {
+        // preparo i waypoints
         std::cout << "Calcolo percorso..." << std::endl;
         token.TRAILS[ID_ROBOT].PATH.clear();
         uint init_pos = 9;
@@ -223,7 +232,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           }
           std::cout << std::endl;
 
-          // entra solo l'ultimo robot a calcolare i percorsi per model6
+          // entra solo l'ultimo robot a calcolare i pezzi finali per model6
           if (ID_ROBOT == token.ACTIVE_ROBOTS - 1 && mapname == "model6")
           {
             std::vector<uint> indices(TEAM_SIZE);
@@ -280,16 +289,18 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
             token.CALCULATE_PATHS = false;
           }
         }
-        catch (std::string& e)
+        catch (std::string& e) // se il dijkstra è fallito devo togliere un robot
         {
           token.GOOD_PATHS = false;
           for (int i = 0; i < token.MISSION.size(); i++)
           {
             c_print("Can't plan with ", token.ACTIVE_ROBOTS, " trying with one less", yellow, P);
+            // resetto le missioni prese
             token.TAKEN_MISSION[i] = -1;
             token.ACTIVE_ROBOTS--;
           }
 
+          // se sono l'ultimo robot devo attivare la fase STEP
           if (ID_ROBOT == TEAM_SIZE - 1)
           {
             token.STEP = true;
@@ -303,6 +314,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       }
       else  // sono uno dei robot inattivi
       {
+        // estendo il vettore di nodi con il vertice iniziale
+        // posso farlo qui perchè i robot inattivi vengono
+        // sempre dopo quelli attivi (rispetto all'ordine del token)
         int max_path=0;
         for(int i=0; i<token.ACTIVE_ROBOTS; i++)
         {
@@ -314,8 +328,9 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
         token.TRAILS[ID_ROBOT].PATH = std::vector<uint>(max_path, current_vertex);
       }
     }
-    else
+    else // un robot precedente non ha trovato un percorso valido
     {
+      // se sono l'ultimo attivo la fase STEP
       if (ID_ROBOT == TEAM_SIZE - 1)
       {
         token.STEP = true;
@@ -323,7 +338,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       }
     }
   }
-  else
+  else // fase di esecuzione percorsi
   {
     // if (!path_calculated)
     // {
