@@ -14,10 +14,10 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=GlobalTaskPlanner
-GEN=rand
+TP_NAME=GreedyTaskPlanner
+GEN=file
 PERM=true
-DEBUG=true
+DEBUG=false
 MISSIONS_FILE=1.txt
 NRUNS=1
 

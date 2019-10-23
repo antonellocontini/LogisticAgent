@@ -216,7 +216,7 @@ void SP_TaskPlanner::allocate_memory()
     next_waypoint[i] = new unsigned int[MAX_TIME];
   }
 
-  queue = new st_location[MAX_TIME * MAX_TIME];
+  queue = new st_location[MAX_WAYPOINTS * MAX_TIME * dimension];
 }
 
 using graph_type = std::vector<std::vector<unsigned int>>;

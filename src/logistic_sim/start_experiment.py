@@ -119,7 +119,7 @@ def getSimulationRunning():
 # Terminates if simulation is stopped (/simulation_running param is false)
 # or if timeout is reached (if this is >0)
 # CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
-def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, PERM):
+def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, PERM, MISSIONS_FILE):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -218,7 +218,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     os.system('sleep 5')
     print 'bash -c \rosrun task_planner TaskPlanner'
     
-    cmd_taskplanner = 'bash -c \'rosrun task_planner '+ TP_NAME+' '+ MAP+' '+ALG+' '+str(NROBOTS)+' '+GEN+' '+str(CAPACITY)+' '+str(PERM)+'\''
+    cmd_taskplanner = 'bash -c \'rosrun task_planner '+ TP_NAME+' '+ MAP+' '+ALG+' '+str(NROBOTS)+' '+GEN+' '+str(CAPACITY)+' '+str(PERM)+' '+str(MISSIONS_FILE)+'\''
     cmd_TP = 'gnome-terminal  --tab -e "'+cmd_taskplanner+'"&'
     
     if (TERM == 'xterm'):
@@ -509,7 +509,7 @@ def main():
     root.geometry("300x430+0+0")
     root.mainloop()  
 
-  elif (len(sys.argv)<16):
+  elif (len(sys.argv)<17):
     print "Use: ",sys.argv[0]
     print " or  ",sys.argv[0],' <map> <n.robots> <init_pos> <alg_short> <loc_mode> <nav_module> <goal_wait_time> <communication_delay> <capacity> <tp_name> <terminal> <timeout> [<custom_stage_flag>|def:false] [<sim_speedup>|def:1.0]'
 

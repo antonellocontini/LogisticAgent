@@ -124,7 +124,7 @@ private:
         }
     };
     // for dijkstra
-    const int MAX_TIME = 70, MAX_WAYPOINTS=64;
+    const int MAX_TIME = 70, MAX_WAYPOINTS=32;
     unsigned int ****prev_paths;
     unsigned int ***path_sizes;
     unsigned int ***visited;
