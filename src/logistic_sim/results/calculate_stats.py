@@ -39,7 +39,7 @@ def main():
             if f.endswith(".csv") and f != 'aggregated.csv':
                 temp.append(f)
         files = temp
-        if subdir != '.':
+        if subdir != '.' and len(files)>0:
             experiments = len(files)
             robots = 0
 
