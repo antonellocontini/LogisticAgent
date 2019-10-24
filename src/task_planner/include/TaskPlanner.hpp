@@ -131,6 +131,10 @@ public:
     void nu_missions_generator();
 
     void random_mission(uint n_missions);
+    void write_single_mission(ostream &os, const logistic_sim::Mission &m);
+    void write_missions(ostream &os, const vector<logistic_sim::Mission> &v);
+    logistic_sim::Mission read_single_mission(istream &is);
+    vector<logistic_sim::Mission> read_missions(istream &is);
 
     int my_random(int n);
 
