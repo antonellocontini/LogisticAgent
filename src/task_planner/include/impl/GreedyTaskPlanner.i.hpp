@@ -34,24 +34,32 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
     double initial_x = list[2 * value];
     double initial_y = list[2 * value + 1];
     uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+    std::cout << "robot " << value << " starts in vertex " << v << std::endl;
     init_vertex.push_back(v);
     // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
   }
 
   std::vector<uint> waypoints;
   std::vector<logistic_sim::Path> other_paths(TEAM_SIZE, logistic_sim::Path());
+  c_print("initial_pos received, start calculating from ", TEAM_SIZE, green, P);
   for (int current_team_size = TEAM_SIZE; current_team_size >= 1; current_team_size--)
   {
     std::cout << "ricerca percorso con " << current_team_size << " robot" << std::endl;
+    it = partition::iterator(missions.size());
     try
     {
       while (true)
       {
         std::vector<std::vector<logistic_sim::Mission>> partitions = *it[missions];
         auto n_subsets = it.subsets();
+        // std::cout << "n sottoinsiemi " << n_subsets << std::endl;
+        // if (n_subsets == 1)
+        // {
+        //   std::cout << "partizione da 1" << std::endl;
+        // }
         if (n_subsets == current_team_size)
         {
-          std::cout << "partizione da " << n_subsets << " robot" << std::endl;
+          // std::cout << "partizione da " << n_subsets << " robot" << std::endl;
           // metto missioni vuote per i robot che stanno fermi
           if (n_subsets < TEAM_SIZE)
           {
@@ -62,6 +70,7 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
           {
             while (true)
             {
+              // std::cout << "nuova permutazione" <<std::endl;
               std::vector<std::vector<logistic_sim::Mission>> permutation = *jt;
               for (int j = 0; j < TEAM_SIZE; j++)
               {
@@ -77,6 +86,7 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
                 {
                   other_paths[i].PATH.push_back(init_vertex[i]);
                   still_robots[i] = true;
+                  // std::cout << "robot " << i << " sta fermo" << std::endl;
                 }
               }
               for (int i = 0; i < TEAM_SIZE; i++)
@@ -94,25 +104,27 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
                     {
                       token.TASKS_COMPLETED[i % TEAM_SIZE]++;
                     }
-                    // std::cout << src_vertex << " ";
+                    std::cout << src_vertex << " ";
                     waypoints.push_back(src_vertex);
                     for (uint v : m.DSTS)
                     {
-                      // std::cout << v << " ";
+                      std::cout << v << " ";
                       waypoints.push_back(v);
                     }
+                    std::cout << std::endl;
                   }
                   if (mapname != "model6")
                   {
                     std::cout << init_vertex[i % TEAM_SIZE] << " ";
                     waypoints.push_back(init_vertex[i % TEAM_SIZE]);
+                  
                   }
                   else
                   {
                     // std::cout << 9 << " ";
                     waypoints.push_back(9);
                   }
-                  std::cout << "\n";
+                  // std::cout << "\n";
                   try
                   {
                     std::vector<uint> path = token_dijkstra(waypoints, other_paths, i % TEAM_SIZE);
@@ -163,7 +175,7 @@ std::vector<logistic_sim::Path> GreedyTaskPlanner::path_partition(logistic_sim::
                     int home_vertex = j;
                     for (int i = 5; i >= home_vertex; i--)
                     {
-                      std::cout << i << " ";
+                      // std::cout << i << " ";
                       other_paths[indices[j]].PATH.push_back(i);
                     }
                     // other_paths[indices[j]].PATH.insert(other_paths[indices[j]].PATH.end(), 50, home_vertex);

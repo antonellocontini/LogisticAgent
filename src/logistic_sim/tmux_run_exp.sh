@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=grid
+MAP=icelab_black
 NROBOTS=6
 INITPOS=default
 ALG=GlobalAgent
@@ -17,8 +17,8 @@ CAPACITY=3
 TP_NAME=GreedyTaskPlanner
 GEN=file
 PERM=true
-DEBUG=false
-MISSIONS_FILE=1.txt
+DEBUG=true
+MISSIONS_FILE=3.txt
 NRUNS=1
 
 function prepare_tmux {

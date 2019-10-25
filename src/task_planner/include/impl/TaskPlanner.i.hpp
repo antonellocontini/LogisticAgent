@@ -423,6 +423,23 @@ void TaskPlanner::init(int argc, char **argv)
   allocate_memory();
   missions_generator(GENERATION);
 
+  // print missions
+  for (const logistic_sim::Mission &m : missions)
+  {
+    std::cout << "ID: "  << m.ID << "\n";
+    std::cout << "DEMANDS:\n";
+    for(auto v : m.DEMANDS)
+    {
+      std::cout << v << " ";
+    }
+    std::cout << "DSTS:\n";
+    for(auto v : m.DSTS)
+    {
+      std::cout << v << " ";
+    }
+    std::cout << std::endl;
+  }
+
   logistic_sim::Token token;
 
   // GENERAZIONE PARTIZIONI
@@ -895,14 +912,16 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
       std::stringstream filename;
       std::ifstream check_new;
       // loop per controllare se il file già esiste
-      do
-      {
-        filename.str("");  // cancella la stringa
-        filename << conf_dir_name.str() << "/" << run_number << ".csv";
-        check_new = std::ifstream(filename.str());
-        run_number++;
-      } while (check_new);
-      check_new.close();
+      // do
+      // {
+      //   filename.str("");  // cancella la stringa
+      //   filename << conf_dir_name.str() << "/" << run_number << ".csv";
+      //   check_new = std::ifstream(filename.str());
+      //   run_number++;
+      // } while (check_new);
+      // check_new.close();
+
+      filename << conf_dir_name.str() << "/" << task_set_file << ".csv";
 
       ofstream stats(filename.str());
       stats << robots_data;
