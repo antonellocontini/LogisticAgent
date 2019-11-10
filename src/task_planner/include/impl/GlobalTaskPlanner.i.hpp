@@ -209,6 +209,8 @@ std::vector<logistic_sim::Path> GlobalTaskPlanner::path_partition(logistic_sim::
                   best_paths[n_subsets - 1] = other_paths;
                   possible_paths_found[n_subsets - 1] = true;
                   missions_stats[n_subsets - 1] = temp_token;
+                  // riduco lunghezza massima dijsktra
+                  MAX_TIME = max_length + 1;
                 }
               }
               ++jt;

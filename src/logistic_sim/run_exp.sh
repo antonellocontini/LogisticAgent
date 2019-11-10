@@ -16,7 +16,7 @@
 # CUSTOM_STAGE: flag if custom version of Stage is used: true, false
 # SPEEDUP: simulator speedup (if Custom Stage is used)
 
-MAP=model5
+MAP=icelab_black
 NROBOTS=6
 INITPOS=default
 ALG=GlobalAgent
@@ -25,72 +25,72 @@ NAV=ros
 GWAIT=0
 COMMDELAY=0.2
 TERM=xterm
-TIMEOUT=1800
+TIMEOUT=1800000
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=GreedyTaskPlanner
+TP_NAME=GlobalTaskPlanner
 GEN=file
 PERM=true
 MISSIONS_FILE=2.txt
 
-ALG=CFreeAgent
-TP_NAME=SP_TaskPlanner
-NROBOTS=2
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+ ALG=CFreeAgent
+ TP_NAME=SP_TaskPlanner
+ NROBOTS=2
+ for i in $(echo 3)
+ do
+ 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+ done
 
-NROBOTS=4
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+ NROBOTS=4
+# for i in $(echo 3)
+# do
+# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+# done
 
-NROBOTS=6
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+# NROBOTS=6
+# for i in $(seq 1 10)
+# do
+# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+# done
 
-ALG=GlobalAgent
-TP_NAME=GreedyTaskPlanner
-NROBOTS=2
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+ ALG=GlobalAgent
+ TP_NAME=GreedyTaskPlanner
+# NROBOTS=2
+# for i in $(echo 10 3)
+# do
+# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+# done
 
-NROBOTS=4
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+# NROBOTS=4
+# for i in $(seq 1 10)
+# do
+# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+# done
 
-NROBOTS=6
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+# NROBOTS=6
+# for i in $(echo 2)
+# do
+# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+# done
 
 
 ALG=GlobalAgent
 TP_NAME=GlobalTaskPlanner
-NROBOTS=2
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+# NROBOTS=2
+# for i in $(echo 3 8)
+# do
+# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+# done
 
-NROBOTS=4
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+#NROBOTS=4
+#for i in $(echo 3)
+#do
+#	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+#done
 
-NROBOTS=6
-for i in $(seq 1 10)
-do
-	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-done
+#NROBOTS=6
+#for i in $(echo 3)
+#do
+#	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+#done

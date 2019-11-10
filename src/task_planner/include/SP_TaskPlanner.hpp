@@ -123,8 +123,10 @@ private:
             return false;
         }
     };
+protected:
     // for dijkstra
-    const int MAX_TIME = 150, MAX_WAYPOINTS=32;
+    int MAX_TIME = 150;
+    const int MAX_WAYPOINTS=32;
     unsigned int ****prev_paths;
     unsigned int ***path_sizes;
     unsigned int ***visited;

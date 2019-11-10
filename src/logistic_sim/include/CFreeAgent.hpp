@@ -45,7 +45,7 @@ protected:
   unsigned int ***path_sizes;
   unsigned int ***visited;
   st_location *queue;
-  const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 128U, MAX_WAYPOINTS = 64U;
+  const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 150U, MAX_WAYPOINTS = 64U;
 
 public:
   void allocate_memory()

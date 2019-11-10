@@ -422,6 +422,99 @@ void TaskPlanner::init(int argc, char **argv)
 
   allocate_memory();
   missions_generator(GENERATION);
+  // int temp_id = 0;
+  // logistic_sim::Mission m;
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(26);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(33);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(42);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+  
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(26);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(33);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(26);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(2);
+  // m.DSTS.push_back(33);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(2);
+  // m.DSTS.push_back(26);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(33);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // m.ID = temp_id++;
+  // m.PICKUP = true;
+  // m.DEMANDS.clear();
+  // m.DSTS.clear();
+  // m.DEMANDS.push_back(1);
+  // m.DSTS.push_back(42);
+  // m.TOT_DEMAND = m.DEMANDS[0];
+  // missions.push_back(m);
+
+  // nTask = 10;
 
   // print missions
   for (const logistic_sim::Mission &m : missions)
@@ -806,7 +899,7 @@ void TaskPlanner::missions_generator(std::string &type_gen)
   else if (type_gen == "rand")
   {
     c_print("creating random mission");
-    random_mission(12);
+    random_mission(10);
   }
   else
   {

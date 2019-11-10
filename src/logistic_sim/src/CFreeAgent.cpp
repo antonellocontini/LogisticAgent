@@ -102,6 +102,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     // static std::vector<logistic_sim::Mission> missions;
     // if (!token.MISSION.empty())
 
+    std::cout << "robot attivi: " << token.ACTIVE_ROBOTS << std::endl;
     if (token.ACTIVE_ROBOTS == 0)
     {
       std::cout << "Impossibile trovare percorso anche con un solo robot!!!" << std::endl;
@@ -109,6 +110,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
       token.TASKS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
       token.INIT_POS.clear();
+      ros::shutdown();
+      system("./stop_experiment.sh");
     }
     else if (ID_ROBOT < token.ACTIVE_ROBOTS) // guardo se sono tra i robot attivi
     {
