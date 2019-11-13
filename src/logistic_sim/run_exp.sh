@@ -16,8 +16,8 @@
 # CUSTOM_STAGE: flag if custom version of Stage is used: true, false
 # SPEEDUP: simulator speedup (if Custom Stage is used)
 
-MAP=icelab_black
-NROBOTS=6
+MAP=model5
+NROBOTS=2
 INITPOS=default
 ALG=GlobalAgent
 LOC=AMCL
@@ -34,15 +34,15 @@ GEN=file
 PERM=true
 MISSIONS_FILE=2.txt
 
- ALG=CFreeAgent
- TP_NAME=SP_TaskPlanner
- NROBOTS=2
- for i in $(echo 3)
- do
- 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
- done
+#  ALG=CFreeAgent
+#  TP_NAME=SP_TaskPlanner
+#  NROBOTS=2
+#  for i in $(echo 3)
+#  do
+#  	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+#  done
 
- NROBOTS=4
+#  NROBOTS=4
 # for i in $(echo 3)
 # do
 # 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
@@ -77,11 +77,11 @@ MISSIONS_FILE=2.txt
 
 ALG=GlobalAgent
 TP_NAME=GlobalTaskPlanner
-# NROBOTS=2
-# for i in $(echo 3 8)
-# do
-# 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
-# done
+ NROBOTS=2
+ for i in $(echo 2 3 8)
+ do
+ 	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
+ done
 
 #NROBOTS=4
 #for i in $(echo 3)
@@ -89,8 +89,8 @@ TP_NAME=GlobalTaskPlanner
 #	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
 #done
 
-#NROBOTS=6
-#for i in $(echo 3)
+NROBOTS=6
+#for i in $(echo 10)
 #do
 #	./start_experiment.py $MAP $NROBOTS $INITPOS $ALG $LOC $NAV $GWAIT $COMMDELAY $TERM $TIMEOUT $CUSTOM_STAGE $SPEEDUP $CAPACITY $TP_NAME $GEN $PERM "$i.txt"
 #done

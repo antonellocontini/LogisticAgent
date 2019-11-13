@@ -14,11 +14,11 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=GreedyTaskPlanner
+TP_NAME=GlobalTaskPlanner
 GEN=file
 PERM=true
-DEBUG=true
-MISSIONS_FILE=3.txt
+DEBUG=false
+MISSIONS_FILE=10.txt
 NRUNS=1
 
 function prepare_tmux {
