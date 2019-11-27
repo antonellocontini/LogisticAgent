@@ -216,9 +216,9 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
 	    #print gcmd
 	    os.system(gcmd)
     os.system('sleep 5')
-    print 'bash -c \rosrun task_planner TaskPlanner'
+    print 'bash -c \rosrun logistic_sim TaskPlanner'
     
-    cmd_taskplanner = 'bash -c \'rosrun task_planner '+ TP_NAME+' '+ MAP+' '+ALG+' '+str(NROBOTS)+' '+GEN+' '+str(CAPACITY)+' '+str(PERM)+' '+str(MISSIONS_FILE)+'\''
+    cmd_taskplanner = 'bash -c \'rosrun logistic_sim '+ TP_NAME+' '+ MAP+' '+ALG+' '+str(NROBOTS)+' '+GEN+' '+str(CAPACITY)+' '+str(PERM)+' '+str(MISSIONS_FILE)+'\''
     cmd_TP = 'gnome-terminal  --tab -e "'+cmd_taskplanner+'"&'
     
     if (TERM == 'xterm'):
@@ -226,7 +226,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     else:
         os.system(cmd_TP)
             
-    # os.system('gnome-terminal  --tab -e "bash -c \'rosrun task_planner TaskPlanner \'" &')    
+    # os.system('gnome-terminal  --tab -e "bash -c \'rosrun logistic_sim TaskPlanner \'" &')    
     os.system('sleep 5')   
         
     # Start patrol behaviors

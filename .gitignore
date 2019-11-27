@@ -5,8 +5,6 @@ build/
 .catkin_workspace
 .catkin_tools
 
-# *.txt
-
 src/logistic_sim/experiments.txt
 src/logistic_sim/rostime.txt
 src/logistic_sim/paths_file.txt
@@ -22,3 +20,5 @@ src/logistic_sim/params/amcl/*.xml
 src/logistic_sim/results/**/*.png
 
 !src/logistic_sim/results/**/*.py
+
+src/logistic_sim/maps/**/robots.inc

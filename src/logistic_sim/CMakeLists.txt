@@ -54,13 +54,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  #Task.msg
+  Task.msg
   TaskRequest.msg
   Token.msg
   Mission.msg
   Path.msg
-  # Vertex.msg
-  # VertexWeb.ms/g
 )
 
 ## Generate services in the 'srv' folder
@@ -93,7 +91,7 @@ add_service_files(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-   LIBRARIES Agent SSIPatrolAgent
+   LIBRARIES Agent
    CATKIN_DEPENDS message_runtime roscpp std_msgs geometry_msgs
 #  CATKIN_DEPENDS actionlib move_base_msgs nav_msgs roscpp tf
 #  DEPENDS system_lib
@@ -114,6 +112,10 @@ include_directories(
   #/home/dave/LogisticAgent/lib
 )
 
+############
+## Agents ##
+############
+
 # Declare a cpp library
 add_library(Agent
   src/Agent.cpp
@@ -122,15 +124,6 @@ add_library(Agent
 )
 
 add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
-
-# Declare a cpp library
-add_library(SSIPatrolAgent
-  src/SSIPatrolAgent.cpp
-)
-
-
-add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
-
 
 # Declare a cpp library
 add_library(DistrAgentLib
@@ -148,36 +141,11 @@ add_dependencies(DistrAgentLib ${PROJECT_NAME}_generate_messages_cpp  ${catkin_E
 # ## Specify libraries to link a library or executable target against
 # target_link_libraries(TP Agent ${catkin_LIBRARIES})
 
-
-## Declare a cpp executable 
-add_executable(TokenAgent src/TokenAgent.cpp)
-add_dependencies(TokenAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(TokenAgent Agent ${catkin_LIBRARIES})
-
-## Declare a cpp executable 
-add_executable(LogicAgent src/LogicAgent.cpp)
-add_dependencies(LogicAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(LogicAgent Agent ${catkin_LIBRARIES})
-
 ## Declare a cpp executable 
 add_executable(DistrAgent src/DistrAgent.cpp)
 add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(DistrAgent Agent ${catkin_LIBRARIES})
-
-## Declare a cpp executable 
-add_executable(ConstAgent src/ConstAgent.cpp)
-add_dependencies(ConstAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(ConstAgent Agent DistrAgentLib ${catkin_LIBRARIES})
-
-## Declare a cpp executable 
-add_executable(SPartAgent src/SPartAgent.cpp)
-add_dependencies(SPartAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-target_link_libraries(SPartAgent Agent DistrAgentLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(CFreeAgent src/CFreeAgent.cpp)
@@ -191,25 +159,39 @@ add_dependencies(GlobalAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPO
 ## Specify libraries to link a library or executable target against
 target_link_libraries(GlobalAgent Agent DistrAgentLib ${catkin_LIBRARIES})
 
+##################
+## TaskPlanners ##
+##################
+
+# Declare a cpp library
+add_library(libTaskPlanner
+  src/TaskPlanner.cpp
+)
 
 ########################################################################################################################
 
-# Results and Monitor Node:
- 
-## Declare a cpp executable 
-# add_executable(monitor src/view_result.cpp src/getgraph.cpp)
-# add_dependencies(monitor ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-## Specify libraries to link a library or executable target against
-# target_link_libraries(monitor ${catkin_LIBRARIES})
+# ## Declare a cpp executable 
+add_executable(TaskPlanner src/TaskPlanner.cpp)
+add_dependencies(TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# ## Specify libraries to link a library or executable target against
+target_link_libraries(TaskPlanner ${catkin_LIBRARIES})
 
-# add_executable(GoToStartPos src/GoToStartPos.cpp)
-# add_dependencies(GoToStartPos ${PROJECT_NAME}_gencpp ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(GoToStartPos ${catkin_LIBRARIES})
+add_executable(SP_TaskPlanner src/SP_TaskPlanner.cpp)
+add_dependencies(SP_TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ ## Specify libraries to link a library or executable target against
+target_link_libraries(SP_TaskPlanner libTaskPlanner ${catkin_LIBRARIES})
 
-## Declare a cpp executable 
-# add_executable(idlHistogram src/idlHistogram.cpp)
-## Specify libraries to link a library or executable target against
-# target_link_libraries(idlHistogram ${catkin_LIBRARIES})
+add_executable(GlobalTaskPlanner src/GlobalTaskPlanner.cpp)
+add_dependencies(GlobalTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ ## Specify libraries to link a library or executable target against
+target_link_libraries(GlobalTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+
+add_executable(GreedyTaskPlanner src/GreedyTaskPlanner.cpp)
+add_dependencies(GreedyTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ ## Specify libraries to link a library or executable target against
+target_link_libraries(GreedyTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+
+########################################################################################################################
 
 
 ## Add cmake target dependencies of the executable/library
