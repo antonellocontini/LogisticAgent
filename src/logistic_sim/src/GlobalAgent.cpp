@@ -4,18 +4,12 @@ using namespace globalagent;
 
 void GlobalAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
 {
-  // ricevo il token ricevo il task set computo la CF migliore la assegno e toglo i task che la compongono.
-
   // se non è per me termino
   if (msg->ID_RECEIVER != ID_ROBOT)
     return;
 
   logistic_sim::Token token;
   token = *msg;
-
-  // logistic_sim::Mission m = coalition_formation(token);
-
-  // cout << "missione finale dopo coalizione: "<< m.ID << m.TOT_DEMAND <<"\n";
 
   token.ID_SENDER = ID_ROBOT;
   // c_print("TEAMSIZE: ",TEAM_SIZE, yellow);
@@ -31,7 +25,7 @@ void GlobalAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
   if (msg->CHECK)
   {
     int id_vertex_stuck;
-    // controlliamo che non ci siano situazioni ti stuck lungo tutti i percorsi calcolati
+    // controlliamo che non ci siano situazioni di stuck lungo tutti i percorsi calcolati
     for (int i = 0; i < TEAM_SIZE; i++)
     {
       if (!token_check_pt(token.TRAILS[i].PATH, token.TRAILS, i, &id_vertex_stuck))
@@ -60,7 +54,8 @@ void GlobalAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.NEXT_VERTEX.push_back(init_next_vertex);
     // solo INIT
     token.CURR_DST.push_back(dimension + 1);
-    token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
+    token.INIT_POS.push_back(initial_vertex);
+    // token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
     token.INIT_POS_INDEX = 0;
     token.MISSION_START_TIME.push_back(ros::Time::now());
     token.MISSION_CURRENT_DISTANCE.push_back(0.0f);

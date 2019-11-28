@@ -42,6 +42,9 @@ namespace distragent
 {
 using namespace agent;
 
+/**
+ * Approccio con grafo dinamico, non più mantenuto 
+ */
 class DistrAgent : public Agent
 {
 protected:
@@ -90,6 +93,7 @@ public:
     void init(int argc, char **argv) override;
     virtual void run();
 
+    // empty implementation
     void onGoalComplete();
     int compute_next_vertex();
 

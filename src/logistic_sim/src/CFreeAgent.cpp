@@ -72,7 +72,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.NEXT_VERTEX.push_back(init_next_vertex);
     // solo INIT
     token.CURR_DST.push_back(dimension + 1);
-    token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
+    token.INIT_POS.push_back(initial_vertex);
+    // token.INIT_POS.insert(token.INIT_POS.begin(), initial_vertex);
     token.INIT_POS_INDEX = 0;
     token.MISSION_START_TIME.push_back(ros::Time::now());
     token.MISSION_CURRENT_DISTANCE.push_back(0.0f);

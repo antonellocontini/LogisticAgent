@@ -1,5 +1,7 @@
 devel/
 build/
+html/
+latex/
 
 .vscode
 .catkin_workspace
