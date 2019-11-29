@@ -401,6 +401,7 @@ void TaskPlanner::init(int argc, char **argv)
   src_vertex = map_src[mapname];
   dst_vertex = map_dsts[mapname];
 
+  // costruisce percorsi per euristica
   for (uint dst : dst_vertex)
   {
     int result[100];
@@ -417,111 +418,18 @@ void TaskPlanner::init(int argc, char **argv)
 
   allocate_memory();
   missions_generator(GENERATION);
-  // int temp_id = 0;
-  // logistic_sim::Mission m;
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(26);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(33);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(42);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-  
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(26);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(33);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(26);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(2);
-  // m.DSTS.push_back(33);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(2);
-  // m.DSTS.push_back(26);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(33);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // m.ID = temp_id++;
-  // m.PICKUP = true;
-  // m.DEMANDS.clear();
-  // m.DSTS.clear();
-  // m.DEMANDS.push_back(1);
-  // m.DSTS.push_back(42);
-  // m.TOT_DEMAND = m.DEMANDS[0];
-  // missions.push_back(m);
-
-  // nTask = 10;
 
   // print missions
   for (const logistic_sim::Mission &m : missions)
   {
-    std::cout << "ID: "  << m.ID << "\n";
+    std::cout << "ID: " << m.ID << "\n";
     std::cout << "DEMANDS:\n";
-    for(auto v : m.DEMANDS)
+    for (auto v : m.DEMANDS)
     {
       std::cout << v << " ";
     }
     std::cout << "DSTS:\n";
-    for(auto v : m.DSTS)
+    for (auto v : m.DSTS)
     {
       std::cout << v << " ";
     }
@@ -536,110 +444,13 @@ void TaskPlanner::init(int argc, char **argv)
   {
     set_partition();
     // scrivo le partizioni generate su file
-    boost::filesystem::path results_directory("results");
-    if (!boost::filesystem::exists(results_directory))
-    {
-      boost::filesystem::create_directory(results_directory);
-    }
-
-    std::stringstream conf_dir_name;
-    conf_dir_name << "results";
-                  //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
-    boost::filesystem::path conf_directory(conf_dir_name.str());
-    if (!boost::filesystem::exists(conf_directory))
-    {
-      boost::filesystem::create_directory(conf_directory);
-    }
-
-    conf_dir_name << "/missions";
-    conf_directory = boost::filesystem::path(conf_dir_name.str());
-    if (!boost::filesystem::exists(conf_directory))
-    {
-      boost::filesystem::create_directory(conf_directory);
-    }
-
-    int run_number = 1;
-    std::stringstream filename;
-    std::ifstream check_new;
-    // loop per controllare se il file già esiste
-    do
-    {
-      filename.str("");  // cancella la stringa
-      filename << conf_dir_name.str() << "/" << run_number << ".txt";
-      check_new = std::ifstream(filename.str());
-      run_number++;
-    } while (check_new);
-    check_new.close();
-
-    ofstream missions_file(filename.str());
-    if (missions_file.fail())
-    {
-      c_print("Impossibile scrivere missioni su disco!!!", red, P);
-    }
-    else
-    {
-      //   missions_file << missions;
-      write_missions(missions_file, missions);
-    }
-    missions_file.close();
+    write_missions_on_file();
   }
 
   // GENERAZIONE PERCORSI
   static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
-  // if (GENERATION != "file")
-  if (true)
-  {
-    paths = path_partition(token);
-  }
-  else if (name == "GlobalTaskPlanner" ||
-           name == "GreedyTaskPlanner")  // se leggo da file e uso algoritmo global leggo i percorsi da disco
-  {
-    std::string filename("paths_file.txt");
-    boost::filesystem::path paths_path(filename);
-    if (!boost::filesystem::exists(paths_path))
-    {
-      c_print("File percorsi ", filename, " non esistente!!!", red, P);
-      sleep(1);
-      ros::shutdown();
-      system("./stop_experiment.sh");
-    }
+  paths = path_partition(token);
 
-    ifstream paths_file(filename);
-    paths_file >> paths;
-    if (paths.size() != TEAM_SIZE)
-    {
-      c_print("Numero robot incoerente!!! TEAMSIZE: ", TEAM_SIZE, " file: ", paths.size(), red, P);
-    }
-    paths_file.close();
-
-    // prendo statistiche per token
-    filename = "stats_file.txt";
-    boost::filesystem::path stats_path(filename);
-    if (!boost::filesystem::exists(stats_path))
-    {
-      c_print("File statistiche ", filename, " non esistente!!!", red, P);
-      sleep(1);
-      ros::shutdown();
-      system("./stop_experiment.sh");
-    }
-
-    ifstream stats_file(filename);
-    int n;
-    stats_file >> n;
-    if (n != TEAM_SIZE)
-    {
-      c_print("Numero robot incoerente!!! TEAMSIZE: ", TEAM_SIZE, " file: ", n, red, P);
-    }
-    for (int i = 0; i < TEAM_SIZE; i++)
-    {
-      uint m, t;
-      stats_file >> m;
-      stats_file >> t;
-      token.MISSIONS_COMPLETED.push_back(m);
-      token.TASKS_COMPLETED.push_back(t);
-    }
-    stats_file.close();
-  }
   // for(int i=0; i<TEAM_SIZE; i++)
   // {
   //     std::cout << "Robot " << i << " path:\n";
@@ -659,7 +470,6 @@ void TaskPlanner::init(int argc, char **argv)
     ros::Duration(1, 0).sleep();
     ros::spinOnce();
   }
-  // sleep(10);
 
   // giro di inizializzazione
   token.ID_SENDER = TASK_PLANNER_ID;
@@ -721,7 +531,7 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
 
 logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 {
-  static uint d[3] = { 0, 0, 0 };
+  static uint d[3] = {0, 0, 0};
   logistic_sim::Mission m;
   m.PICKUP = false;
   m.ID = id;
@@ -1040,4 +850,60 @@ bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req, logistic_s
   return true;
 }
 
-}  // namespace taskplanner
+void TaskPlanner::write_missions_on_file(std::string filename)
+{
+
+  // scrivo le partizioni generate su file
+  boost::filesystem::path results_directory("results");
+  if (!boost::filesystem::exists(results_directory))
+  {
+    boost::filesystem::create_directory(results_directory);
+  }
+
+  std::stringstream conf_dir_name;
+  conf_dir_name << "results";
+  //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
+  boost::filesystem::path conf_directory(conf_dir_name.str());
+  if (!boost::filesystem::exists(conf_directory))
+  {
+    boost::filesystem::create_directory(conf_directory);
+  }
+
+  conf_dir_name << "/missions";
+  conf_directory = boost::filesystem::path(conf_dir_name.str());
+  if (!boost::filesystem::exists(conf_directory))
+  {
+    boost::filesystem::create_directory(conf_directory);
+  }
+
+  if (filename == "")
+  {
+    int run_number = 1;
+    std::stringstream filenamestream;
+    std::ifstream check_new;
+    // loop per controllare se il file già esiste
+    do
+    {
+      filenamestream.str(""); // cancella la stringa
+      filenamestream << conf_dir_name.str() << "/" << run_number << ".txt";
+      check_new = std::ifstream(filenamestream.str());
+      run_number++;
+    } while (check_new);
+    check_new.close();
+    filename = filenamestream.str();
+  }
+
+  ofstream missions_file(filename);
+  if (missions_file.fail())
+  {
+    c_print("Impossibile scrivere missioni su disco!!!", red, P);
+  }
+  else
+  {
+    //   missions_file << missions;
+    write_missions(missions_file, missions);
+  }
+  missions_file.close();
+}
+
+} // namespace taskplanner

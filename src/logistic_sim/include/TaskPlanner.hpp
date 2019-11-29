@@ -156,6 +156,8 @@ protected:
     ros::Subscriber sub_token;
     ros::Publisher pub_token;
     std::string name;
+
+    void write_missions_on_file(std::string filename = "");
 };
 
 } // namespace taskplanner
