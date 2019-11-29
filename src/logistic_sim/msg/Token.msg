@@ -7,6 +7,8 @@ bool        INIT
 bool        ALLOCATE
 bool        CHECK   # controllo validità percorsi
 bool        CALCULATE_PATHS
+bool        NEW_MISSIONS_AVAILABLE
+bool        GOOD_PATHS  # percorsi contenuti nel token validi
 
 Mission[]   MISSION
 int32[]     TAKEN_MISSION   # usato da CFree per tenere traccia dell'assegnamento missioni
@@ -42,7 +44,6 @@ uint32[]    GOAL_STATUS
 Path[]      TRAILS
 uint32      INIT_POS_INDEX
 bool[]      REACHED_HOME
-bool        GOOD_PATHS
 int32       ACTIVE_ROBOTS
 
 # flag per terminazione simulazione
