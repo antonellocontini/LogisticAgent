@@ -43,12 +43,6 @@ void OnlineTaskPlanner::init(int argc, char **argv)
         paths.push_back(std::vector<uint>(result, result + result_size));
     }
 
-    // avvio servizio
-    robots_ready_status = std::vector<bool>(TEAM_SIZE);
-    ros::NodeHandle nh;
-    ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
-    ros::spinOnce();
-
     allocate_memory();
     missions_generator(GENERATION);
 

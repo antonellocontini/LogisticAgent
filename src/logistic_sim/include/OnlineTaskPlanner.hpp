@@ -5,6 +5,8 @@
 namespace onlinetaskplanner
 {
 
+const std::string PS_path = ros::package::getPath("logistic_sim");
+
 class OnlineTaskPlanner : public taskplanner::TaskPlanner
 {
 public:
