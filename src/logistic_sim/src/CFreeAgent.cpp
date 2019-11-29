@@ -90,23 +90,23 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     token.TRAILS.push_back(p);
     if (ID_ROBOT == TEAM_SIZE - 1)
     {
-      token.STEP = true;
+      token.ALLOCATE = true;
     }
     token.REACHED_HOME.push_back(false);
     token.ACTIVE_ROBOTS = TEAM_SIZE;
 
     initialize = false;
   }
-  else if (msg->STEP)
+  else if (msg->ALLOCATE)
   {
-    std::cout << "Inizio fase step" << std::endl;
+    std::cout << "Inizio fase allocazione" << std::endl;
     // static std::vector<logistic_sim::Mission> missions;
     // if (!token.MISSION.empty())
 
     std::cout << "robot attivi: " << token.ACTIVE_ROBOTS << std::endl;
     if (token.ACTIVE_ROBOTS == 0)
     {
-      std::cout << "Impossibile trovare percorso anche con un solo robot!!!" << std::endl;
+      std::cout << "Impossibile allocare missioni anche con un solo robot!!!" << std::endl;
       token.END_SIMULATION = true;
       token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
       token.TASKS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
@@ -185,7 +185,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     if (taken_missions_count(token) == token.MISSION.size() && ID_ROBOT == TEAM_SIZE - 1)
     {
       std::cout << "Tutti hanno preso le missioni" << std::endl;
-      token.STEP = false;
+      token.ALLOCATE = false;
       token.CALCULATE_PATHS = true;
       token.GOOD_PATHS = true;
     }
@@ -289,7 +289,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
           path_calculated = true;
           if (ID_ROBOT == TEAM_SIZE - 1)
           {
-            token.STEP = false;
+            token.ALLOCATE = false;
             token.CALCULATE_PATHS = false;
           }
         }
@@ -304,10 +304,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
             token.ACTIVE_ROBOTS--;
           }
 
-          // se sono l'ultimo robot devo attivare la fase STEP
+          // se sono l'ultimo robot devo attivare la fase ALLOCATE
           if (ID_ROBOT == TEAM_SIZE - 1)
           {
-            token.STEP = true;
+            token.ALLOCATE = true;
             token.CALCULATE_PATHS = false;
           }
           // std::cout << e << std::endl;
@@ -334,10 +334,10 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
     }
     else // un robot precedente non ha trovato un percorso valido
     {
-      // se sono l'ultimo attivo la fase STEP
+      // se sono l'ultimo attivo la fase ALLOCATE
       if (ID_ROBOT == TEAM_SIZE - 1)
       {
-        token.STEP = true;
+        token.ALLOCATE = true;
         token.CALCULATE_PATHS = false;
       }
     }

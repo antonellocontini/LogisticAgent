@@ -4,13 +4,12 @@ uint32      ID_RECEIVER
 # flag di stato
 # TODO: unire in un solo campo uint32
 bool        INIT
-bool        STEP
-bool        CHECK
+bool        ALLOCATE
+bool        CHECK   # controllo validità percorsi
 bool        CALCULATE_PATHS
 
 Mission[]   MISSION
-Mission[]   ASSIGNED_MISSION
-int32[]     TAKEN_MISSION
+int32[]     TAKEN_MISSION   # usato da CFree per tenere traccia dell'assegnamento missioni
 
 # posizioni dei robot nella mappa
 float64[]   X_POS
