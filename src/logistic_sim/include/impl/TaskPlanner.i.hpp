@@ -372,7 +372,7 @@ vector<logistic_sim::Mission> TaskPlanner::read_missions(istream &is)
 
 TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(name)
 {
-  sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_Callback, this);
+  sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_callback, this);
   pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
 
   nh_.setParam("/simulation_running", "true");
@@ -394,14 +394,9 @@ void TaskPlanner::init(int argc, char **argv)
   TEAM_SIZE = atoi(argv[3]);
   GENERATION = argv[4];
   TEAM_CAPACITY = atoi(argv[5]);
-  std::stringstream ss(argv[6]);
-  if (!(ss >> std::boolalpha >> PERMUTATIONS))
-  {
-    c_print("Manca booleano PERMUTATIONS", red, P);
-  }
 
   // PARAMETRO TASKSET
-  task_set_file = argv[7];
+  task_set_file = argv[6];
 
   src_vertex = map_src[mapname];
   dst_vertex = map_dsts[mapname];
@@ -548,7 +543,6 @@ void TaskPlanner::init(int argc, char **argv)
     }
 
     std::stringstream conf_dir_name;
-    std::string global = PERMUTATIONS ? "global" : "local";
     conf_dir_name << "results";
                   //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
     boost::filesystem::path conf_directory(conf_dir_name.str());
@@ -907,7 +901,7 @@ void TaskPlanner::missions_generator(std::string &type_gen)
   }
 }
 
-void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
+void TaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
   static int last_mission_size = 0;
   static vector<int> last_interf_count;
@@ -992,7 +986,6 @@ void TaskPlanner::token_Callback(const logistic_sim::TokenConstPtr &msg)
       }
 
       std::stringstream conf_dir_name;
-      std::string global = PERMUTATIONS ? "global" : "local";
       conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots
                     << "capacity" << CAPACITY[0] << "_" << mapname;
       boost::filesystem::path conf_directory(conf_dir_name.str());

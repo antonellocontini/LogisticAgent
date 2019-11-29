@@ -107,7 +107,6 @@ public:
 
     vector<MonitorData> robots_data;
     bool first_round = true;
-    bool PERMUTATIONS;
     int num_robots, robots_ready_count = 0;
     vector<bool> robots_ready_status;
 
@@ -145,7 +144,7 @@ public:
 
     void init(int argc, char **argv);
 
-    virtual void token_Callback(const logistic_sim::TokenConstPtr &msg);
+    virtual void token_callback(const logistic_sim::TokenConstPtr &msg);
 
     bool robot_ready(logistic_sim::RobotReady::Request &req,
                      logistic_sim::RobotReady::Response &res);

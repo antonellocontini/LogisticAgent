@@ -83,7 +83,7 @@ function launch_robots {
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
 	if [ $DEBUG = true ] ; then
-		tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM $MISSIONS_FILE" C-m
+		tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
 	else
 		tmux send-keys "rosrun logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $PERM $MISSIONS_FILE" C-m
 	fi
