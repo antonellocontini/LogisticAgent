@@ -85,7 +85,7 @@ void GetGraphInfo(vertex *vertex_web, uint dimension, const char *graph_file)
       for (j = 0; j < vertex_web[i].num_neigh; j++)
       {
         r = fscanf(file, "%u", &vertex_web[i].id_neigh[j]);
-        r = fscanf(file, "%s", &vertex_web[i].dir[j]);
+        r = fscanf(file, "%s", vertex_web[i].dir[j]);
         r = fscanf(file, "%u", &vertex_web[i].cost[j]); //can eventually be converted to meters also...
       }
     }

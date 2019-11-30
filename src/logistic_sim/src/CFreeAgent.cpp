@@ -112,7 +112,7 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr& msg)
       token.TASKS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
       token.INIT_POS.clear();
       ros::shutdown();
-      system("./stop_experiment.sh");
+      int cmd_result = system("./stop_experiment.sh");
     }
     else if (ID_ROBOT < token.ACTIVE_ROBOTS) // guardo se sono tra i robot attivi
     {

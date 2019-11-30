@@ -381,7 +381,7 @@ TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(n
 void TaskPlanner::init(int argc, char **argv)
 {
   srand(time(NULL));
-  chdir(PS_path.c_str());
+  int cmd_result = chdir(PS_path.c_str());
   mapname = string(argv[1]);
   std::string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
   dimension = GetGraphDimension(graph_file.c_str());
@@ -692,7 +692,7 @@ void TaskPlanner::missions_generator(std::string &type_gen)
       c_print("File missioni ", filename, " non esistente!!!", red, P);
       sleep(1);
       ros::shutdown();
-      system("./stop_experiment.sh");
+      int cmd_result = system("./stop_experiment.sh");
     }
     ifstream missions_file(filename);
     // missions_file >> missions;
@@ -832,7 +832,7 @@ void TaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
   if (token.END_SIMULATION)
   {
     ros::shutdown();
-    system("./stop_experiment.sh");
+    int cmd_result = system("./stop_experiment.sh");
   }
 }
 

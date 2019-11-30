@@ -1,7 +1,7 @@
 #pragma once
 
 template <typename Elem>
-std::auto_ptr<std::vector<std::vector<Elem>>>
+std::unique_ptr<std::vector<std::vector<Elem>>>
     partition::iterator::
     operator[](const std::vector<Elem> &v)
         const
@@ -12,7 +12,7 @@ std::auto_ptr<std::vector<std::vector<Elem>>>
   for (unsigned i = 0; i < size(); ++i)
     (*part)[kappa[i]].push_back(v[i]);
 
-  return std::auto_ptr<std::vector<std::vector<Elem>>>(part);
+  return std::unique_ptr<std::vector<std::vector<Elem>>>(part);
 }
 
 std::ostream &

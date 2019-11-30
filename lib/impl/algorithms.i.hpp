@@ -2603,7 +2603,7 @@ uint get_MSP_dimension (const char* msp_file) {
 		ROS_BREAK();	
 	}else{
 		ROS_INFO("MSP Route File Opened. Reading Dimensions.\n");
-		fscanf (file, "%u", &dimension);
+		int result = fscanf (file, "%u", &dimension);
 	}
 	fclose(file);
 	return dimension;
@@ -2625,11 +2625,11 @@ void get_MSP_route (uint *route, uint dimension, const char* msp_file) {
       
       //Start Reading the File from the second line On:
       //Start Reading the File from FIRST_VID On:
-	fscanf (file, "%f", &temp);   
+	int result = fscanf (file, "%f", &temp);   
 
       
       for (i=0;i<dimension;i++){	
-	fscanf (file, "%u", &route[i]);	
+	result = fscanf (file, "%u", &route[i]);	
       }     
       
    }
@@ -2724,15 +2724,16 @@ void load_real_histogram(double *real_histogram, uint size_hist, char* filename)
     if (file!=NULL){ 
      
        //ignore first three lines:
-	fgets (inicio , 128 , file);
-	fgets (inicio , 128 , file);      
-	fgets (inicio , 128 , file);
+	char* valid;
+	valid = fgets (inicio , 128 , file);
+	valid = fgets (inicio , 128 , file);      
+	valid = fgets (inicio , 128 , file);
       
       for (i=0; i<size_hist; i++){ 		//"%f(%d)-%f(%d)\t%f\t%f"	
 	//fscanf(file, "%f\t", &a);      
-	fscanf(file, "%d(%d)-%d(%d)", &a, &d, &e, &f);
-	fscanf(file, "%f\t", &b);
-	fscanf(file, "%f", &c);
+	int result = fscanf(file, "%d(%d)-%d(%d)", &a, &d, &e, &f);
+	result = fscanf(file, "%f\t", &b);
+	result = fscanf(file, "%f", &c);
 	real_histogram[i] = c;
       }
       

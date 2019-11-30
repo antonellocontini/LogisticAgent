@@ -59,7 +59,7 @@ public:
     iterator &operator--();
 
     template <typename Elem>
-    std::auto_ptr<std::vector<std::vector<Elem>>>
+    std::unique_ptr<std::vector<std::vector<Elem>>>
     operator[](const std::vector<Elem> &v) const;
 
   protected:

@@ -31,7 +31,7 @@ void Agent::init(int argc, char** argv) {
     c_print("C and TS:", CAPACITY, TEAM_SIZE, green);
     
     /** D.Portugal: needed in case you "rosrun" from another folder **/     
-    chdir(PS_path.c_str());
+    int cmd_result = chdir(PS_path.c_str());
                 
     mapname = string(argv[2]);
     std::string graph_file = "maps/"+mapname+"/"+mapname+".graph";
