@@ -1,6 +1,9 @@
 Header      header
 bool        PICKUP
 uint32      ID
+# usato da OnlineTaskPlanner e OnlineAgent
+# per identificare a quale finestra appartiene il task
+uint32      WINDOW_ID
 uint32      PRIORITY
 uint32[]    ITEM
 uint32[]    ROUTE
