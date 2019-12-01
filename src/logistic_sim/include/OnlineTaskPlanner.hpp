@@ -104,6 +104,12 @@ public:
     void run();
     void token_callback(const logistic_sim::TokenConstPtr &msg) override;
     std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
+    // definito per come ros vuole il tipo della funzione, chiamo quella della base class
+    bool robot_ready(logistic_sim::RobotReady::Request &req,
+                     logistic_sim::RobotReady::Response &res)
+    {
+        return TaskPlanner::robot_ready(req, res);
+    }
 protected:
     int window_size = 9;
     std::vector<std::vector<logistic_sim::Mission>> mission_windows;

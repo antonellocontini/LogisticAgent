@@ -43,6 +43,12 @@ void OnlineTaskPlanner::init(int argc, char **argv)
         paths.push_back(std::vector<uint>(result, result + result_size));
     }
 
+    // avvio servizio
+    robots_ready_status = std::vector<bool>(TEAM_SIZE);
+    ros::NodeHandle nh;
+    ros::ServiceServer service = nh.advertiseService("robot_ready", &OnlineTaskPlanner::robot_ready, this);
+    ros::spinOnce();
+
     allocate_memory();
     missions_generator(GENERATION);
 
@@ -64,6 +70,20 @@ void OnlineTaskPlanner::init(int argc, char **argv)
         std::cout << std::endl;
     }
 
+    // inizializzo strutture statistiche
+    for (int i = 0; i < TEAM_SIZE; i++)
+    {
+        taskplanner::MonitorData data;
+        robots_data.push_back(data);
+    }
+
+    // aspetto che arrivino gli agenti
+    while (robots_ready_count < TEAM_SIZE)
+    {
+        ros::Duration(1, 0).sleep();
+        ros::spinOnce();
+    }
+
     logistic_sim::Token token;
 
     // giro di inizializzazione
@@ -71,6 +91,7 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     token.ID_RECEIVER = 0;
     token.INIT = true;
     token.NEW_MISSIONS_AVAILABLE = false;
+    token.SHUTDOWN = false;
 
     pub_token.publish(token);
     ros::spinOnce();
@@ -110,26 +131,126 @@ void OnlineTaskPlanner::run()
     ros::waitForShutdown();
 }
 
+/*
+ * qua gestisco la raccolta delle statistiche (come sempre)
+ * inoltre devo gestire l'inserimento di nuovi task multi-item
+ * quando sono pronti (necessario meccanismo di sincronizzazione)
+ * 
+ * una volta inseriti i nuovi task nel token si abilita una flag
+ * che indica agli agenti che nuovi task sono stati inseriti e che
+ * devono allocare e pianificare
+ * 
+ * per ora facciamo tornare gli agenti a casa alla fine di ogni
+ * finestra quindi non ci dovrebbero essere problemi con la pianificazione
+ * 
+ * deve sempre valere il solito meccanismo di rimozione robot in
+ * caso di fallimento
+ * 
+ * con una nuova finestra i robot spenti devono essere
+ * riabilitati
+ */
 void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
-    /*
-     * qua gestisco la raccolta delle statistiche (come sempre)
-     * inoltre devo gestire l'inserimento di nuovi task multi-item
-     * quando sono pronti (necessario meccanismo di sincronizzazione)
-     * 
-     * una volta inseriti i nuovi task nel token si abilita una flag
-     * che indica agli agenti che nuovi task sono stati inseriti e che
-     * devono allocare e pianificare
-     * 
-     * per ora facciamo tornare gli agenti a casa alla fine di ogni
-     * tranche quindi non ci dovrebbero essere problemi con la pianificazione
-     * 
-     * deve sempre valere il solito meccanismo di rimozione robot in
-     * caso di fallimento
-     * 
-     * cosa nuova con una nuova tranche i robot spenti devono essere
-     * riabilitati
-     */
+    static int last_mission_size = 0;
+    if (msg->ID_RECEIVER != TASK_PLANNER_ID)
+        return;
+
+    logistic_sim::Token token;
+    token = *msg;
+    token.ID_SENDER = TASK_PLANNER_ID;
+    token.ID_RECEIVER = 0;
+    if (msg->INIT)
+    {
+        token.HEADER.seq = 1;
+        CAPACITY = msg->CAPACITY;
+        token.INIT = false;
+        token.END_SIMULATION = false;
+        start_time = ros::Time::now();
+        last_mission_size = 0;
+    }
+    else
+    {
+        token.HEADER.seq += 1;
+
+        // stampa task rimanenti
+        if (token.MISSION.size() != last_mission_size)
+        {
+            last_mission_size = token.MISSION.size();
+            c_print("Task rimanenti: ", last_mission_size, green);
+        }
+
+        // se c'è una nuova finestra pronta la aggiungo al token
+        window_mutex.lock();
+        // la flag viene messa a false dagli agenti quando
+        // hanno finito di distribuirsi le nuove missioni
+        if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
+        {
+            token.MISSION = mission_windows.back();
+            mission_windows.pop_back();
+            token.NEW_MISSIONS_AVAILABLE = true;
+        }
+        window_mutex.unlock();
+
+        // aggiorno la mia struttura con i dati del token
+        for (int i = 0; i < num_robots; i++)
+        {
+            robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
+            robots_data[i].completed_missions = token.MISSIONS_COMPLETED[i];
+            robots_data[i].completed_tasks = token.TASKS_COMPLETED[i];
+            robots_data[i].tot_distance = token.TOTAL_DISTANCE[i];
+            robots_data[i].total_time = (ros::Time::now() - start_time).sec;
+        }
+
+        // all'uscita scrivo le statistiche su disco
+        if (token.SHUTDOWN)
+        {
+            boost::filesystem::path results_directory("results");
+            if (!boost::filesystem::exists(results_directory))
+            {
+                boost::filesystem::create_directory(results_directory);
+            }
+
+            std::stringstream conf_dir_name;
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots
+                          << "capacity" << CAPACITY[0] << "_" << mapname;
+            boost::filesystem::path conf_directory(conf_dir_name.str());
+            if (!boost::filesystem::exists(conf_directory))
+            {
+                boost::filesystem::create_directory(conf_directory);
+            }
+
+            int run_number = 1;
+            std::stringstream filename;
+            std::ifstream check_new;
+            if (GENERATION != "file")
+            {
+                // loop per controllare se il file già esiste
+                do
+                {
+                    filename.str(""); // cancella la stringa
+                    filename << conf_dir_name.str() << "/" << run_number << ".csv";
+                    check_new = std::ifstream(filename.str());
+                    run_number++;
+                } while (check_new);
+                check_new.close();
+            }
+            else
+            {
+                filename << conf_dir_name.str() << "/" << task_set_file << ".csv";
+            }
+
+            ofstream stats(filename.str());
+            stats << robots_data;
+            stats.close();
+            ros::NodeHandle nh;
+            nh.setParam("/simulation_running", "false");
+            ros::shutdown();
+            int cmd_result = system("./stop_experiment.sh");
+        }
+    }
+
+    pub_token.publish(token);
+    ros::spinOnce();
 }
 
 std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
@@ -173,15 +294,15 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                 // calcolo la lunghezza del percorso di questa missione
                 // per poter stimare la metrica V
                 std::vector<uint> path;
-                for(auto it = candidate_subset.DSTS.begin(); it+1 != candidate_subset.DSTS.end(); it++)
+                for (auto it = candidate_subset.DSTS.begin(); it + 1 != candidate_subset.DSTS.end(); it++)
                 {
                     int dijkstra_result[64];
                     uint dijkstra_size;
-                    dijkstra(*it, *(it+1), dijkstra_result, dijkstra_size, vertex_web, dimension);
-                    path.insert(path.end(), dijkstra_result, dijkstra_result+dijkstra_size);
+                    dijkstra(*it, *(it + 1), dijkstra_result, dijkstra_size, vertex_web, dimension);
+                    path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
                 }
                 candidate_subset.PATH_DISTANCE = compute_cost_of_route(path);
-                candidate_subset.V = (double) candidate_subset.PATH_DISTANCE / (double) candidate_subset.TOT_DEMAND;
+                candidate_subset.V = (double)candidate_subset.PATH_DISTANCE / (double)candidate_subset.TOT_DEMAND;
 
                 candidate.second.V += candidate_subset.V;
 
