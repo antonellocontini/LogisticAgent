@@ -43,6 +43,7 @@ float32[]   TOTAL_DISTANCE
 # campi per GlobalAgent
 uint32[]    GOAL_STATUS
 Path[]      TRAILS
+Path[]      NEW_TRAILS
 uint32      INIT_POS_INDEX
 bool[]      REACHED_HOME
 int32       ACTIVE_ROBOTS

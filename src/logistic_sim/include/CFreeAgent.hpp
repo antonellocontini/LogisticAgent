@@ -47,7 +47,6 @@ protected:
   st_location *queue;
   const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 150U, MAX_WAYPOINTS = 64U;
 
-public:
   void allocate_memory()
   {
     std::cout << "allocating memory..." << std::endl;
@@ -81,6 +80,7 @@ public:
 
     queue = new st_location[MAX_TIME * MAX_TIME];
   }
+public:
   
   ~CFreeAgent()
   {
@@ -117,6 +117,6 @@ public:
                                                const std::vector<unsigned int> &waypoints,
                                                const std::vector<bool> &still_robots);
 };
-}  // namespace spartagent
+}  // namespace cfreeagent
 
 #include "impl/CFreeAgent.i.hpp"
