@@ -191,6 +191,12 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         }
         window_mutex.unlock();
 
+        // se non ci sono più missioni da inserire si indica nel token
+        if (missions.empty())
+        {
+            token.ALL_MISSIONS_INSERTED = true;
+        }
+
         // aggiorno la mia struttura con i dati del token
         for (int i = 0; i < num_robots; i++)
         {

@@ -196,6 +196,23 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             token.GOAL_STATUS[ID_ROBOT]++;
 
             // TODO: bisogna gestire condizione di terminazione
+            if (token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
+            {
+                token.REACHED_HOME[ID_ROBOT] = true;
+                bool can_exit = true;
+                for (int i = 0; i < TEAM_SIZE; i++)
+                {
+                    if (!token.REACHED_HOME[i])
+                    {
+                        can_exit = false;
+                        break;
+                    }
+                }
+                if (can_exit)
+                {
+                    token.SHUTDOWN = true;
+                }
+            }
         }
         current_vertex = next_vertex;
 

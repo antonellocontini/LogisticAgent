@@ -10,6 +10,7 @@ bool        CALCULATE_PATHS
 bool        NEW_MISSIONS_AVAILABLE
 bool        GOOD_PATHS  # percorsi contenuti nel token validi
 bool        SHUTDOWN    # termina simulazione (per ora usato solo da Online)
+bool        ALL_MISSIONS_INSERTED
 
 Mission[]   MISSION
 int32[]     TAKEN_MISSION   # usato da CFree per tenere traccia dell'assegnamento missioni
