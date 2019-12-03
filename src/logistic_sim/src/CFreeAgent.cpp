@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
 {
   cfreeagent::CFreeAgent CFA;
   CFA.init(argc, argv);
-  c_print("@ SPART", green);
+  c_print("@ CFREE", green);
   sleep(3);
   CFA.run();
   return 0;

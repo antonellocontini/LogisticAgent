@@ -41,6 +41,8 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         c_print("Inizializzazione...", green, P);
         token.CAPACITY.push_back(CAPACITY);
         token.INIT_POS.push_back(initial_vertex);
+        token.CURR_VERTEX.push_back(initial_vertex);
+        token.NEXT_VERTEX.push_back(initial_vertex);
         token.MISSION_START_TIME.push_back(ros::Time::now());
         token.MISSION_CURRENT_DISTANCE.push_back(0.0f);
         token.INTERFERENCE_COUNTER.push_back(0);
@@ -53,55 +55,35 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         logistic_sim::Path p;
         p.PATH = std::vector<uint>(1, initial_vertex);
         token.TRAILS.push_back(p);
+        token.NEW_TRAILS.push_back(p);
         token.REACHED_HOME.push_back(false);
         token.ACTIVE_ROBOTS = TEAM_SIZE;
 
         initialize = false;
+        next_vertex = current_vertex = initial_vertex;
+        sendGoal(initial_vertex);
     }
 
-    if (msg->ALLOCATE)
-    {
-        c_print("Allocazione task...", green, P);
-        if (token.ACTIVE_ROBOTS == 0)
-        {
-            c_print("Impossibile allocare missioni anche con un solo robot", red, P);
-            // mando il token al taskplanner segnalando la terminazione
-            token.SHUTDOWN = true;
-        }
-        else if (ID_ROBOT < token.ACTIVE_ROBOTS) // robot attivo
-        {
-            // prendo una missione tra quelle disponibili
-            auto it = token.TAKEN_MISSION.begin();
-            for (; it != token.TAKEN_MISSION.end(); it++)
-            {
-                int i = it - token.TAKEN_MISSION.begin();
-                if (*it == -1)
-                {
-                    break;
-                }
-            }
-
-            // trovata una missione non assegnata
-            if (it != token.TAKEN_MISSION.end())
-            {
-                logistic_sim::Mission m;
-                missions.push_back(m);
-            }
-            else if (ID_ROBOT == TEAM_SIZE - 1) // tutte le missioni sono state assegnate
-            {
-                c_print("Missioni assegnate", green, P);
-                token.ALLOCATE = false;
-                token.GOOD_PATHS = true;
-                token.CALCULATE_PATHS = true;
-            }
-        }
-    }
-    else if (msg->CALCULATE_PATHS)
+    if (msg->CALCULATE_PATHS)
     {
         if (msg->GOOD_PATHS && ID_ROBOT < token.ACTIVE_ROBOTS)
         {
+            c_print("Pianificazione percorsi...", green, P);
+
+            // riempo vettore missions
+            missions.clear();
+            for (auto it = token.TAKEN_MISSION.begin(); it != token.TAKEN_MISSION.end(); it++)
+            {
+                if (*it == ID_ROBOT)
+                {
+                    int index = it - token.TAKEN_MISSION.begin();
+                    missions.push_back(token.MISSION[index]);
+                }
+            }
+
+            // creo il vettore di waypoints
             uint init_pos = initial_vertex;
-            std::vector<uint> waypoints = {current_vertex};
+            std::vector<uint> waypoints = {token.TRAILS[ID_ROBOT].PATH.back()};
             for (logistic_sim::Mission &m : missions)
             {
                 waypoints.push_back(src_vertex);
@@ -113,19 +95,31 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             waypoints.push_back(init_pos);
             try
             {
-                std::vector<unsigned int> path = spacetime_dijkstra(token.TRAILS, map_graph, waypoints, std::max(0UL, token.TRAILS[ID_ROBOT].PATH.size() - 1));
-                token.NEW_TRAILS[ID_ROBOT].PATH = path;
+                if (token.TRAILS[ID_ROBOT].PATH.empty())
+                {
+                    c_print("[WARN]\tPercorso vuoto!", yellow, P);
+                }
+
+                std::vector<uint> path =
+                    spacetime_dijkstra(token.NEW_TRAILS, map_graph, waypoints,
+                                       token.NEW_TRAILS[ID_ROBOT].PATH.size() - 1);
+                token.NEW_TRAILS[ID_ROBOT].PATH.pop_back();
+                token.NEW_TRAILS[ID_ROBOT].PATH.insert(
+                    token.NEW_TRAILS[ID_ROBOT].PATH.end(),
+                    path.begin(), path.end());
 
                 // l'ultimo robot attivo pusha i nuovi percorsi
                 if (ID_ROBOT == token.ACTIVE_ROBOTS - 1)
                 {
-                    for (int i = 0; i < TEAM_SIZE; i++)
+                    c_print("Percorsi calcolati!", green, P);
+                    for (int i = 0; i < token.ACTIVE_ROBOTS; i++)
                     {
-                        token.TRAILS[i].PATH.insert(
-                            token.TRAILS[i].PATH.end(),
-                            token.NEW_TRAILS[i].PATH.begin(),
-                            token.NEW_TRAILS[i].PATH.end());
+                        token.TRAILS[i].PATH = token.NEW_TRAILS[i].PATH;
                     }
+
+                    // segnalo al planner che sono stati distribuiti i task
+                    token.NEW_MISSIONS_AVAILABLE = false;
+                    token.CALCULATE_PATHS = false;
                 }
             }
             catch (const std::string &e)
@@ -137,8 +131,6 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
         if (!token.GOOD_PATHS)
         {
-            missions.clear();
-
             if (ID_ROBOT == TEAM_SIZE - 1)
             {
                 token.ACTIVE_ROBOTS--;
@@ -148,98 +140,151 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
         }
     }
-
-    // avanzamento dei robot
-
-    // aggiorno posizioni dei robot nel token
-    token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
-    token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
-    for (int i = 0; i < TEAM_SIZE; i++)
+    else if (msg->ALLOCATE)
     {
-        if (i != ID_ROBOT)
+        if (token.ACTIVE_ROBOTS == 0)
         {
-            xPos[i] = token.X_POS[i];
-            yPos[i] = token.Y_POS[i];
+            c_print("Impossibile allocare missioni anche con un solo robot", red, P);
+            // mando il token al taskplanner segnalando la terminazione
+            token.SHUTDOWN = true;
+        }
+        else if (ID_ROBOT < token.ACTIVE_ROBOTS) // robot attivo
+        {
+            c_print("Allocazione task...", green, P);
+            // prendo una missione tra quelle disponibili
+            auto it = token.TAKEN_MISSION.begin();
+            int i;
+            for (; it != token.TAKEN_MISSION.end(); it++)
+            {
+                i = it - token.TAKEN_MISSION.begin();
+                if (*it == -1)
+                {
+                    break;
+                }
+            }
+
+            // trovata una missione non assegnata
+            if (it != token.TAKEN_MISSION.end())
+            {
+                *it = ID_ROBOT;
+            }
+            else if (ID_ROBOT == token.ACTIVE_ROBOTS - 1) // tutte le missioni sono state assegnate
+            {
+                c_print("Missioni assegnate", green, P);
+                token.ALLOCATE = false;
+                token.GOOD_PATHS = true;
+                token.CALCULATE_PATHS = true;
+                for (int i = 0; i < token.ACTIVE_ROBOTS; i++)
+                {
+                    token.NEW_TRAILS[i].PATH = token.TRAILS[i].PATH;
+                }
+            }
         }
     }
-
-    // metto nel token quale arco sto occupando
-    token.CURR_VERTEX[ID_ROBOT] = current_vertex;
-    token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
-
-    // gestisco l'arrivo al goal
-    if (goal_complete)
+    else
     {
-        static bool first_time = true;
-
-        if (first_time)
+        // se ci sono nuove missioni disponibili bisogna allocarle
+        if (ID_ROBOT == TEAM_SIZE - 1 && msg->NEW_MISSIONS_AVAILABLE)
         {
-            // aggiorno distanza percorsa nel token
-            uint edge_length = 0;
-            if (current_vertex < dimension)
-            {
-                for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
-                {
-                    if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
-                    {
-                        edge_length += vertex_web[current_vertex].cost[i];
-                        break;
-                    }
-                }
-            }
-            token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
-
-            if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
-            {
-                token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
-            }
-            token.GOAL_STATUS[ID_ROBOT]++;
-
-            // TODO: bisogna gestire condizione di terminazione
-            if (token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
-            {
-                token.REACHED_HOME[ID_ROBOT] = true;
-                bool can_exit = true;
-                for (int i = 0; i < TEAM_SIZE; i++)
-                {
-                    if (!token.REACHED_HOME[i])
-                    {
-                        can_exit = false;
-                        break;
-                    }
-                }
-                if (can_exit)
-                {
-                    token.SHUTDOWN = true;
-                }
-            }
-        }
-        current_vertex = next_vertex;
-
-        bool equal_status = true;
-        int status = token.GOAL_STATUS[0];
-        for (int i = 1; i < TEAM_SIZE; i++)
-        {
-            if (token.GOAL_STATUS[i] != status)
-                equal_status = false;
+            token.ALLOCATE = true;
         }
 
-        if (equal_status)
+        // avanzamento dei robot
+
+        // aggiorno posizioni dei robot nel token
+        token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
+        token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
+        for (int i = 0; i < TEAM_SIZE; i++)
         {
-            first_time = true;
-            if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+            if (i != ID_ROBOT)
             {
-                goal_complete = false;
-                next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                xPos[i] = token.X_POS[i];
+                yPos[i] = token.Y_POS[i];
             }
-            else
+        }
+
+        // metto nel token quale arco sto occupando
+        token.CURR_VERTEX[ID_ROBOT] = current_vertex;
+        token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+
+        // gestisco l'arrivo al goal
+        if (goal_complete)
+        {
+            static bool first_time = true;
+
+            if (first_time)
             {
-                c_print("[ WARN]Don't know what to do!!!", yellow, P);
-                next_vertex = current_vertex;
+                // aggiorno distanza percorsa nel token
+                uint edge_length = 0;
+                if (current_vertex < dimension)
+                {
+                    for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
+                    {
+                        if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
+                        {
+                            edge_length += vertex_web[current_vertex].cost[i];
+                            break;
+                        }
+                    }
+                }
+                token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
+
+                if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+                {
+                    token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
+                }
+                token.GOAL_STATUS[ID_ROBOT]++;
+
+                // TODO: bisogna gestire condizione di terminazione
+                if (token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
+                {
+                    token.REACHED_HOME[ID_ROBOT] = true;
+                    bool can_exit = true;
+                    for (int i = 0; i < TEAM_SIZE; i++)
+                    {
+                        if (!token.REACHED_HOME[i])
+                        {
+                            can_exit = false;
+                            break;
+                        }
+                    }
+                    if (false)
+                    // if (can_exit)
+                    {
+                        c_print("Finiti tutti i task, esco!", magenta, P);
+                        token.SHUTDOWN = true;
+                    }
+                }
+
+                first_time = false;
             }
-            c_print("before OnGoal()", magenta);
-            c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
-            sendGoal(next_vertex);
+            current_vertex = next_vertex;
+
+            bool equal_status = true;
+            int status = token.GOAL_STATUS[0];
+            for (int i = 1; i < TEAM_SIZE; i++)
+            {
+                if (token.GOAL_STATUS[i] != status)
+                    equal_status = false;
+            }
+
+            if (equal_status)
+            {
+                first_time = true;
+                if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+                {
+                    goal_complete = false;
+                    next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+                }
+                else
+                {
+                    c_print("[ WARN]Don't know what to do!!!", yellow, P);
+                    next_vertex = current_vertex;
+                }
+                c_print("before OnGoal()", magenta);
+                c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
+                sendGoal(next_vertex);
+            }
         }
     }
 
@@ -254,6 +299,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     }
 }
 
+// genera un percorso fino all'ultimo waypoint
 std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logistic_sim::Path> &other_paths,
                                                           const std::vector<std::vector<unsigned int>> &graph,
                                                           const std::vector<unsigned int> &waypoints,
@@ -317,7 +363,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
     {
         st_location current_st = queue[--queue_size];
         unsigned int u = current_st.vertex;
-        unsigned int time = current_st.time;
+        unsigned int time = current_st.time - start_time;
         unsigned int current_waypoint = current_st.waypoint;
         unsigned int next_next_waypoint;
 
@@ -360,11 +406,11 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
             {
                 if (i != ID_ROBOT)
                 {
-                    if (next_time < other_paths[i].PATH.size())
+                    if (next_time + start_time < other_paths[i].PATH.size())
                     {
-                        if (other_paths[i].PATH[next_time] == u)
+                        if (other_paths[i].PATH[next_time + start_time] == u)
                         {
-                            std::cout << "can't stand in " << u << " at time " << time << std::endl;
+                            // std::cout << "can't stand in " << u << " at time " << time << std::endl;
                             good = false;
                             break;
                         }
@@ -373,7 +419,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
                     {
                         if (other_paths[i].PATH.back() == u)
                         {
-                            std::cout << "can't stand in " << u << " at time " << time << std::endl;
+                            // std::cout << "can't stand in " << u << " at time " << time << std::endl;
                             good = false;
                             break;
                         }
@@ -383,7 +429,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
 
             if (good)
             {
-                st_location next_st(u, next_time, next_next_waypoint);
+                st_location next_st(u, next_time + start_time, next_next_waypoint);
                 queue_size = insertion_sort(queue, queue_size, next_st);
                 visited[u][next_time][next_next_waypoint] = GRAY;
 
@@ -410,17 +456,17 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
                 {
                     if (i != ID_ROBOT)
                     {
-                        if (next_time < other_paths[i].PATH.size())
+                        if (next_time + start_time < other_paths[i].PATH.size())
                         {
-                            if (other_paths[i].PATH[next_time] == v)
+                            if (other_paths[i].PATH[next_time + start_time] == v)
                             {
-                                std::cout << "can't go in " << v << " at time " << time << std::endl;
+                                // std::cout << "can't go in " << v << " at time " << time << std::endl;
                                 good = false;
                                 break;
                             }
-                            if (other_paths[i].PATH[next_time] == u && other_paths[i].PATH[time] == v)
+                            if (other_paths[i].PATH[next_time + start_time] == u && other_paths[i].PATH[time + start_time] == v)
                             {
-                                std::cout << "can't go in " << v << " at time " << time << std::endl;
+                                // std::cout << "can't go in " << v << " at time " << time << std::endl;
                                 good = false;
                                 break;
                             }
@@ -429,7 +475,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
                         {
                             if (other_paths[i].PATH.back() == v)
                             {
-                                std::cout << "can't go in " << v << " at time " << time << ", there is a still robot" << std::endl;
+                                // std::cout << "can't go in " << v << " at time " << time << ", there is a still robot" << std::endl;
                                 good = false;
                                 break;
                             }
@@ -439,7 +485,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
 
                 if (good)
                 {
-                    st_location next_st(v, next_time, next_next_waypoint);
+                    st_location next_st(v, next_time + start_time, next_next_waypoint);
                     queue_size = insertion_sort(queue, queue_size, next_st);
                     visited[v][next_time][next_next_waypoint] = GRAY;
 
@@ -462,5 +508,10 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
 
 int main(int argc, char *argv[])
 {
+    onlineagent::OnlineAgent OA;
+    OA.init(argc, argv);
+    c_print("@ ONLINE", green);
+    sleep(3);
+    OA.run();
     return 0;
 }

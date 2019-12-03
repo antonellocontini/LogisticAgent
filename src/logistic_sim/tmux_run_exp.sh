@@ -1,10 +1,10 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=icelab_black
-NROBOTS=2
+MAP=grid
+NROBOTS=4
 INITPOS=default
-ALG=GlobalAgent
+ALG=OnlineAgent
 LOC=AMCL
 NAV=ros
 GWAIT=0
@@ -14,8 +14,8 @@ TIMEOUT=1800
 CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=GreedyTaskPlanner
-GEN=file
+TP_NAME=OnlineTaskPlanner
+GEN=uniform
 PERM=true
 DEBUG=false
 MISSIONS_FILE=10.txt
@@ -55,12 +55,13 @@ function launch_ros {
 	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
 	IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
 	tmux send-keys "./setinitposes.py $MAP 	\"$IPOSES\"" C-m
+	sleep 1
 }
 
 function launch_stage {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP" C-m
+	tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP --wait" C-m
 	echo "Launching Stage..."
 	sleep 3
 }
@@ -83,7 +84,11 @@ function launch_robots {
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
 	if [ $DEBUG = true ] ; then
-		tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' task_planner $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
+		if [ -f "commands_taskplanner.txt" ] ; then
+			tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
+		else
+			tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
+		fi
 	else
 		tmux send-keys "rosrun logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
 	fi

@@ -13,6 +13,7 @@ src/logistic_sim/paths_file.txt
 src/logistic_sim/stats_file.txt
 src/logistic_sim/missions_file.txt
 src/logistic_sim/commands_*.txt
+src/logistic_sim/commands_taskplanner.txt
 
 
 src/logistic_sim/params/amcl/*.xml

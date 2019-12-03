@@ -52,23 +52,24 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     allocate_memory();
     missions_generator(GENERATION);
 
+    c_print("Numero di task: ", missions.size(), green, P);
     // print missions
-    std::cout << "Single item task-set:\n";
-    for (const logistic_sim::Mission &m : missions)
-    {
-        std::cout << "ID: " << m.ID << "\n";
-        std::cout << "DEMANDS:\n";
-        for (auto v : m.DEMANDS)
-        {
-            std::cout << v << " ";
-        }
-        std::cout << "DSTS:\n";
-        for (auto v : m.DSTS)
-        {
-            std::cout << v << " ";
-        }
-        std::cout << std::endl;
-    }
+    // std::cout << "Single item task-set:\n";
+    // for (const logistic_sim::Mission &m : missions)
+    // {
+    //     std::cout << "ID: " << m.ID << "\n";
+    //     std::cout << "DEMANDS:\n";
+    //     for (auto v : m.DEMANDS)
+    //     {
+    //         std::cout << v << " ";
+    //     }
+    //     std::cout << "DSTS:\n";
+    //     for (auto v : m.DSTS)
+    //     {
+    //         std::cout << v << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     // inizializzo strutture statistiche
     for (int i = 0; i < TEAM_SIZE; i++)
@@ -119,11 +120,13 @@ void OnlineTaskPlanner::run()
         }
         std::vector<logistic_sim::Mission> tasks(first_it, last_it);
         missions.erase(first_it, last_it);
+        c_print("Task ancora da unire: ", missions.size(), green, P);
         std::vector<logistic_sim::Mission> window = set_partition(tasks);
         // il mutex è necessario perchè nella thread del token
         // si accede al vettore delle finestre
         window_mutex.lock();
         mission_windows.push_back(window);
+        c_print("Nuova finestra calcolata - Finestre rimanenti: ", mission_windows.size(), yellow, P);
         window_mutex.unlock();
     }
 
@@ -165,6 +168,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         CAPACITY = msg->CAPACITY;
         token.INIT = false;
         token.END_SIMULATION = false;
+        token.ALL_MISSIONS_INSERTED = false;
         start_time = ros::Time::now();
         last_mission_size = 0;
     }
@@ -173,11 +177,11 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.HEADER.seq += 1;
 
         // stampa task rimanenti
-        if (token.MISSION.size() != last_mission_size)
-        {
-            last_mission_size = token.MISSION.size();
-            c_print("Task rimanenti: ", last_mission_size, green);
-        }
+        // if (token.MISSION.size() != last_mission_size)
+        // {
+        //     last_mission_size = token.MISSION.size();
+        //     c_print("Task rimanenti: ", last_mission_size, green);
+        // }
 
         // se c'è una nuova finestra pronta la aggiungo al token
         window_mutex.lock();
@@ -186,7 +190,9 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
         {
             token.MISSION = mission_windows.back();
+            token.TAKEN_MISSION = std::vector<int>(token.MISSION.size(), -1);
             mission_windows.pop_back();
+            c_print("Nuovi task inseriti - Finestre rimanenti: ", mission_windows.size(), yellow, P);
             token.NEW_MISSIONS_AVAILABLE = true;
         }
         window_mutex.unlock();
@@ -266,7 +272,7 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
     try
     {
         int num_tasks = ts.size();
-        c_print(num_tasks);
+        // c_print(num_tasks);
         partition::iterator it(num_tasks);
         static int id_partition = 0;
 
@@ -295,6 +301,16 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                     copy(subset[j].DEMANDS.begin(), subset[j].DEMANDS.end(), back_inserter(candidate_subset.DEMANDS));
                     copy(subset[j].DSTS.begin(), subset[j].DSTS.end(), back_inserter(candidate_subset.DSTS));
                     copy(subset[j].ITEM.begin(), subset[j].ITEM.end(), back_inserter(candidate_subset.ITEM));
+                }
+
+                // rimuovo doppioni adiacenti in DSTS
+                for(int j=0; j<candidate_subset.DSTS.size()-1; j++)
+                {
+                    if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j+1])
+                    {
+                        candidate_subset.DSTS.erase(candidate_subset.DSTS.begin() + j+1);
+                        j--;
+                    }
                 }
 
                 // calcolo la lunghezza del percorso di questa missione
