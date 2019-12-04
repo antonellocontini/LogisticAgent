@@ -332,11 +332,14 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                 // calcolo la lunghezza del percorso di questa missione
                 // per poter stimare la metrica V
                 std::vector<uint> path;
+                int dijkstra_result[64];
+                uint dijkstra_size;
+                dijkstra(src_vertex, *candidate_subset.DSTS.begin(), dijkstra_result, dijkstra_size, vertex_web, dimension);
+                path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
                 for (auto it = candidate_subset.DSTS.begin(); it + 1 != candidate_subset.DSTS.end(); it++)
                 {
-                    int dijkstra_result[64];
-                    uint dijkstra_size;
                     dijkstra(*it, *(it + 1), dijkstra_result, dijkstra_size, vertex_web, dimension);
+                    path.pop_back();
                     path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
                 }
                 candidate_subset.PATH_DISTANCE = compute_cost_of_route(path);
