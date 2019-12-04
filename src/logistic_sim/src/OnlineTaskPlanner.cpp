@@ -127,6 +127,7 @@ void OnlineTaskPlanner::run()
         mission_windows.push_back(window);
         c_print("Nuova finestra calcolata - Finestre rimanenti: ", mission_windows.size(), yellow, P);
         c_print("Task ancora da unire: ", missions.size(), green, P);
+        c_print("");
         window_mutex.unlock();
     }
 
@@ -189,9 +190,9 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         // hanno finito di distribuirsi le nuove missioni
         if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
         {
-            token.MISSION = mission_windows.back();
+            token.MISSION = mission_windows.front();
             token.TAKEN_MISSION = std::vector<int>(token.MISSION.size(), -1);
-            mission_windows.pop_back();
+            mission_windows.pop_front();
             // se non ci sono più missioni da inserire si indica nel token
             if (missions.empty())
             {
@@ -373,7 +374,16 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
 
     std::sort(good_partition.begin(), good_partition.end(), less_V());
 
-    auto ele = good_partition.front();
+    t_coalition ele;
+    if (!good_partition.empty())
+    {
+        ele = good_partition.front();
+    }
+    else
+    {
+        ele.first = ts;
+        ele.second = logistic_sim::Mission();
+    }
 
     print_coalition(ele);
 

@@ -113,6 +113,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.GOOD_PATHS = false;
       }
     }
+    // caso base calcolo percorsi
     else if (msg->GOOD_PATHS && ID_ROBOT < token.ACTIVE_ROBOTS)
     {
       c_print("Pianificazione percorsi...", green, P);
@@ -147,10 +148,13 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
           c_print("[WARN]\tPercorso vuoto!", yellow, P);
         }
 
-        std::vector<uint> path =
-            spacetime_dijkstra(token.NEW_TRAILS, map_graph, waypoints, token.NEW_TRAILS[ID_ROBOT].PATH.size() - 1);
-        token.NEW_TRAILS[ID_ROBOT].PATH.pop_back();
-        token.NEW_TRAILS[ID_ROBOT].PATH.insert(token.NEW_TRAILS[ID_ROBOT].PATH.end(), path.begin(), path.end());
+        if (!missions.empty())
+        {
+          std::vector<uint> path =
+              spacetime_dijkstra(token.NEW_TRAILS, map_graph, waypoints, token.NEW_TRAILS[ID_ROBOT].PATH.size() - 1);
+          token.NEW_TRAILS[ID_ROBOT].PATH.pop_back();
+          token.NEW_TRAILS[ID_ROBOT].PATH.insert(token.NEW_TRAILS[ID_ROBOT].PATH.end(), path.begin(), path.end());
+        }
 
         // l'ultimo robot attivo pusha i nuovi percorsi e aggiorna le statistiche
         if (ID_ROBOT == token.ACTIVE_ROBOTS - 1)

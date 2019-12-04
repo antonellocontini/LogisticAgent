@@ -15,7 +15,7 @@ CUSTOM_STAGE=false
 SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=OnlineTaskPlanner
-GEN=uniform
+GEN=rand
 PERM=true
 DEBUG=false
 MISSIONS_FILE=10.txt
@@ -46,7 +46,7 @@ function launch_ros {
 	tmux selectp -t $SESSION:0.0
 	tmux send-keys "roscore &" C-m
 	echo "Launching roscore..."
-	sleep 5
+	sleep 8
 	echo "Setting ROS parameters..."
 	tmux send-keys "rosparam set /use_sim_time True" C-m
 	tmux send-keys "rosparam set /goal_reached_wait $GWAIT" C-m
