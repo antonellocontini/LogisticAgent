@@ -58,15 +58,6 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token.REACHED_HOME.push_back(false);
     token.ACTIVE_ROBOTS = TEAM_SIZE;
 
-    // test
-    // if (ID_ROBOT == 3)
-    // {
-    // token.TRAILS[0].PATH = { 1, 6, 11, 10 };
-    // token.TRAILS[1].PATH = { 3, 8, 13, 14 };
-    // token.TRAILS[2].PATH = { 21, 16, 16, 11};
-    // token.TRAILS[3].PATH = { 23, 18, 18, 13};
-    // }
-
     initialize = false;
     next_vertex = current_vertex = initial_vertex;
     goal_complete = true;
@@ -74,25 +65,14 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
   if (msg->CALCULATE_PATHS)
   {
-    if (msg->GOOD_PATHS && ID_ROBOT < token.ACTIVE_ROBOTS)
+    // caso speciale, un solo robot rimasto, tutti provano a pianfificare
+    if (token.ACTIVE_ROBOTS == 1)
     {
       c_print("Pianificazione percorsi...", green, P);
-
-      // riempo vettore missions
-      missions.clear();
-      for (auto it = token.TAKEN_MISSION.begin(); it != token.TAKEN_MISSION.end(); it++)
-      {
-        if (*it == ID_ROBOT)
-        {
-          int index = it - token.TAKEN_MISSION.begin();
-          missions.push_back(token.MISSION[index]);
-        }
-      }
-
       // creo il vettore di waypoints
       uint init_pos = initial_vertex;
-      std::vector<uint> waypoints = { token.TRAILS[ID_ROBOT].PATH.back() };
-      for (logistic_sim::Mission &m : missions)
+      std::vector<uint> waypoints = {token.TRAILS[ID_ROBOT].PATH.back()};
+      for (const logistic_sim::Mission &m : token.MISSION)
       {
         waypoints.push_back(src_vertex);
         for (uint dst : m.DSTS)
@@ -113,13 +93,79 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.NEW_TRAILS[ID_ROBOT].PATH.pop_back();
         token.NEW_TRAILS[ID_ROBOT].PATH.insert(token.NEW_TRAILS[ID_ROBOT].PATH.end(), path.begin(), path.end());
 
-        // l'ultimo robot attivo pusha i nuovi percorsi
+        // pusha i nuovi percorsi e aggiorna le statistiche
+        c_print("Percorsi calcolati!", green, P);
+        token.TRAILS[ID_ROBOT].PATH = token.NEW_TRAILS[ID_ROBOT].PATH;
+
+        for (int i = 0; i < token.MISSION.size(); i++)
+        {
+          token.MISSIONS_COMPLETED[ID_ROBOT]++;
+          token.TASKS_COMPLETED[ID_ROBOT] += token.MISSION[i].DEMANDS.size();
+        }
+
+        // segnalo al planner che sono stati distribuiti i task
+        token.NEW_MISSIONS_AVAILABLE = false;
+        token.CALCULATE_PATHS = false;
+      }
+      catch (const std::string &e)
+      {
+        c_print("Impossibile pianificare con ", token.ACTIVE_ROBOTS, red, P);
+        token.GOOD_PATHS = false;
+      }
+    }
+    else if (msg->GOOD_PATHS && ID_ROBOT < token.ACTIVE_ROBOTS)
+    {
+      c_print("Pianificazione percorsi...", green, P);
+
+      // riempo vettore missions
+      missions.clear();
+      for (auto it = token.TAKEN_MISSION.begin(); it != token.TAKEN_MISSION.end(); it++)
+      {
+        if (*it == ID_ROBOT)
+        {
+          int index = it - token.TAKEN_MISSION.begin();
+          missions.push_back(token.MISSION[index]);
+        }
+      }
+
+      // creo il vettore di waypoints
+      uint init_pos = initial_vertex;
+      std::vector<uint> waypoints = {token.TRAILS[ID_ROBOT].PATH.back()};
+      for (const logistic_sim::Mission &m : missions)
+      {
+        waypoints.push_back(src_vertex);
+        for (uint dst : m.DSTS)
+        {
+          waypoints.push_back(dst);
+        }
+      }
+      waypoints.push_back(init_pos);
+      try
+      {
+        if (token.TRAILS[ID_ROBOT].PATH.empty())
+        {
+          c_print("[WARN]\tPercorso vuoto!", yellow, P);
+        }
+
+        std::vector<uint> path =
+            spacetime_dijkstra(token.NEW_TRAILS, map_graph, waypoints, token.NEW_TRAILS[ID_ROBOT].PATH.size() - 1);
+        token.NEW_TRAILS[ID_ROBOT].PATH.pop_back();
+        token.NEW_TRAILS[ID_ROBOT].PATH.insert(token.NEW_TRAILS[ID_ROBOT].PATH.end(), path.begin(), path.end());
+
+        // l'ultimo robot attivo pusha i nuovi percorsi e aggiorna le statistiche
         if (ID_ROBOT == token.ACTIVE_ROBOTS - 1)
         {
           c_print("Percorsi calcolati!", green, P);
           for (int i = 0; i < token.ACTIVE_ROBOTS; i++)
           {
             token.TRAILS[i].PATH = token.NEW_TRAILS[i].PATH;
+          }
+
+          for (int i = 0; i < token.TAKEN_MISSION.size(); i++)
+          {
+            int id = token.TAKEN_MISSION[i];
+            token.MISSIONS_COMPLETED[id]++;
+            token.TASKS_COMPLETED[id] += token.MISSION[i].DEMANDS.size();
           }
 
           // segnalo al planner che sono stati distribuiti i task
@@ -153,7 +199,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       // mando il token al taskplanner segnalando la terminazione
       token.SHUTDOWN = true;
     }
-    else if (ID_ROBOT < token.ACTIVE_ROBOTS)  // robot attivo
+    else if (ID_ROBOT < token.ACTIVE_ROBOTS) // robot attivo
     {
       c_print("Allocazione task...", green, P);
       // prendo una missione tra quelle disponibili
@@ -173,7 +219,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       {
         *it = ID_ROBOT;
       }
-      else if (ID_ROBOT == token.ACTIVE_ROBOTS - 1)  // tutte le missioni sono state assegnate
+      else if (ID_ROBOT == token.ACTIVE_ROBOTS - 1) // tutte le missioni sono state assegnate
       {
         c_print("Missioni assegnate", green, P);
         token.ALLOCATE = false;
@@ -232,7 +278,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.GOAL_STATUS[ID_ROBOT]++;
 
         // TODO: bisogna gestire condizione di terminazione
-        if (token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
+        if (!token.NEW_MISSIONS_AVAILABLE && token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
         {
           token.REACHED_HOME[ID_ROBOT] = true;
           bool can_exit = true;
@@ -244,8 +290,8 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
               break;
             }
           }
-          if (false)
-          // if (can_exit)
+
+          if (can_exit)
           {
             c_print("Finiti tutti i task, esco!", magenta, P);
             token.SHUTDOWN = true;
@@ -399,7 +445,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
         next_next_waypoint = current_waypoint + 1;
       }
     }
-    else  // u non è waypoint
+    else // u non è waypoint
     {
       next_next_waypoint = current_waypoint;
     }
@@ -511,7 +557,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
   throw std::string("Can't find path!!!");
 }
 
-}  // namespace onlineagent
+} // namespace onlineagent
 
 int main(int argc, char *argv[])
 {

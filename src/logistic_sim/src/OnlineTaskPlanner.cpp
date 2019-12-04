@@ -192,21 +192,20 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             token.MISSION = mission_windows.back();
             token.TAKEN_MISSION = std::vector<int>(token.MISSION.size(), -1);
             mission_windows.pop_back();
-            c_print("Nuovi task inseriti - Finestre rimanenti: ", mission_windows.size(), yellow, P);
+            // se non ci sono più missioni da inserire si indica nel token
+            if (missions.empty())
+            {
+                token.ALL_MISSIONS_INSERTED = true;
+            }
+            c_print("Finestra inserita nel token - Finestre rimanenti: ", mission_windows.size(), yellow, P);
             token.NEW_MISSIONS_AVAILABLE = true;
         }
         window_mutex.unlock();
 
-        // se non ci sono più missioni da inserire si indica nel token
-        if (missions.empty())
-        {
-            token.ALL_MISSIONS_INSERTED = true;
-        }
-
         // controllo conflitti nei percorsi
         bool eq = true;
         int v = token.GOAL_STATUS[0];
-        for(int i=0; i<TEAM_SIZE; i++)
+        for (int i = 0; i < TEAM_SIZE; i++)
         {
             if (v != token.GOAL_STATUS[i])
             {
@@ -214,11 +213,11 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
                 break;
             }
         }
-        if(eq)
+        if (eq)
             check_paths_conflicts(token.TRAILS);
 
         // aggiorno la mia struttura con i dati del token
-        for (int i = 0; i < num_robots; i++)
+        for (int i = 0; i < TEAM_SIZE; i++)
         {
             robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
             robots_data[i].completed_missions = token.MISSIONS_COMPLETED[i];
@@ -237,7 +236,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             std::stringstream conf_dir_name;
-            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots
+            conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE
                           << "capacity" << CAPACITY[0] << "_" << mapname;
             boost::filesystem::path conf_directory(conf_dir_name.str());
             if (!boost::filesystem::exists(conf_directory))
@@ -266,7 +265,10 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             ofstream stats(filename.str());
-            stats << robots_data;
+            // per qualche ragione devo esplicitare il namespace
+            // per usare l'operatore corretto
+            taskplanner::operator<<(stats, robots_data);
+            // stats << robots_data;
             stats.close();
             ros::NodeHandle nh;
             nh.setParam("/simulation_running", "false");
@@ -318,11 +320,11 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                 }
 
                 // rimuovo doppioni adiacenti in DSTS
-                for(int j=0; j<candidate_subset.DSTS.size()-1; j++)
+                for (int j = 0; j < candidate_subset.DSTS.size() - 1; j++)
                 {
-                    if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j+1])
+                    if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j + 1])
                     {
-                        candidate_subset.DSTS.erase(candidate_subset.DSTS.begin() + j+1);
+                        candidate_subset.DSTS.erase(candidate_subset.DSTS.begin() + j + 1);
                         j--;
                     }
                 }
@@ -380,16 +382,16 @@ bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Pa
     bool good = true;
     int conflicts = 0;
 
-    for(auto it = paths.begin(); it != paths.end(); it++)
+    for (auto it = paths.begin(); it != paths.end(); it++)
     {
-        for(auto jt = it+1; jt != paths.end(); jt++)
+        for (auto jt = it + 1; jt != paths.end(); jt++)
         {
             int ri = it - paths.begin();
             int rj = jt - paths.begin();
             const logistic_sim::Path &p1 = *it;
             const logistic_sim::Path &p2 = *jt;
             int n = std::min(p1.PATH.size(), p2.PATH.size());
-            for(int i=0; i<n-1; i++)
+            for (int i = 0; i < n - 1; i++)
             {
                 if (p1.PATH[i] == p2.PATH[i])
                 {
@@ -400,14 +402,14 @@ bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Pa
                        << " all'istante " << i;
                     c_print(ss.str(), yellow, print);
                 }
-                if (p1.PATH[i] == p2.PATH[i+1] &&
-                    p2.PATH[i] == p1.PATH[i+1])
+                if (p1.PATH[i] == p2.PATH[i + 1] &&
+                    p2.PATH[i] == p1.PATH[i + 1])
                 {
                     conflicts++;
                     good = false;
                     std::stringstream ss;
                     ss << "[WARN] Robot " << ri << " e " << rj << "si incontrano nell'arco (" << p1.PATH[i]
-                       << "," << p1.PATH[i+1] << ") all'istante " << i;
+                       << "," << p1.PATH[i + 1] << ") all'istante " << i;
                     c_print(ss.str(), yellow, print);
                 }
             }

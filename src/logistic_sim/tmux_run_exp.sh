@@ -46,7 +46,7 @@ function launch_ros {
 	tmux selectp -t $SESSION:0.0
 	tmux send-keys "roscore &" C-m
 	echo "Launching roscore..."
-	sleep 3
+	sleep 5
 	echo "Setting ROS parameters..."
 	tmux send-keys "rosparam set /use_sim_time True" C-m
 	tmux send-keys "rosparam set /goal_reached_wait $GWAIT" C-m
@@ -71,7 +71,7 @@ function launch_robots {
 	n=$(( NROBOTS - 1 ))
 	for i in $(seq 0 $n); do
 		tmux selectp -t $SESSION:1.$i
-		tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true" C-m
+		tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
 		echo "Robot $i launched"
 		sleep 1
 	done
