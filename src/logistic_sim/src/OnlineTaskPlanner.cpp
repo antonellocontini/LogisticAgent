@@ -120,13 +120,13 @@ void OnlineTaskPlanner::run()
         }
         std::vector<logistic_sim::Mission> tasks(first_it, last_it);
         missions.erase(first_it, last_it);
-        c_print("Task ancora da unire: ", missions.size(), green, P);
         std::vector<logistic_sim::Mission> window = set_partition(tasks);
         // il mutex è necessario perchè nella thread del token
         // si accede al vettore delle finestre
         window_mutex.lock();
         mission_windows.push_back(window);
         c_print("Nuova finestra calcolata - Finestre rimanenti: ", mission_windows.size(), yellow, P);
+        c_print("Task ancora da unire: ", missions.size(), green, P);
         window_mutex.unlock();
     }
 
