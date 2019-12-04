@@ -381,7 +381,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
     {
       if (current_waypoint + 1 == waypoints.size())
       {
-        if (time + 1 >= max_path_size)
+        if (time + 1 + start_time >= max_path_size)
         {
           std::vector<unsigned int> result =
               std::vector<unsigned int>(prev_paths[u][time][current_waypoint],
