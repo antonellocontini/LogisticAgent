@@ -203,6 +203,20 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             token.ALL_MISSIONS_INSERTED = true;
         }
 
+        // controllo conflitti nei percorsi
+        bool eq = true;
+        int v = token.GOAL_STATUS[0];
+        for(int i=0; i<TEAM_SIZE; i++)
+        {
+            if (v != token.GOAL_STATUS[i])
+            {
+                eq = false;
+                break;
+            }
+        }
+        if(eq)
+            check_paths_conflicts(token.TRAILS);
+
         // aggiorno la mia struttura con i dati del token
         for (int i = 0; i < num_robots; i++)
         {
@@ -359,6 +373,53 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
     print_coalition(ele);
 
     return ele.first;
+}
+
+bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Path> &paths, bool print)
+{
+    bool good = true;
+    int conflicts = 0;
+
+    for(auto it = paths.begin(); it != paths.end(); it++)
+    {
+        for(auto jt = it+1; jt != paths.end(); jt++)
+        {
+            int ri = it - paths.begin();
+            int rj = jt - paths.begin();
+            const logistic_sim::Path &p1 = *it;
+            const logistic_sim::Path &p2 = *jt;
+            int n = std::min(p1.PATH.size(), p2.PATH.size());
+            for(int i=0; i<n-1; i++)
+            {
+                if (p1.PATH[i] == p2.PATH[i])
+                {
+                    conflicts++;
+                    good = false;
+                    std::stringstream ss;
+                    ss << "[WARN] Robot " << ri << " e " << rj << " si incontrano in " << p1.PATH[i]
+                       << " all'istante " << i;
+                    c_print(ss.str(), yellow, print);
+                }
+                if (p1.PATH[i] == p2.PATH[i+1] &&
+                    p2.PATH[i] == p1.PATH[i+1])
+                {
+                    conflicts++;
+                    good = false;
+                    std::stringstream ss;
+                    ss << "[WARN] Robot " << ri << " e " << rj << "si incontrano nell'arco (" << p1.PATH[i]
+                       << "," << p1.PATH[i+1] << ") all'istante " << i;
+                    c_print(ss.str(), yellow, print);
+                }
+            }
+        }
+    }
+
+    if (conflicts > 0)
+    {
+        c_print("[WARN] individuati ", conflicts, "conflitti", yellow, print);
+    }
+
+    return good;
 }
 
 } // namespace onlinetaskplanner

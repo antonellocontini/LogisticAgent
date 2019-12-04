@@ -110,6 +110,7 @@ public:
     {
         return TaskPlanner::robot_ready(req, res);
     }
+    bool check_paths_conflicts(const std::vector<logistic_sim::Path> &paths, bool print = true);
 protected:
     int window_size = 9;
     std::vector<std::vector<logistic_sim::Mission>> mission_windows;
