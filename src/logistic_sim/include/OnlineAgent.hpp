@@ -12,9 +12,15 @@ public:
     std::vector<unsigned int> spacetime_dijkstra(const std::vector<logistic_sim::Path> &other_paths,
                                                  const std::vector<std::vector<unsigned int> > &graph,
                                                  const std::vector<unsigned int> &waypoints,
-                                                 int start_time = 0);
+                                                 int start_time = 0,
+                                                 std::vector<unsigned int> *last_leg = nullptr);
 protected:
     std::vector<std::vector<unsigned int> > map_graph;
+
+    void token_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+    void token_simple_allocation(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+    void token_simple_planning(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+    void token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
 };
 
 } // namespace onlineagent
