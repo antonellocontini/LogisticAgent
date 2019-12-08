@@ -45,6 +45,7 @@ float32[]   TOTAL_DISTANCE
 uint32[]    GOAL_STATUS
 Path[]      TRAILS
 Path[]      NEW_TRAILS
+Path[]      HOME_TRAILS # per separare ritorno a casa dal percorso dei task
 uint32      INIT_POS_INDEX
 bool[]      REACHED_HOME
 int32       ACTIVE_ROBOTS

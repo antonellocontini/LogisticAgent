@@ -79,7 +79,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   else
   {
     // avanzamento dei robot
-    token_coordination(msg, token);
+    token_simple_coordination(msg, token);
   }
 
   ros::Duration(0.03).sleep();
@@ -93,7 +93,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
 }
 
-void OnlineAgent::token_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
+void OnlineAgent::token_simple_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   // avanzamento dei robot
 
@@ -379,6 +379,120 @@ void OnlineAgent::token_simple_planning(const logistic_sim::TokenConstPtr &msg, 
   }
 }
 
+void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
+{
+  // avanzamento dei robot
+
+  // aggiorno posizioni dei robot nel token
+  token.X_POS[ID_ROBOT] = xPos[ID_ROBOT];
+  token.Y_POS[ID_ROBOT] = yPos[ID_ROBOT];
+  for (int i = 0; i < TEAM_SIZE; i++)
+  {
+    if (i != ID_ROBOT)
+    {
+      xPos[i] = token.X_POS[i];
+      yPos[i] = token.Y_POS[i];
+    }
+  }
+
+  // gestisco l'arrivo al goal
+  if (goal_complete)
+  {
+    static bool first_time = true;
+
+    if (first_time)
+    {
+      // aggiorno distanza percorsa nel token
+      uint edge_length = 0;
+      if (current_vertex < dimension)
+      {
+        for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
+        {
+          if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
+          {
+            edge_length += vertex_web[current_vertex].cost[i];
+            break;
+          }
+        }
+      }
+      token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
+
+      if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+      {
+        token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
+        if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
+        {
+          token.TRAILS[ID_ROBOT].PATH.push_back(token.HOME_TRAILS[ID_ROBOT].PATH.front());
+          token.HOME_TRAILS[ID_ROBOT].PATH.erase(token.HOME_TRAILS[ID_ROBOT].PATH.begin());
+        }
+      }
+      token.GOAL_STATUS[ID_ROBOT]++;
+
+      if (!token.NEW_MISSIONS_AVAILABLE && token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
+      {
+        token.REACHED_HOME[ID_ROBOT] = true;
+        bool can_exit = true;
+        for (int i = 0; i < TEAM_SIZE; i++)
+        {
+          if (!token.REACHED_HOME[i])
+          {
+            can_exit = false;
+            break;
+          }
+        }
+
+        if (can_exit)
+        {
+          c_print("Finiti tutti i task, esco!", magenta, P);
+          token.SHUTDOWN = true;
+        }
+      }
+
+      current_vertex = next_vertex;
+      first_time = false;
+    }
+
+    bool equal_status = true;
+    int status = token.GOAL_STATUS[0];
+    for (int i = 1; i < TEAM_SIZE; i++)
+    {
+      if (token.GOAL_STATUS[i] != status)
+        equal_status = false;
+    }
+
+    if (equal_status)
+    {
+      // se ci sono nuove missioni disponibili bisogna allocarle
+      // IMPORTANTE: è essenziale che i robot siano sincronizzati
+      // sul goal altrimenti la pianificazione si baserà
+      // su dei percorsi sfasati
+      if (ID_ROBOT == TEAM_SIZE - 1 && msg->NEW_MISSIONS_AVAILABLE)
+      {
+        token.ALLOCATE = true;
+      }
+
+      first_time = true;
+      if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
+      {
+        goal_complete = false;
+        next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
+      }
+      else
+      {
+        c_print("[ WARN]Don't know what to do!!!", yellow, P);
+        next_vertex = current_vertex;
+      }
+      c_print("before OnGoal()", magenta);
+      c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
+      sendGoal(next_vertex);
+    }
+  }
+
+  // metto nel token quale arco sto occupando
+  token.CURR_VERTEX[ID_ROBOT] = current_vertex;
+  token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
+}
+
 void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   /* uso solo fase ALLOCATE
@@ -393,6 +507,65 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
    * rimuovere l'ultimo pezzo del percorso (ritorno a casa)
    * N.B. cambia leggermente token_coordination
    */
+
+  // il planner ha mandato il token al robot più scarico
+  logistic_sim::Mission m = token.MISSION.front();
+  // unsico le due parti di percorso di tutti i robot
+  std::vector<logistic_sim::Path> robot_paths = token.TRAILS;
+  for (int i = 0; i < TEAM_SIZE; i++)
+  {
+    robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
+  }
+  try
+  {
+    std::vector<unsigned int> last_leg, first_leg;
+    std::vector<unsigned int> waypoints;
+
+    waypoints.push_back(token.TRAILS[ID_ROBOT].PATH.back());
+    waypoints.push_back(src_vertex);
+    for (auto dst : m.DSTS)
+    {
+      waypoints.push_back(dst);
+    }
+    waypoints.push_back(initial_vertex);
+    spacetime_dijkstra(robot_paths, map_graph, waypoints, robot_paths[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
+    token.TRAILS[ID_ROBOT].PATH.pop_back();
+    token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), first_leg.begin(), first_leg.end());
+    token.HOME_TRAILS[ID_ROBOT].PATH = last_leg;
+
+    // aggiorno percorso in variabile locale (per sapere a chi mandare il token)
+    robot_paths[ID_ROBOT].PATH = token.TRAILS[ID_ROBOT].PATH;
+    robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(), token.HOME_TRAILS[ID_ROBOT].PATH.end());
+
+    // rimuovo la missione dal token
+    token.MISSION.erase(token.MISSION.begin());
+  }
+  catch (std::string &e)
+  {
+    c_print("Impossibile calcolare percorso", yellow, P);
+  }
+
+  // se ci sono altre missioni mando al robot col percorso più corto
+  if (!token.MISSION.empty())
+  {
+    int id_next_robot = 0;
+    int min_length = robot_paths[0].PATH.size();
+    for (int i = 1; i < TEAM_SIZE; i++)
+    {
+      if (robot_paths[i].PATH.size() < min_length)
+      {
+        min_length = robot_paths[i].PATH.size();
+        id_next_robot = i;
+      }
+    }
+
+    token.ID_RECEIVER = id_next_robot;
+  }
+  else
+  {
+    token.ALLOCATE = false;
+    token.ID_RECEIVER = TASK_PLANNER_ID;
+  }
 }
 
 // genera un percorso fino all'ultimo waypoint
@@ -403,7 +576,8 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
                                                           const std::vector<std::vector<unsigned int>> &graph,
                                                           const std::vector<unsigned int> &waypoints,
                                                           int start_time,
-                                                          std::vector<unsigned int> *last_leg)
+                                                          std::vector<unsigned int> *last_leg,
+                                                          std::vector<unsigned int> *first_leg)
 {
   std::cout << "SPACETIME DIJKSTRA --- WAYPOINTS:";
   for (int i = 0; i < waypoints.size(); i++)
@@ -479,16 +653,26 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
               std::vector<unsigned int>(prev_paths[u][time][current_waypoint],
                                         prev_paths[u][time][current_waypoint] + path_sizes[u][time][current_waypoint]);
 
-          // ricostruisco l'ultima gamba del percorso
-          if (last_leg != nullptr)
+          // spezzo il percorso in due parti
+          if (last_leg != nullptr && first_leg != nullptr)
           {
             last_leg->clear();
+            first_leg->clear();
+            bool last_part = true;
             for (auto it = result.rbegin(); it != result.rend(); it++)
             {
-              last_leg->insert(last_leg->begin(), *it);
               if (*it == waypoints[current_waypoint - 1])
               {
-                break;
+                last_part = false;
+              }
+
+              if (last_part)
+              {
+                last_leg->insert(last_leg->begin(), *it);
+              }
+              else
+              {
+                first_leg->insert(first_leg->begin(), *it);
               }
             }
           }
