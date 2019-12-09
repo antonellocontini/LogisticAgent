@@ -1,3 +1,4 @@
+#include <limits>
 #include "OnlineAgent.hpp"
 
 namespace onlineagent
@@ -211,7 +212,7 @@ void OnlineAgent::token_simple_allocation(const logistic_sim::TokenConstPtr &msg
     // mando il token al taskplanner segnalando la terminazione
     token.SHUTDOWN = true;
   }
-  else if (ID_ROBOT < token.ACTIVE_ROBOTS) // robot attivo
+  else if (ID_ROBOT < token.ACTIVE_ROBOTS)  // robot attivo
   {
     c_print("Allocazione task...", green, P);
     // prendo una missione tra quelle disponibili
@@ -231,7 +232,7 @@ void OnlineAgent::token_simple_allocation(const logistic_sim::TokenConstPtr &msg
     {
       *it = ID_ROBOT;
     }
-    else if (ID_ROBOT == token.ACTIVE_ROBOTS - 1) // tutte le missioni sono state assegnate
+    else if (ID_ROBOT == token.ACTIVE_ROBOTS - 1)  // tutte le missioni sono state assegnate
     {
       c_print("Missioni assegnate", green, P);
       token.ALLOCATE = false;
@@ -254,7 +255,7 @@ void OnlineAgent::token_simple_planning(const logistic_sim::TokenConstPtr &msg, 
     c_print("Pianificazione percorsi...", green, P);
     // creo il vettore di waypoints
     uint init_pos = initial_vertex;
-    std::vector<uint> waypoints = {token.TRAILS[ID_ROBOT].PATH.back()};
+    std::vector<uint> waypoints = { token.TRAILS[ID_ROBOT].PATH.back() };
     for (const logistic_sim::Mission &m : token.MISSION)
     {
       waypoints.push_back(src_vertex);
@@ -314,7 +315,7 @@ void OnlineAgent::token_simple_planning(const logistic_sim::TokenConstPtr &msg, 
 
     // creo il vettore di waypoints
     uint init_pos = initial_vertex;
-    std::vector<uint> waypoints = {token.TRAILS[ID_ROBOT].PATH.back()};
+    std::vector<uint> waypoints = { token.TRAILS[ID_ROBOT].PATH.back() };
     for (const logistic_sim::Mission &m : missions)
     {
       waypoints.push_back(src_vertex);
@@ -502,7 +503,7 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
    * proseguo così finchè tutti i task non sono allocati
    * a questo punto giro il token al task planner e si procede
    * normalmente
-   * 
+   *
    * devo spezzare nel token i percorsi in modo da poter
    * rimuovere l'ultimo pezzo del percorso (ritorno a casa)
    * N.B. cambia leggermente token_coordination
@@ -510,12 +511,18 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
 
   // il planner ha mandato il token al robot più scarico
   logistic_sim::Mission m = token.MISSION.front();
+
   // unsico le due parti di percorso di tutti i robot
   std::vector<logistic_sim::Path> robot_paths = token.TRAILS;
   for (int i = 0; i < TEAM_SIZE; i++)
   {
-    robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
+    robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(),
+                               token.HOME_TRAILS[i].PATH.end());
   }
+
+  int id_next_robot;
+  int min_length;
+
   try
   {
     std::vector<unsigned int> last_leg, first_leg;
@@ -535,24 +542,47 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
 
     // aggiorno percorso in variabile locale (per sapere a chi mandare il token)
     robot_paths[ID_ROBOT].PATH = token.TRAILS[ID_ROBOT].PATH;
-    robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(), token.HOME_TRAILS[ID_ROBOT].PATH.end());
+    robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(),
+                                      token.HOME_TRAILS[ID_ROBOT].PATH.end());
 
     // rimuovo la missione dal token
     token.MISSION.erase(token.MISSION.begin());
+
+    // se ci sono altre missioni mando al robot col percorso più corto
+    if (!token.MISSION.empty())
+    {
+      id_next_robot = 0;
+      min_length = robot_paths[0].PATH.size();
+      for (int i = 1; i < TEAM_SIZE; i++)
+      {
+        if (robot_paths[i].PATH.size() < min_length)
+        {
+          min_length = robot_paths[i].PATH.size();
+          id_next_robot = i;
+        }
+      }
+
+      token.ID_RECEIVER = id_next_robot;
+    }
+    else
+    {
+      // if all tasks have been assigned the token
+      // is sent to the planner in case new tasks
+      // have been generated
+      token.ALLOCATE = false;
+      token.NEW_MISSIONS_AVAILABLE = false;
+      token.ID_RECEIVER = TASK_PLANNER_ID;
+    }
   }
   catch (std::string &e)
   {
     c_print("Impossibile calcolare percorso", yellow, P);
-  }
 
-  // se ci sono altre missioni mando al robot col percorso più corto
-  if (!token.MISSION.empty())
-  {
-    int id_next_robot = 0;
-    int min_length = robot_paths[0].PATH.size();
-    for (int i = 1; i < TEAM_SIZE; i++)
+    // search the next robot
+    min_length = std::numeric_limits<int>::max();
+    for (int i = 0; i < TEAM_SIZE; i++)
     {
-      if (robot_paths[i].PATH.size() < min_length)
+      if (i != ID_ROBOT && robot_paths[i].PATH.size() < min_length)
       {
         min_length = robot_paths[i].PATH.size();
         id_next_robot = i;
@@ -560,11 +590,6 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     }
 
     token.ID_RECEIVER = id_next_robot;
-  }
-  else
-  {
-    token.ALLOCATE = false;
-    token.ID_RECEIVER = TASK_PLANNER_ID;
   }
 }
 
@@ -574,8 +599,7 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
 // all'ultimo waypoint
 std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logistic_sim::Path> &other_paths,
                                                           const std::vector<std::vector<unsigned int>> &graph,
-                                                          const std::vector<unsigned int> &waypoints,
-                                                          int start_time,
+                                                          const std::vector<unsigned int> &waypoints, int start_time,
                                                           std::vector<unsigned int> *last_leg,
                                                           std::vector<unsigned int> *first_leg)
 {
@@ -689,7 +713,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
         next_next_waypoint = current_waypoint + 1;
       }
     }
-    else // u non è waypoint
+    else  // u non è waypoint
     {
       next_next_waypoint = current_waypoint;
     }
@@ -801,7 +825,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
   throw std::string("Can't find path!!!");
 }
 
-} // namespace onlineagent
+}  // namespace onlineagent
 
 int main(int argc, char *argv[])
 {

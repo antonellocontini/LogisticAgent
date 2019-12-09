@@ -200,6 +200,27 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
             c_print("Finestra inserita nel token - Finestre rimanenti: ", mission_windows.size(), yellow, P);
             token.NEW_MISSIONS_AVAILABLE = true;
+
+            // mando il token al robot più scarico
+            std::vector<logistic_sim::Path> robot_paths;
+            for (int i=0; i<TEAM_SIZE; i++)
+            {
+                robot_paths[i] = token.TRAILS[i];
+                robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
+            }
+
+            int id_next_robot = 0;
+            int min_length = robot_paths[0].PATH.size();
+            for (int i=1; i<TEAM_SIZE; i++)
+            {
+                if (robot_paths[i].PATH.size() < min_length)
+                {
+                    min_length = robot_paths[i].PATH.size();
+                    id_next_robot = i;
+                }
+            }
+
+            token.ID_RECEIVER = id_next_robot;
         }
         window_mutex.unlock();
 
