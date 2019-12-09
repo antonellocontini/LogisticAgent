@@ -56,6 +56,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     p.PATH = std::vector<uint>(1, initial_vertex);
     token.TRAILS.push_back(p);
     token.NEW_TRAILS.push_back(p);
+    token.HOME_TRAILS.push_back(logistic_sim::Path());
     token.REACHED_HOME.push_back(false);
     token.ACTIVE_ROBOTS = TEAM_SIZE;
 
@@ -80,7 +81,8 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   else
   {
     // avanzamento dei robot
-    token_simple_coordination(msg, token);
+    token_priority_coordination(msg, token);
+    // token_simple_coordination(msg, token);
   }
 
   ros::Duration(0.03).sleep();
@@ -399,83 +401,103 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
   // gestisco l'arrivo al goal
   if (goal_complete)
   {
-    static bool first_time = true;
-
-    if (first_time)
+    // aggiorno distanza percorsa nel token
+    uint edge_length = 0;
+    if (current_vertex < dimension)
     {
-      // aggiorno distanza percorsa nel token
-      uint edge_length = 0;
-      if (current_vertex < dimension)
+      for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
       {
-        for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
+        if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
         {
-          if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
-          {
-            edge_length += vertex_web[current_vertex].cost[i];
-            break;
-          }
+          edge_length += vertex_web[current_vertex].cost[i];
+          break;
         }
       }
-      token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
+    }
+    token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
 
-      if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+    if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+    {
+      token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
+      if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
       {
-        token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
-        if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
-        {
-          token.TRAILS[ID_ROBOT].PATH.push_back(token.HOME_TRAILS[ID_ROBOT].PATH.front());
-          token.HOME_TRAILS[ID_ROBOT].PATH.erase(token.HOME_TRAILS[ID_ROBOT].PATH.begin());
-        }
+        token.TRAILS[ID_ROBOT].PATH.push_back(token.HOME_TRAILS[ID_ROBOT].PATH.front());
+        token.HOME_TRAILS[ID_ROBOT].PATH.erase(token.HOME_TRAILS[ID_ROBOT].PATH.begin());
       }
-      token.GOAL_STATUS[ID_ROBOT]++;
+    }
+    token.GOAL_STATUS[ID_ROBOT]++;
 
-      if (!token.NEW_MISSIONS_AVAILABLE && token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
+    // exit check routine
+    if (!token.NEW_MISSIONS_AVAILABLE && token.ALL_MISSIONS_INSERTED && token.TRAILS[ID_ROBOT].PATH.size() == 1)
+    {
+      token.REACHED_HOME[ID_ROBOT] = true;
+      bool can_exit = true;
+      for (int i = 0; i < TEAM_SIZE; i++)
       {
-        token.REACHED_HOME[ID_ROBOT] = true;
-        bool can_exit = true;
-        for (int i = 0; i < TEAM_SIZE; i++)
+        if (!token.REACHED_HOME[i])
         {
-          if (!token.REACHED_HOME[i])
-          {
-            can_exit = false;
-            break;
-          }
-        }
-
-        if (can_exit)
-        {
-          c_print("Finiti tutti i task, esco!", magenta, P);
-          token.SHUTDOWN = true;
+          can_exit = false;
+          break;
         }
       }
 
-      current_vertex = next_vertex;
-      first_time = false;
+      if (can_exit)
+      {
+        c_print("Finiti tutti i task, esco!", magenta, P);
+        token.SHUTDOWN = true;
+      }
     }
 
-    bool equal_status = true;
-    int status = token.GOAL_STATUS[0];
+    current_vertex = next_vertex;
+    goal_complete = false;
+    still = true;
+  }
+
+  bool equal_status = true;
+  int status = token.GOAL_STATUS[0];
+  for (int i = 1; i < TEAM_SIZE; i++)
+  {
+    if (token.GOAL_STATUS[i] != status)
+      equal_status = false;
+  }
+
+  if (equal_status && still)
+  {
+    // se ci sono nuove missioni disponibili bisogna allocarle
+    // IMPORTANTE: è essenziale che i robot siano sincronizzati
+    // sul goal altrimenti la pianificazione si baserà
+    // su dei percorsi sfasati
+    bool first_to_see_equal = false;
+    status = msg->GOAL_STATUS[0];
     for (int i = 1; i < TEAM_SIZE; i++)
     {
-      if (token.GOAL_STATUS[i] != status)
-        equal_status = false;
+      if (msg->GOAL_STATUS[i] != status)
+        first_to_see_equal = true;
     }
 
-    if (equal_status)
+    if (msg->NEW_MISSIONS_AVAILABLE && first_to_see_equal)
     {
-      // se ci sono nuove missioni disponibili bisogna allocarle
-      // IMPORTANTE: è essenziale che i robot siano sincronizzati
-      // sul goal altrimenti la pianificazione si baserà
-      // su dei percorsi sfasati
-      if (ID_ROBOT == TEAM_SIZE - 1 && msg->NEW_MISSIONS_AVAILABLE)
+      token.ALLOCATE = true;
+
+      // individuo il robot più scarico e gli mando il token
+      int id_next_robot = 0;
+      int min_path_len = token.TRAILS[0].PATH.size();
+      for (int i = 1; i < TEAM_SIZE; i++)
       {
-        token.ALLOCATE = true;
+        int len = token.TRAILS[i].PATH.size();
+        if (len < min_path_len)
+        {
+          min_path_len = len;
+          id_next_robot = i;
+        }
       }
 
-      first_time = true;
+      token.ID_RECEIVER = id_next_robot;
+    }
+    else
+    {
       if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
       {
-        goal_complete = false;
         next_vertex = token.TRAILS[ID_ROBOT].PATH[1];
       }
       else
@@ -483,6 +505,8 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
         c_print("[ WARN]Don't know what to do!!!", yellow, P);
         next_vertex = current_vertex;
       }
+
+      still = false;
       c_print("before OnGoal()", magenta);
       c_print("[DEBUG]\tGoing to ", next_vertex, green, P);
       sendGoal(next_vertex);
@@ -536,6 +560,17 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     }
     waypoints.push_back(initial_vertex);
     spacetime_dijkstra(robot_paths, map_graph, waypoints, robot_paths[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
+    std::cout << "first_leg: ";
+    for (unsigned int v : first_leg)
+    {
+      std::cout << v << " ";
+    }
+    std::cout << "\nlast_leg: ";
+    for (unsigned int v : last_leg)
+    {
+      std::cout << v << " ";
+    }
+    std::cout << std::endl;
     token.TRAILS[ID_ROBOT].PATH.pop_back();
     token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), first_leg.begin(), first_leg.end());
     token.HOME_TRAILS[ID_ROBOT].PATH = last_leg;
@@ -552,12 +587,13 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     if (!token.MISSION.empty())
     {
       id_next_robot = 0;
-      min_length = robot_paths[0].PATH.size();
+      min_length = token.TRAILS[0].PATH.size();
       for (int i = 1; i < TEAM_SIZE; i++)
       {
-        if (robot_paths[i].PATH.size() < min_length)
+        int len = token.TRAILS[i].PATH.size();
+        if (len < min_length)
         {
-          min_length = robot_paths[i].PATH.size();
+          min_length = len;
           id_next_robot = i;
         }
       }

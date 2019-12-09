@@ -17,6 +17,7 @@ public:
                                                  std::vector<unsigned int> *first_leg = nullptr);
 protected:
     std::vector<std::vector<unsigned int> > map_graph;
+    bool still = true;
 
     void token_simple_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
     void token_simple_allocation(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);

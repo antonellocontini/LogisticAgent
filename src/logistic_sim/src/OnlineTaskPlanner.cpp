@@ -155,6 +155,10 @@ void OnlineTaskPlanner::run()
  */
 void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
+    // c_print("From: ", msg->ID_SENDER, yellow, P);
+    // c_print("To: ", msg->ID_RECEIVER, yellow, P);
+    // c_print("");
+
     static int last_mission_size = 0;
     if (msg->ID_RECEIVER != TASK_PLANNER_ID)
         return;
@@ -202,25 +206,25 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             token.NEW_MISSIONS_AVAILABLE = true;
 
             // mando il token al robot più scarico
-            std::vector<logistic_sim::Path> robot_paths;
-            for (int i=0; i<TEAM_SIZE; i++)
-            {
-                robot_paths[i] = token.TRAILS[i];
-                robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
-            }
+            // std::vector<logistic_sim::Path> robot_paths(TEAM_SIZE);
+            // for (int i=0; i<TEAM_SIZE; i++)
+            // {
+            //     robot_paths[i] = token.TRAILS[i];
+            //     robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
+            // }
 
-            int id_next_robot = 0;
-            int min_length = robot_paths[0].PATH.size();
-            for (int i=1; i<TEAM_SIZE; i++)
-            {
-                if (robot_paths[i].PATH.size() < min_length)
-                {
-                    min_length = robot_paths[i].PATH.size();
-                    id_next_robot = i;
-                }
-            }
+            // int id_next_robot = 0;
+            // int min_length = robot_paths[0].PATH.size();
+            // for (int i=1; i<TEAM_SIZE; i++)
+            // {
+            //     if (robot_paths[i].PATH.size() < min_length)
+            //     {
+            //         min_length = robot_paths[i].PATH.size();
+            //         id_next_robot = i;
+            //     }
+            // }
 
-            token.ID_RECEIVER = id_next_robot;
+            // token.ID_RECEIVER = id_next_robot;
         }
         window_mutex.unlock();
 
@@ -236,7 +240,15 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
         }
         if (eq)
-            check_paths_conflicts(token.TRAILS);
+        {
+            std::vector<logistic_sim::Path> paths = token.TRAILS;
+            for(int i=0; i<TEAM_SIZE; i++)
+            {
+                paths[i].PATH.insert(paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
+            }
+            check_paths_conflicts(paths);
+            // check_paths_conflicts(token.TRAILS); VECCHIA VERSIONE
+        }
 
         // aggiorno la mia struttura con i dati del token
         for (int i = 0; i < TEAM_SIZE; i++)
