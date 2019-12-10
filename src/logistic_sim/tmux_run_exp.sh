@@ -107,11 +107,11 @@ function launch_agents {
 		tmux selectp -t $SESSION:2.$i
 		if [ $DEBUG = true ] ; then
 			if [ -f "commands_all.txt" ] ; then
-				tmux send-keys "rosrun --prefix 'gdb -x commands_all.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+				tmux send-keys "rosrun --prefix 'gdb -q -x commands_all.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
 			elif [ -f "commands_$i.txt" ] ; then
-				tmux send-keys "rosrun --prefix 'gdb -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+				tmux send-keys "rosrun --prefix 'gdb -q -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
 			else
-				tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+				tmux send-keys "rosrun --prefix 'gdb -q -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
 			fi
 		else
 			tmux send-keys "rosrun logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m

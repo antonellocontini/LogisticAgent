@@ -416,7 +416,7 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
     }
     token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
 
-    if (token.GOAL_STATUS[ID_ROBOT] > 0 && token.TRAILS[ID_ROBOT].PATH.size() > 1)
+    if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
     {
       token.TRAILS[ID_ROBOT].PATH.erase(token.TRAILS[ID_ROBOT].PATH.begin());
       if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
@@ -559,7 +559,7 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
       waypoints.push_back(dst);
     }
     waypoints.push_back(initial_vertex);
-    spacetime_dijkstra(robot_paths, map_graph, waypoints, robot_paths[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
+    spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
     std::cout << "first_leg: ";
     for (unsigned int v : first_leg)
     {
@@ -579,6 +579,10 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     robot_paths[ID_ROBOT].PATH = token.TRAILS[ID_ROBOT].PATH;
     robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(),
                                       token.HOME_TRAILS[ID_ROBOT].PATH.end());
+
+    // aggiorno le statistiche nel token
+    token.MISSIONS_COMPLETED[ID_ROBOT]++;
+    token.TASKS_COMPLETED[ID_ROBOT] += m.DEMANDS.size();
 
     // rimuovo la missione dal token
     token.MISSION.erase(token.MISSION.begin());
