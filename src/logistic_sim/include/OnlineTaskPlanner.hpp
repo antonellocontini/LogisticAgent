@@ -112,7 +112,7 @@ public:
     }
     bool check_paths_conflicts(const std::vector<logistic_sim::Path> &paths, bool print = true);
 protected:
-    int window_size = 10;
+    int window_size = 11;
     std::list<std::vector<logistic_sim::Mission>> mission_windows;
     boost::mutex window_mutex;
 };

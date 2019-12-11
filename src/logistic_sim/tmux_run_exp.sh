@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=grid
-NROBOTS=4
+MAP=icelab_black
+NROBOTS=6
 INITPOS=default
 ALG=OnlineAgent
 LOC=AMCL
@@ -17,7 +17,7 @@ CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=rand
 PERM=true
-DEBUG=true
+DEBUG=false
 MISSIONS_FILE=10.txt
 NRUNS=1
 
@@ -85,12 +85,12 @@ function launch_taskplanner {
 	tmux selectw -t $SESSION:3
 	if [ $DEBUG = true ] ; then
 		if [ -f "commands_taskplanner.txt" ] ; then
-			tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
+			tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
 		else
-			tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
+			tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
 		fi
 	else
-		tmux send-keys "rosrun logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE" C-m
+		tmux send-keys "rosrun logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
 	fi
 
 	echo "Launching TaskPlanner $TP_NAME..."
