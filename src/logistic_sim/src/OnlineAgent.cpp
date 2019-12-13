@@ -18,20 +18,31 @@ void OnlineAgent::init(int argc, char **argv)
 
   min_hops_matrix = calculate_min_hops_matrix();
   // TEST
-  unsigned int infinity = std::numeric_limits<unsigned int>::max();
-  for(int i=0; i<dimension; i++)
-  {
-    std::cout << std::setw(3) << i << " | ";
-    for(int j=0; j<dimension; j++)
-    {
-      if (min_hops_matrix[i][j] == infinity)
-        std::cout << "inf ";
-      else
-        std::cout << std::setw(3) << min_hops_matrix[i][j] << " ";
-    }
-    std::cout << "\n";      
-  }
-  std::cout << std::endl;
+  // unsigned int infinity = std::numeric_limits<unsigned int>::max();
+  // std::cout << "    | ";
+  // for(int i=0; i<dimension; i++)
+  // {
+  //   std::cout << std::setw(3) << i << " ";
+  // }
+  // std::cout << "\n----+-";
+  // for(int i=0; i<dimension; i++)
+  // {
+  //   std::cout << "----";
+  // }
+  // std::cout << "\n";
+  // for(int i=0; i<dimension; i++)
+  // {
+  //   std::cout << std::setw(3) << i << " | ";
+  //   for(int j=0; j<dimension; j++)
+  //   {
+  //     if (min_hops_matrix[i][j] == infinity)
+  //       std::cout << "inf ";
+  //     else
+  //       std::cout << std::setw(3) << min_hops_matrix[i][j] << " ";
+  //   }
+  //   std::cout << "\n";      
+  // }
+  // std::cout << std::endl;
 }
 
 void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -576,29 +587,11 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
       waypoints.push_back(dst);
     }
     waypoints.push_back(initial_vertex);
-    spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
+    std::vector<unsigned int> bfs_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
     // test euristica astar
-    auto astar_cmp_function = [&](const st_location &lhs, const st_location &rhs)
-    {
-        // uso la min_hops_matrix come euristica sulla lunghezza del percorso rimanente
-        unsigned int lhs_h = min_hops_matrix[lhs.vertex][waypoints[lhs.waypoint]];
-        unsigned int rhs_h = min_hops_matrix[rhs.vertex][waypoints[rhs.waypoint]];
-        if (lhs.time + lhs_h < rhs.time + rhs_h)
-        {
-            return true;
-        }
-        else if (lhs.time + lhs_h == rhs.time + rhs_h)
-        {
-            if (lhs.waypoint > rhs.waypoint)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    };
+    auto f = boost::bind(astar_cmp_function, min_hops_matrix, waypoints, _1, _2);
     std::vector<unsigned int> astar_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1,
-                                                                nullptr, nullptr, &astar_cmp_function);
+                                                                nullptr, nullptr, &f);
     std::cout << "first_leg: ";
     for (unsigned int v : first_leg)
     {
@@ -679,10 +672,12 @@ std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
 {
   unsigned int infinity = std::numeric_limits<unsigned int>::max();
   std::vector<std::vector<unsigned int>> result(dimension,
+                                                // std::vector<unsigned int>(dimension, 0));
                                                 std::vector<unsigned int>(dimension, infinity));
   for (unsigned int u=0; u < dimension; u++)
   {
-    result[u][u] = 0;
+    // self loop is 1 because the robot must wait for the others to do their moves
+    result[u][u] = 1;
     for (unsigned int v : map_graph[u])
     {
       result[u][v] = 1;
@@ -707,238 +702,7 @@ std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
   return result;
 }
 
-// genera un percorso fino all'ultimo waypoint
-// se last_leg è diverso da nullptr il vettore
-// viene riempito col percorso dal penultimo
-// all'ultimo waypoint
-std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logistic_sim::Path> &other_paths,
-                                                          const std::vector<std::vector<unsigned int>> &graph,
-                                                          const std::vector<unsigned int> &waypoints, int start_time,
-                                                          std::vector<unsigned int> *last_leg,
-                                                          std::vector<unsigned int> *first_leg,
-                                                          bool (*cmp_function)(const st_location&, const st_location&))
-{
-  std::cout << "SPACETIME DIJKSTRA --- WAYPOINTS:";
-  for (int i = 0; i < waypoints.size(); i++)
-  {
-    std::cout << " " << waypoints[i];
-  }
-  std::cout << std::endl;
 
-  unsigned int source = waypoints.front();
-  auto it_waypoints = waypoints.begin() + 1;
-
-  // inizializzazione strutture
-  for (unsigned int i = 0; i < graph.size(); i++)
-  {
-    for (unsigned int j = 0; j < MAX_TIME; j++)
-    {
-      for (unsigned int k = 0; k < MAX_WAYPOINTS; k++)
-      {
-        path_sizes[i][j][k] = 0;
-      }
-    }
-  }
-  prev_paths[source][0][1][0] = source;
-  path_sizes[source][0][1] = 1;
-
-  for (unsigned int i = 0; i < graph.size(); i++)
-  {
-    for (unsigned int j = 0; j < MAX_TIME; j++)
-    {
-      for (unsigned int k = 0; k < MAX_WAYPOINTS; k++)
-      {
-        visited[i][j][k] = WHITE;
-      }
-    }
-  }
-
-  // inizializzazione coda
-  for (unsigned int i = 0; i < MAX_TIME; i++)
-  {
-    queue[i] = st_location();
-  }
-  st_location st(source, start_time, 1);
-  queue[0] = st;
-  int queue_size = 1;
-
-  // individuo la lunghezza del percorso maggiore
-  uint max_path_size = 0;
-  for (int i = 0; i < TEAM_SIZE; i++)
-  {
-    if (i != ID_ROBOT && other_paths[i].PATH.size() > max_path_size)
-    {
-      max_path_size = other_paths[i].PATH.size();
-    }
-  }
-
-  while (queue_size > 0)
-  {
-    st_location current_st = queue[--queue_size];
-    unsigned int u = current_st.vertex;
-    unsigned int time = current_st.time - start_time;
-    unsigned int current_waypoint = current_st.waypoint;
-    unsigned int next_next_waypoint;
-
-    visited[u][time][current_waypoint] = BLACK;
-
-    if (u == waypoints[current_waypoint])
-    {
-      if (current_waypoint + 1 == waypoints.size())
-      {
-        if (time + 1 + start_time >= max_path_size)
-        {
-          std::vector<unsigned int> result =
-              std::vector<unsigned int>(prev_paths[u][time][current_waypoint],
-                                        prev_paths[u][time][current_waypoint] + path_sizes[u][time][current_waypoint]);
-
-          // spezzo il percorso in due parti
-          if (last_leg != nullptr && first_leg != nullptr)
-          {
-            last_leg->clear();
-            first_leg->clear();
-            bool last_part = true;
-            for (auto it = result.rbegin(); it != result.rend(); it++)
-            {
-              if (*it == waypoints[current_waypoint - 1])
-              {
-                last_part = false;
-              }
-
-              if (last_part)
-              {
-                last_leg->insert(last_leg->begin(), *it);
-              }
-              else
-              {
-                first_leg->insert(first_leg->begin(), *it);
-              }
-            }
-          }
-
-          return result;
-        }
-        else
-        {
-          next_next_waypoint = current_waypoint;
-        }
-      }
-      else
-      {
-        next_next_waypoint = current_waypoint + 1;
-      }
-    }
-    else  // u non è waypoint
-    {
-      next_next_waypoint = current_waypoint;
-    }
-
-    // considero l'attesa sul posto
-    unsigned int next_time = time + 1;
-    if (next_time < MAX_TIME && visited[u][next_time][next_next_waypoint] == WHITE)
-    {
-      bool good = true;
-      for (int i = 0; i < TEAM_SIZE; i++)
-      {
-        if (i != ID_ROBOT)
-        {
-          if (next_time + start_time < other_paths[i].PATH.size())
-          {
-            if (other_paths[i].PATH[next_time + start_time] == u)
-            {
-              // std::cout << "can't stand in " << u << " at time " << time << std::endl;
-              good = false;
-              break;
-            }
-          }
-          else if (!other_paths[i].PATH.empty() /* && still_robots[i] */)
-          {
-            if (other_paths[i].PATH.back() == u)
-            {
-              // std::cout << "can't stand in " << u << " at time " << time << std::endl;
-              good = false;
-              break;
-            }
-          }
-        }
-      }
-
-      if (good)
-      {
-        st_location next_st(u, next_time + start_time, next_next_waypoint);
-        queue_size = insertion_sort(queue, queue_size, next_st, cmp_function);
-        visited[u][next_time][next_next_waypoint] = GRAY;
-
-        unsigned int psize = path_sizes[u][time][current_waypoint];
-        for (unsigned int i = 0; i < psize; i++)
-        {
-          prev_paths[u][next_time][next_next_waypoint][i] = prev_paths[u][time][current_waypoint][i];
-        }
-        prev_paths[u][next_time][next_next_waypoint][psize] = u;
-        path_sizes[u][next_time][next_next_waypoint] = path_sizes[u][time][current_waypoint] + 1;
-      }
-    }
-
-    // considero i vicini
-    for (auto it = graph[u].begin(); it != graph[u].end(); it++)
-    {
-      const unsigned int v = *it;
-      const unsigned int next_time = time + 1;
-
-      if (next_time < MAX_TIME && visited[v][next_time][next_next_waypoint] == WHITE)
-      {
-        bool good = true;
-        for (int i = 0; i < TEAM_SIZE; i++)
-        {
-          if (i != ID_ROBOT)
-          {
-            if (next_time + start_time < other_paths[i].PATH.size())
-            {
-              if (other_paths[i].PATH[next_time + start_time] == v)
-              {
-                // std::cout << "can't go in " << v << " at time " << time << std::endl;
-                good = false;
-                break;
-              }
-              if (other_paths[i].PATH[next_time + start_time] == u && other_paths[i].PATH[time + start_time] == v)
-              {
-                // std::cout << "can't go in " << v << " at time " << time << std::endl;
-                good = false;
-                break;
-              }
-            }
-            else if (!other_paths[i].PATH.empty() /* && still_robots[i] */)
-            {
-              if (other_paths[i].PATH.back() == v)
-              {
-                // std::cout << "can't go in " << v << " at time " << time << ", there is a still robot" << std::endl;
-                good = false;
-                break;
-              }
-            }
-          }
-        }
-
-        if (good)
-        {
-          st_location next_st(v, next_time + start_time, next_next_waypoint);
-          queue_size = insertion_sort(queue, queue_size, next_st);
-          visited[v][next_time][next_next_waypoint] = GRAY;
-
-          unsigned int psize = path_sizes[u][time][current_waypoint];
-          for (unsigned int i = 0; i < psize; i++)
-          {
-            prev_paths[v][next_time][next_next_waypoint][i] = prev_paths[u][time][current_waypoint][i];
-          }
-          prev_paths[v][next_time][next_next_waypoint][psize] = v;
-          path_sizes[v][next_time][next_next_waypoint] = path_sizes[u][time][current_waypoint] + 1;
-        }
-      }
-    }
-  }
-
-  throw std::string("Can't find path!!!");
-}
 
 }  // namespace onlineagent
 

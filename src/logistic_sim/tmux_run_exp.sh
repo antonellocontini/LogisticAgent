@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=icelab_black
+MAP=grid
 NROBOTS=2
 INITPOS=default
 ALG=OnlineAgent
