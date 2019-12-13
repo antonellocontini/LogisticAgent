@@ -504,7 +504,8 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 	}
 } // token_callback()
 
-unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc)
+unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc,
+							bool (*cmp_function)(const st_location&, const st_location&) = nullptr)
 {
 	//   auto cmp_function = [&](const st_location &lhs, const st_location &rhs) {
 	// 	if (lhs.time < rhs.time)
@@ -524,9 +525,15 @@ unsigned int insertion_sort(st_location *queue, unsigned int size, st_location l
 	int i;
 	for (i = size - 1; i >= 0; i--)
 	{
-		// if (cmp_function(loc, queue[i]))
-		if (loc < queue[i])
+		if (cmp_function != nullptr)
+		{
+			if (cmp_function(loc, queue[i]))
+				break;
+		}
+		else if (loc < queue[i])
+		{
 			break;
+		}
 		queue[i + 1] = queue[i];
 	}
 	queue[i + 1] = loc;

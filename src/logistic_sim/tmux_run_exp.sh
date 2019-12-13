@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=6
+NROBOTS=2
 INITPOS=default
 ALG=OnlineAgent
 LOC=AMCL
@@ -17,7 +17,7 @@ CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=rand
 PERM=true
-DEBUG=false
+DEBUG=true
 MISSIONS_FILE=10.txt
 NRUNS=1
 

@@ -15,6 +15,23 @@ void OnlineAgent::init(int argc, char **argv)
       map_graph[i].push_back(vertex_web[i].id_neigh[j]);
     }
   }
+
+  min_hops_matrix = calculate_min_hops_matrix();
+  // TEST
+  unsigned int infinity = std::numeric_limits<unsigned int>::max();
+  for(int i=0; i<dimension; i++)
+  {
+    std::cout << std::setw(3) << i << " | ";
+    for(int j=0; j<dimension; j++)
+    {
+      if (min_hops_matrix[i][j] == infinity)
+        std::cout << "inf ";
+      else
+        std::cout << std::setw(3) << min_hops_matrix[i][j] << " ";
+    }
+    std::cout << "\n";      
+  }
+  std::cout << std::endl;
 }
 
 void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -560,6 +577,28 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     }
     waypoints.push_back(initial_vertex);
     spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
+    // test euristica astar
+    auto astar_cmp_function = [&](const st_location &lhs, const st_location &rhs)
+    {
+        // uso la min_hops_matrix come euristica sulla lunghezza del percorso rimanente
+        unsigned int lhs_h = min_hops_matrix[lhs.vertex][waypoints[lhs.waypoint]];
+        unsigned int rhs_h = min_hops_matrix[rhs.vertex][waypoints[rhs.waypoint]];
+        if (lhs.time + lhs_h < rhs.time + rhs_h)
+        {
+            return true;
+        }
+        else if (lhs.time + lhs_h == rhs.time + rhs_h)
+        {
+            if (lhs.waypoint > rhs.waypoint)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    };
+    std::vector<unsigned int> astar_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1,
+                                                                nullptr, nullptr, &astar_cmp_function);
     std::cout << "first_leg: ";
     for (unsigned int v : first_leg)
     {
@@ -633,6 +672,41 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
   }
 }
 
+/*
+ * Floyd-Warshall per trovare il minimo numero di hop tra ogni coppia di vertici
+ */
+std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
+{
+  unsigned int infinity = std::numeric_limits<unsigned int>::max();
+  std::vector<std::vector<unsigned int>> result(dimension,
+                                                std::vector<unsigned int>(dimension, infinity));
+  for (unsigned int u=0; u < dimension; u++)
+  {
+    result[u][u] = 0;
+    for (unsigned int v : map_graph[u])
+    {
+      result[u][v] = 1;
+    }
+  }
+
+  for (unsigned int k=0; k<dimension; k++)
+  {
+    for (unsigned int i=0; i<dimension; i++)
+    {
+      for (unsigned int j=0; j<dimension; j++)
+      {
+        if (result[i][k] != infinity && result[k][j] != infinity &&
+            result[i][j] > result[i][k] + result[k][j])
+        {
+          result[i][j] = result[i][k] + result[k][j];
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
 // genera un percorso fino all'ultimo waypoint
 // se last_leg è diverso da nullptr il vettore
 // viene riempito col percorso dal penultimo
@@ -641,7 +715,8 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
                                                           const std::vector<std::vector<unsigned int>> &graph,
                                                           const std::vector<unsigned int> &waypoints, int start_time,
                                                           std::vector<unsigned int> *last_leg,
-                                                          std::vector<unsigned int> *first_leg)
+                                                          std::vector<unsigned int> *first_leg,
+                                                          bool (*cmp_function)(const st_location&, const st_location&))
 {
   std::cout << "SPACETIME DIJKSTRA --- WAYPOINTS:";
   for (int i = 0; i < waypoints.size(); i++)
@@ -791,7 +866,7 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
       if (good)
       {
         st_location next_st(u, next_time + start_time, next_next_waypoint);
-        queue_size = insertion_sort(queue, queue_size, next_st);
+        queue_size = insertion_sort(queue, queue_size, next_st, cmp_function);
         visited[u][next_time][next_next_waypoint] = GRAY;
 
         unsigned int psize = path_sizes[u][time][current_waypoint];
