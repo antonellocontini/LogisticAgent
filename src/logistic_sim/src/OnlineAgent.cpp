@@ -102,7 +102,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   // {
   //   token_simple_allocation(msg, token);
   // }
-  if (msg->ALLOCATE)
+  else if (msg->ALLOCATE)
   {
     token_priority_alloc_plan(msg, token);
   }
@@ -587,11 +587,11 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
       waypoints.push_back(dst);
     }
     waypoints.push_back(initial_vertex);
-    std::vector<unsigned int> bfs_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
+    // std::vector<unsigned int> bfs_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
     // test euristica astar
     auto f = boost::bind(astar_cmp_function, min_hops_matrix, waypoints, _1, _2);
     std::vector<unsigned int> astar_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1,
-                                                                nullptr, nullptr, &f);
+                                                                &last_leg, &first_leg, &f);
     std::cout << "first_leg: ";
     for (unsigned int v : first_leg)
     {

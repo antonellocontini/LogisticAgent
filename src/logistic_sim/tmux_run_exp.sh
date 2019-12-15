@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=grid
-NROBOTS=2
+MAP=icelab_black
+NROBOTS=6
 INITPOS=default
 ALG=OnlineAgent
 LOC=AMCL
@@ -17,7 +17,7 @@ CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=rand
 PERM=true
-DEBUG=true
+DEBUG=false
 MISSIONS_FILE=10.txt
 NRUNS=1
 
