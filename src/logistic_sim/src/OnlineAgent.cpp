@@ -86,6 +86,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token.NEW_TRAILS.push_back(p);
     token.HOME_TRAILS.push_back(logistic_sim::Path());
     token.REACHED_HOME.push_back(false);
+    token.FAILED_ALLOCATION.push_back(false);
     token.ACTIVE_ROBOTS = TEAM_SIZE;
 
     initialize = false;
@@ -619,6 +620,9 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     // rimuovo la missione dal token
     token.MISSION.erase(token.MISSION.begin());
 
+    // i campi bool dei messaggi diventano uint8_t
+    token.FAILED_ALLOCATION = std::vector<uint8_t>(TEAM_SIZE, false);
+
     // se ci sono altre missioni mando al robot col percorso più corto
     if (!token.MISSION.empty())
     {
@@ -650,11 +654,13 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
   {
     c_print("Impossibile calcolare percorso", yellow, P);
 
+    token.FAILED_ALLOCATION[ID_ROBOT] = true;
+
     // search the next robot
     min_length = std::numeric_limits<int>::max();
     for (int i = 0; i < TEAM_SIZE; i++)
     {
-      if (i != ID_ROBOT && robot_paths[i].PATH.size() < min_length)
+      if (!token.FAILED_ALLOCATION[i] && robot_paths[i].PATH.size() < min_length)
       {
         min_length = robot_paths[i].PATH.size();
         id_next_robot = i;

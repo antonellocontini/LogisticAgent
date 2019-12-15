@@ -41,7 +41,7 @@ uint32[]    MISSIONS_COMPLETED
 uint32[]    TASKS_COMPLETED
 float32[]   TOTAL_DISTANCE
 
-# campi per GlobalAgent
+# campi per GlobalAgent e versioni successive
 uint32[]    GOAL_STATUS
 Path[]      TRAILS
 Path[]      NEW_TRAILS
@@ -49,6 +49,7 @@ Path[]      HOME_TRAILS # per separare ritorno a casa dal percorso dei task
 uint32      INIT_POS_INDEX
 bool[]      REACHED_HOME
 int32       ACTIVE_ROBOTS
+bool[]      FAILED_ALLOCATION # per segnalare quali robot hanno fallito l'allocazione del task corrente (solo OnlineAgent)
 
 # flag per terminazione simulazione
 bool        END_SIMULATION
