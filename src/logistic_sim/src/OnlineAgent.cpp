@@ -91,18 +91,9 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
     initialize = false;
     next_vertex = current_vertex = initial_vertex;
-    goal_complete = true;
+    // goal_complete = true;
+    sendGoal(initial_vertex);
   }
-
-  // VECCHIO METODO
-  // if (msg->CALCULATE_PATHS)
-  // {
-  //   token_simple_planning(msg, token);
-  // }
-  // else if (msg->ALLOCATE)
-  // {
-  //   token_simple_allocation(msg, token);
-  // }
   else if (msg->ALLOCATE)
   {
     token_priority_alloc_plan(msg, token);
@@ -113,6 +104,15 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token_priority_coordination(msg, token);
     // token_simple_coordination(msg, token);
   }
+  // VECCHIO METODO
+  // if (msg->CALCULATE_PATHS)
+  // {
+  //   token_simple_planning(msg, token);
+  // }
+  // else if (msg->ALLOCATE)
+  // {
+  //   token_simple_allocation(msg, token);
+  // }
 
   ros::Duration(0.03).sleep();
   token_pub.publish(token);

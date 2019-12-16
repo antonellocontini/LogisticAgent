@@ -5,7 +5,8 @@ MAP=icelab_black
 NROBOTS=6
 INITPOS=default
 ALG=OnlineAgent
-LOC=AMCL
+# LOC=AMCL
+LOC=fake_localization
 NAV=ros
 GWAIT=0
 COMMDELAY=0.2
@@ -17,7 +18,7 @@ CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=rand
 PERM=true
-DEBUG=false
+DEBUG=true
 MISSIONS_FILE=10.txt
 NRUNS=1
 
@@ -46,7 +47,7 @@ function launch_ros {
 	tmux selectp -t $SESSION:0.0
 	tmux send-keys "roscore &" C-m
 	echo "Launching roscore..."
-	sleep 8
+	until rostopic list &> /dev/null; do sleep 1; done
 	echo "Setting ROS parameters..."
 	tmux send-keys "rosparam set /use_sim_time True" C-m
 	tmux send-keys "rosparam set /goal_reached_wait $GWAIT" C-m
@@ -71,7 +72,11 @@ function launch_robots {
 	n=$(( NROBOTS - 1 ))
 	for i in $(seq 0 $n); do
 		tmux selectp -t $SESSION:1.$i
-		tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
+		if [ "$LOC" = "AMCL" ]; then
+			tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
+		else
+			tmux send-keys "roslaunch logistic_sim robot_fake_loc.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
+		fi
 		echo "Robot $i launched"
 		sleep 1
 	done

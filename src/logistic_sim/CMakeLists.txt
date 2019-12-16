@@ -109,7 +109,6 @@ include_directories(
   # src
   ${catkin_INCLUDE_DIRS}
   ../../lib
-  #/home/dave/LogisticAgent/lib
 )
 
 ############
