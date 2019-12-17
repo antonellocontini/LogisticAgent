@@ -228,17 +228,17 @@ void Agent::goalDoneCallback(const actionlib::SimpleClientGoalState &state, cons
                 sprintf(srvname, "/robot_%d/move_base/clear_costmaps", ID_ROBOT);
             }
 
-            // ros::NodeHandle n;
-            // ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
-            // std_srvs::Empty srv;
-            // if (client.call(srv))
-            // {
-            //     ROS_INFO("Costmaps cleared.\n");
-            // }
-            // else
-            // {
-            //     ROS_ERROR("Failed to call service move_base/clear_costmaps");
-            // }
+            ros::NodeHandle n;
+            ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
+            std_srvs::Empty srv;
+            if (client.call(srv))
+            {
+                ROS_INFO("Costmaps cleared.\n");
+            }
+            else
+            {
+                ROS_ERROR("Failed to call service move_base/clear_costmaps");
+            }
 
             ROS_INFO("Resend Goal!");
             ResendGoal = true;
