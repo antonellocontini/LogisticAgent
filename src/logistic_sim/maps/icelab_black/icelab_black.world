@@ -4,16 +4,16 @@ include "../floorplan.inc"
 include "../cpoint.inc"
 
 window( 
-  size   [ 460 180 1 ]         
+  size   [ 640 256 1 ]         
   rotate [ 0.000 0.000 ]    
-  center [ 11.500 4.000 ]   
-  scale 17.000
+  center [ 12.500 4.000 ]   
+  scale 18.000
   show_data 1
 )
 
 floorplan (
-  size [24.000 5.900  1.000] 
-  pose [12.000 3.150 0.000 0.000]
+  size [28.000 6.900  1.000] 
+  pose [14.000 3.750 0.000 0.000]
   bitmap "icelab_black.pgm"
 )
 
