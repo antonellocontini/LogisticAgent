@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=6
+NROBOTS=2
 INITPOS=default
 ALG=OnlineAgent
 # LOC=AMCL
