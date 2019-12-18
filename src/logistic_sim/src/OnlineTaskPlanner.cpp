@@ -50,7 +50,55 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     ros::spinOnce();
 
     allocate_memory();
-    missions_generator(GENERATION);
+    if (GENERATION != "file")
+    {
+        missions_generator(GENERATION);
+        std::stringstream conf_dir_name;
+        conf_dir_name << "missions";
+        //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
+        boost::filesystem::path conf_directory(conf_dir_name.str());
+        if (!boost::filesystem::exists(conf_directory))
+        {
+            boost::filesystem::create_directory(conf_directory);
+        }
+
+        std::string filename;
+        int run_number = 1;
+        std::stringstream filenamestream;
+        std::ifstream check_new;
+        // loop per controllare se il file già esiste
+        do
+        {
+            filenamestream.str(""); // cancella la stringa
+            filenamestream << conf_dir_name.str() << "/" << run_number << ".txt";
+            check_new = std::ifstream(filenamestream.str());
+            run_number++;
+        } while (check_new);
+        check_new.close();
+        filename = filenamestream.str();
+        std::ofstream file(filename);
+        write_simple_missions(file, missions);
+    }
+    else
+    {
+        c_print("Lettura da file...", green, P);
+        std::stringstream taskset_dir_name;
+        taskset_dir_name << "missions/" << task_set_file;
+        std::string filename(taskset_dir_name.str());
+        boost::filesystem::path missions_path(filename);
+        if (!boost::filesystem::exists(missions_path))
+        {
+            c_print("File missioni ", filename, " non esistente!!!", red, P);
+            sleep(2);
+            ros::shutdown();
+            int cmd_result = system("./stop_experiment.sh");
+        }
+        ifstream missions_file(filename);
+        // missions_file >> missions;
+        missions = read_simple_missions(missions_file);
+        nTask = missions.size();
+        missions_file.close();
+    }
 
     c_print("Numero di task: ", missions.size(), green, P);
     // print missions
@@ -242,7 +290,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         if (eq)
         {
             std::vector<logistic_sim::Path> paths = token.TRAILS;
-            for(int i=0; i<TEAM_SIZE; i++)
+            for (int i = 0; i < TEAM_SIZE; i++)
             {
                 paths[i].PATH.insert(paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(), token.HOME_TRAILS[i].PATH.end());
             }
@@ -468,6 +516,56 @@ bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Pa
     }
 
     return good;
+}
+
+void OnlineTaskPlanner::write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &missions)
+{
+    os << missions.size() << "\n\n";
+    for (const logistic_sim::Mission &m : missions)
+    {
+        os << m.ID << "\n";
+        uint dst = m.DSTS[0];
+        // cerco indice nel vettore di destinazioni
+        auto it = std::find(dst_vertex.begin(), dst_vertex.end(), dst);
+        os << it - dst_vertex.begin() << "\n";
+
+        uint dms = m.DEMANDS[0];
+        os << dms << "\n";
+
+        os << "\n";
+    }
+
+    os << std::flush;
+}
+
+std::vector<logistic_sim::Mission> OnlineTaskPlanner::read_simple_missions(std::istream &is)
+{
+    std::vector<logistic_sim::Mission> missions;
+    int n_missions;
+    is >> n_missions;
+
+    for (int i = 0; i < n_missions; i++)
+    {
+        logistic_sim::Mission m;
+        is >> m.ID;
+        uint dst_index;
+        is >> dst_index;
+        m.DSTS.push_back(dst_vertex[dst_index]);
+
+        uint dms;
+        is >> dms;
+        m.DEMANDS.push_back(dms);
+
+        // genero percorso e metrica V
+        copy(paths[dst_index].begin(), paths[dst_index].end(), back_inserter(m.ROUTE));
+        m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+        m.TOT_DEMAND = dms;
+        m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
+
+        missions.push_back(m);
+    }
+
+    return missions;
 }
 
 } // namespace onlinetaskplanner

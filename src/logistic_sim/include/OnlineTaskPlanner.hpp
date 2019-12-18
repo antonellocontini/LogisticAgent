@@ -111,6 +111,13 @@ public:
         return TaskPlanner::robot_ready(req, res);
     }
     bool check_paths_conflicts(const std::vector<logistic_sim::Path> &paths, bool print = true);
+
+    // queste due funzioni scrivono/leggono una versione semplificata della struttura mission
+    // in particolare andrebbero usate solo per missioni con singola destinazione
+    // inoltre identificano la destinazione non con il vertice nel grafo ma con un indice
+    // per garantire compatibilità con mappe diverse
+    void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
+    std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
 protected:
     int window_size = 11;
     std::list<std::vector<logistic_sim::Mission>> mission_windows;

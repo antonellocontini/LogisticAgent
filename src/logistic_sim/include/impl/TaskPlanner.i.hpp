@@ -675,31 +675,26 @@ void TaskPlanner::missions_generator(std::string &type_gen)
   else if (type_gen == "file")
   {
     std::stringstream taskset_dir_name;
-    // taskset_dir_name << "results/" << name << "_" << ALGORITHM
-    //                  // TODO: lettura da cartella diversa da rand!!!
-    //                  << "_"
-    //                  << "rand"
-    //                  << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname << "/missions/"
-    //                  << task_set_file;
-    taskset_dir_name << "results/missions/" << task_set_file;
+    taskset_dir_name << "missions/" << task_set_file;
     std::string filename(taskset_dir_name.str());
     boost::filesystem::path missions_path(filename);
     if (!boost::filesystem::exists(missions_path))
     {
       c_print("File missioni ", filename, " non esistente!!!", red, P);
-      sleep(1);
+      sleep(2);
       ros::shutdown();
       int cmd_result = system("./stop_experiment.sh");
     }
     ifstream missions_file(filename);
     // missions_file >> missions;
     missions = read_missions(missions_file);
+    nTask = missions.size();
     missions_file.close();
   }
   else if (type_gen == "rand")
   {
     c_print("creating random mission");
-    random_mission(40);
+    random_mission(30);
   }
   else
   {
@@ -857,7 +852,7 @@ void TaskPlanner::write_missions_on_file(std::string filename)
   }
 
   std::stringstream conf_dir_name;
-  conf_dir_name << "results";
+  conf_dir_name << "missions";
   //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
   boost::filesystem::path conf_directory(conf_dir_name.str());
   if (!boost::filesystem::exists(conf_directory))
@@ -865,12 +860,12 @@ void TaskPlanner::write_missions_on_file(std::string filename)
     boost::filesystem::create_directory(conf_directory);
   }
 
-  conf_dir_name << "/missions";
-  conf_directory = boost::filesystem::path(conf_dir_name.str());
-  if (!boost::filesystem::exists(conf_directory))
-  {
-    boost::filesystem::create_directory(conf_directory);
-  }
+  // conf_dir_name << "/missions";
+  // conf_directory = boost::filesystem::path(conf_dir_name.str());
+  // if (!boost::filesystem::exists(conf_directory))
+  // {
+  //   boost::filesystem::create_directory(conf_directory);
+  // }
 
   if (filename == "")
   {
