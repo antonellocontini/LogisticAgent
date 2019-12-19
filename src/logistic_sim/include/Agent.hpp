@@ -103,7 +103,7 @@ protected:
 
   bool ResendGoal; // Send the same goal again (if goal failed...)
   bool interference;
-  bool goal_complete;
+  bool goal_complete, goal_success;
   bool initialize;
   bool end_simulation;
   bool goal_canceled_by_user;

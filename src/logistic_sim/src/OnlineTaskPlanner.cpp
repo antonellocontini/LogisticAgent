@@ -223,6 +223,8 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.END_SIMULATION = false;
         token.ALL_MISSIONS_INSERTED = false;
         start_time = ros::Time::now();
+        last_goal_time = ros::Time::now();
+        last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
         last_mission_size = 0;
     }
     else
@@ -275,6 +277,35 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             // token.ID_RECEIVER = id_next_robot;
         }
         window_mutex.unlock();
+
+        // controllo liveness dei robot
+        if (std::equal(token.GOAL_STATUS.begin(), token.GOAL_STATUS.end(), last_goal_status.begin()))
+        {
+            auto delta = ros::Time::now() - last_goal_time;
+            if (delta >= shutdown_timeout)
+            {
+                ROS_ERROR("Shutdown timeout has occured!!! Shutting down in 3 seconds");
+                ros::Duration(3.0).sleep();
+                ros::shutdown();
+                int cmd_result = system("./stop_experiment.sh");
+            }
+            else if (delta >= shutdown_warning && !warning_occured)
+            {
+                ROS_WARN("Stuck robots detected, shutting down in 1 minute");
+                warning_occured = true;
+            }
+        }
+        else
+        {
+            last_goal_status = token.GOAL_STATUS;
+            last_goal_time = ros::Time::now();
+            if (warning_occured)
+            {
+                ROS_INFO("Timeout resetted");
+                warning_occured = false;
+            }
+        }
+        
 
         // controllo conflitti nei percorsi
         bool eq = true;

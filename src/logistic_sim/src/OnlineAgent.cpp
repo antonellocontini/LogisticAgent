@@ -428,7 +428,7 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
   }
 
   // gestisco l'arrivo al goal
-  if (goal_complete)
+  if (goal_success)
   {
     // aggiorno distanza percorsa nel token
     uint edge_length = 0;
@@ -478,7 +478,7 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
     }
 
     current_vertex = next_vertex;
-    goal_complete = false;
+    goal_success = false;
     still = true;
   }
 

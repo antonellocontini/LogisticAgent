@@ -203,6 +203,7 @@ void Agent::goalDoneCallback(const actionlib::SimpleClientGoalState &state, cons
         delay.sleep();
         ROS_INFO("Goal reached ... DONE");
         goal_complete = true;
+        goal_success = true;
     }
     else
     {

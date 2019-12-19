@@ -122,6 +122,10 @@ protected:
     int window_size = 11;
     std::list<std::vector<logistic_sim::Mission>> mission_windows;
     boost::mutex window_mutex;
+    ros::Time last_goal_time;
+    ros::Duration shutdown_timeout = ros::Duration(5 * 60.0), shutdown_warning = ros::Duration(4 * 60.0);
+    bool warning_occured = false;
+    logistic_sim::Token::_GOAL_STATUS_type last_goal_status;
 };
 
 } // namespace onlinetaskplanner
