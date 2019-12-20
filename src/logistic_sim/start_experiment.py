@@ -42,10 +42,11 @@ Alg_names = [
         [ 'ConstAgent', 'ConstAgent'],
         [ 'SPartAgent','SPartAgent'],
         [ 'CFreeAgent','CFreeAgent'],
-        [ 'GlobalAgent','GlobalAgent']
+        [ 'GlobalAgent','GlobalAgent'],
+        [ 'OnlineAgent','OnlineAgent']
      ]
 
-TaskPlanner_names = [ 'TaskPlanner', 'SP_TaskPlanner', 'GlobalTaskPlanner' ]
+TaskPlanner_names = [ 'TaskPlanner', 'SP_TaskPlanner', 'GlobalTaskPlanner', 'OnlineTaskPlanner' ]
 
 TaskGeneration_names = ['uniform', 'non-uniform']
 
@@ -119,7 +120,7 @@ def getSimulationRunning():
 # Terminates if simulation is stopped (/simulation_running param is false)
 # or if timeout is reached (if this is >0)
 # CUSTOM_STAGE: use of extended API for stage (requires custom stage and stage_ros).
-def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, PERM, MISSIONS_FILE):
+def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, MISSIONS_FILE):
 
     ALG = findAlgName(ALG_SHORT)
     print 'Run the experiment'
@@ -218,7 +219,7 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     os.system('sleep 5')
     print 'bash -c \rosrun logistic_sim TaskPlanner'
     
-    cmd_taskplanner = 'bash -c \'rosrun logistic_sim '+ TP_NAME+' '+ MAP+' '+ALG+' '+str(NROBOTS)+' '+GEN+' '+str(CAPACITY)+' '+str(PERM)+' '+str(MISSIONS_FILE)+'\''
+    cmd_taskplanner = 'bash -c \'rosrun logistic_sim '+ TP_NAME+' '+ MAP+' '+ALG+' '+str(NROBOTS)+' '+GEN+' '+str(CAPACITY)+' '+str(MISSIONS_FILE)+'\''
     cmd_TP = 'gnome-terminal  --tab -e "'+cmd_taskplanner+'"&'
     
     if (TERM == 'xterm'):
@@ -529,8 +530,7 @@ def main():
     CAPACITY = int(sys.argv[13])
     TP_NAME = sys.argv[14]
     GEN = sys.argv[15]
-    PERM = sys.argv[16]
-    MISSIONS_FILE = sys.argv[17]
+    MISSIONS_FILE = sys.argv[16]
 
     # MAP = model5
     # NROBOTS = 2
@@ -553,16 +553,15 @@ def main():
     # if (len(sys.argv)>=13):
     #   SPEEDUP = float(sys.argv[12])
 
-    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY,TP_NAME,GEN,PERM,MISSIONS_FILE
+    print "param: ", MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE,SPEEDUP,CAPACITY,TP_NAME,GEN,MISSIONS_FILE
     
-    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, PERM, MISSIONS_FILE)
+    run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT, COMMDELAY, TERM, TIMEOUT, CUSTOM_STAGE, SPEEDUP, CAPACITY, TP_NAME, GEN, MISSIONS_FILE)
 
  
 
 
 if __name__ == '__main__':
     os.chdir(dirname)
-    # print "diocan"
     # MAP = "model5"
     # NROBOTS = 2
     # INITPOS = "default"
