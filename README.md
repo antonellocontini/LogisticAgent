@@ -15,8 +15,25 @@ To compile just `cd` into the repo and run `catkin_make`, if compilation fails y
 After compiling the code run `source devel/setup.bash` to add the workspace to the environment (it is good practice to add this script to your `.bashrc` file).
 
 ### Running
-To run a simulation head into the `src/logistic_sim` folder and run `./tmux_run_exp.sh`.
+There are two ways to launch the simulation, one using `tmux` (recommended) and another using `xterm`
 
+#### tmux
+To run a simulation head into the `src/logistic_sim` directory and run `./tmux_run_exp.sh`.
+
+This script uses `tmux` to organize the terminals of the different nodes so it is recommended to know at least how to switch between windows and panes. The nodes are organized in different windows:
+* roscore and free terminal
+* move_base nodes
+* agents nodes
+* task planner node
+
+The script lands on the agents window.
+
+If you desire to terminate the simulation prematurely press ctrl-b X (assuming you're using the default tmux prefix key).
+
+#### xterm
+Inside `src/logistic_sim` directory run `./run_exp.sh` to start the simulation. To stop the simulation run `./stop_experiment.sh`
+
+#### Parameters
 Inside the script there are many parameters that can be configured:
 
 The `ALG` parameter sets which agents algorithm to run:
@@ -37,7 +54,7 @@ The `GEN` parameter sets how the tasks are generated:
 The `NROBOTS` parameter sets the number of robots to run in the simulation, currently only configurations of 2, 4 or 6 robots are defined, but different ones can be made in the `params/initial_poses.txt` file. This file contains the starting positions of the robots for each map.
 
 ## Debugging
-If the `DEBUG` flag is set to `True` the agents and the task planner will run inside gdb. Custom gdb commands can be given to the robots and the taskplanner by creating specific named files inside the `src/logistic_sim` folder:
+If the `DEBUG` flag is set to `True` the agents and the task planner will run inside gdb. Custom gdb commands can be given to the robots and the taskplanner by creating specific named files inside the `src/logistic_sim` directory:
 * For the taskplanner create a `commands_taskplanner.txt` file
 * For a single agent create a `commands_<agent_id>.txt` file, where the agent id can go from 0 to `NROBOTS - 1`
 * To send commands to all agents create `commands_all.txt` file
