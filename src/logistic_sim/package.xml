@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>logistic_sim</name>
-  <version>1.0</version>
+  <version>2.2.2</version>
   <description>Multi-Robot MAPD Solver Stage/ROS Simulation Package.</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
