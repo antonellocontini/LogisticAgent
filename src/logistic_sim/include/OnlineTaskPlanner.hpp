@@ -1,6 +1,8 @@
 #pragma once
 
-#include<boost/thread.hpp>
+#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <boost/thread.hpp>
 #include "TaskPlanner.hpp"
 
 namespace onlinetaskplanner
@@ -126,6 +128,15 @@ protected:
     ros::Duration shutdown_timeout = ros::Duration(5 * 60.0), shutdown_warning = ros::Duration(4 * 60.0);
     bool warning_occured = false;
     logistic_sim::Token::_GOAL_STATUS_type last_goal_status;
+
+    std::vector<ros::Subscriber> real_pos_sub, amcl_pos_sub;
+    std::vector<nav_msgs::Odometry> last_real_pos;
+    std::vector<geometry_msgs::PoseWithCovarianceStamped> last_amcl_pos;
+    std::vector<std::vector<double>> robot_pos_errors;
+
+    // callback per leggere posizioni reali e misurate dei robot
+    void real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot);
+    void amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg, int id_robot);
 };
 
 } // namespace onlinetaskplanner

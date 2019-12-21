@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=icelab_black
+MAP=grid
 NROBOTS=6
 INITPOS=default
 ALG=OnlineAgent
@@ -14,7 +14,7 @@ SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=file
-DEBUG=false
+DEBUG=true
 MISSIONS_FILE=1.txt
 NRUNS=1
 
@@ -132,7 +132,7 @@ function set_footprints {
 	tmux selectw -t $SESSION:2
 }
 
-for i in $(echo 1 3 8)
+for i in $(seq 1 1)
 do
 	MISSIONS_FILE="$i.txt"
 	prepare_tmux

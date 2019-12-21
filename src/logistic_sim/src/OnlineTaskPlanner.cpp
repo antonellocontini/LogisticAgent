@@ -49,6 +49,39 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     ros::ServiceServer service = nh.advertiseService("robot_ready", &OnlineTaskPlanner::robot_ready, this);
     ros::spinOnce();
 
+    // subscribe alle posizioni dei robot
+    last_real_pos = std::vector<nav_msgs::Odometry>(TEAM_SIZE);
+    last_amcl_pos = std::vector<geometry_msgs::PoseWithCovarianceStamped>(TEAM_SIZE);
+    robot_pos_errors = std::vector<std::vector<double>>(TEAM_SIZE);
+    for (int i=0; i<TEAM_SIZE; i++)
+    {
+        std::stringstream real_ss, amcl_ss;
+        real_ss << "/robot_" << i << "/base_pose_ground_truth";
+        amcl_ss << "/robot_" << i << "/amcl_pose";
+        ros::Subscriber real_sub = nh.subscribe<nav_msgs::Odometry>(real_ss.str(), 10, boost::bind(&OnlineTaskPlanner::real_pos_callback, this, _1, i));
+        ros::Subscriber amcl_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(amcl_ss.str(), 10, boost::bind(&OnlineTaskPlanner::amcl_pos_callback, this, _1, i));
+
+        if (real_sub)
+        {
+            real_pos_sub.push_back(real_sub);
+            ROS_INFO_STREAM("Subscribed to " << real_ss.str());
+        }
+        else
+        {
+            ROS_WARN_STREAM("Can't subscribe to " << real_ss.str());
+        }
+
+        if (amcl_sub)
+        {
+            amcl_pos_sub.push_back(amcl_sub);
+            ROS_INFO_STREAM("Subscribed to " << amcl_ss.str());
+        }
+        else
+        {
+            ROS_WARN_STREAM("Can't subscribe to " << amcl_ss.str());
+        }
+    }
+
     allocate_memory();
     if (GENERATION != "file")
     {
@@ -378,11 +411,24 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             ofstream stats(filename.str());
-            // per qualche ragione devo esplicitare il namespace
+            // esplicitare il namespace
             // per usare l'operatore corretto
             taskplanner::operator<<(stats, robots_data);
             // stats << robots_data;
             stats.close();
+
+            for (int i=0; i<TEAM_SIZE; i++)
+            {
+                std::stringstream ss;
+                ss << filename.str() << "_robot_" << i << "_error.txt";
+                ofstream amcl_error(ss.str());
+                for (auto it = robot_pos_errors[i].begin(); it != robot_pos_errors[i].end(); it++)
+                {
+                    amcl_error << *it << "\n";
+                }
+                amcl_error.close();
+            }
+
             ros::NodeHandle nh;
             nh.setParam("/simulation_running", "false");
             ros::shutdown();
@@ -597,6 +643,22 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::read_simple_missions(std::
     }
 
     return missions;
+}
+
+void OnlineTaskPlanner::real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot)
+{
+    last_real_pos[id_robot] = *msg;
+}
+
+void OnlineTaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg, int id_robot)
+{
+    last_amcl_pos[id_robot] = *msg;
+    nav_msgs::Odometry *real_pos = &last_real_pos[id_robot];
+    
+    double distance = sqrt((msg->pose.pose.position.x - real_pos->pose.pose.position.x)*(msg->pose.pose.position.x - real_pos->pose.pose.position.x) 
+                        + (msg->pose.pose.position.y - real_pos->pose.pose.position.y)*(msg->pose.pose.position.y - real_pos->pose.pose.position.y));
+    ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
+    robot_pos_errors[id_robot].push_back(distance);
 }
 
 } // namespace onlinetaskplanner
