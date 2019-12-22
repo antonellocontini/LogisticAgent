@@ -166,6 +166,9 @@ void OnlineTaskPlanner::init(int argc, char **argv)
         ros::spinOnce();
     }
 
+    // wait
+    ros::Duration(3.0).sleep();
+
     logistic_sim::Token token;
 
     // giro di inizializzazione
@@ -543,7 +546,7 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
         ele.second = logistic_sim::Mission();
     }
 
-    print_coalition(ele);
+    // print_coalition(ele);
 
     return ele.first;
 }

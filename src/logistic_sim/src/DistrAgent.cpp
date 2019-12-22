@@ -61,7 +61,7 @@ void DistrAgent::run()
     // TEST: attesa di qualche secondo dalla partenza del precedente
     init_start_time = ros::Time::now();
     init_wait_time = 13 * ID_ROBOT;
-    c_print("[DEBUG]\tAttendo ", init_wait_time, " secondi...", yellow);
+    // c_print("[DEBUG]\tAttendo ", init_wait_time, " secondi...", yellow);
 
     // Asynch spinner (non-blocking)
     ros::AsyncSpinner spinner(2); // Use n threads

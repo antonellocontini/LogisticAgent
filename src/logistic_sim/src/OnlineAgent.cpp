@@ -92,7 +92,8 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     initialize = false;
     next_vertex = current_vertex = initial_vertex;
     // goal_complete = true;
-    sendGoal(initial_vertex);
+    // sendGoal(initial_vertex);
+    goal_success = true;
   }
   else if (msg->ALLOCATE)
   {

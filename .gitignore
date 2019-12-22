@@ -21,6 +21,7 @@ src/logistic_sim/params/amcl/*.xml
 *.zip
 *.csv
 src/logistic_sim/results/**/*.png
+src/logistic_sim/results/**/*.txt
 
 !src/logistic_sim/results/**/*.py
 
