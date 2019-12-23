@@ -5,4 +5,4 @@ global_costmap:
    publish_frequency: 0.0
    static_map: true
    # inflation_radius: 0.66
-   inflation_radius: 0.33
+   inflation_radius: 0.4235
