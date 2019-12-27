@@ -11,6 +11,7 @@ bool        NEW_MISSIONS_AVAILABLE  # indica agli agenti che sono disponibili nu
 bool        GOOD_PATHS  # percorsi contenuti nel token validi
 bool        SHUTDOWN    # termina simulazione (per ora usato solo da Online)
 bool        ALL_MISSIONS_INSERTED   # attivato dal taskplanner quando tutte le missioni sono nel token
+bool        SYNCED_ROBOTS # robot sincronizzati sul goal
 
 Mission[]   MISSION
 int32[]     TAKEN_MISSION   # usato da CFree per tenere traccia dell'assegnamento missioni

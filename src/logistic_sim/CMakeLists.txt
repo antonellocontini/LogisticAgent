@@ -164,6 +164,12 @@ add_dependencies(OnlineAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPO
 ## Specify libraries to link a library or executable target against
 target_link_libraries(OnlineAgent Agent DistrAgentLib ${catkin_LIBRARIES})
 
+## Declare a cpp executable 
+add_executable(OnlineCentralizedAgent src/OnlineCentralizedAgent.cpp)
+add_dependencies(OnlineCentralizedAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(OnlineCentralizedAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+
 ##################
 ## TaskPlanners ##
 ##################
@@ -200,6 +206,11 @@ add_executable(OnlineTaskPlanner src/OnlineTaskPlanner.cpp)
 add_dependencies(OnlineTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
 target_link_libraries(OnlineTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+
+add_executable(OnlineGlobalTaskPlanner src/OnlineGlobalTaskPlanner.cpp)
+add_dependencies(OnlineGlobalTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ ## Specify libraries to link a library or executable target against
+target_link_libraries(OnlineGlobalTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
 
 ########################################################################################################################
 
