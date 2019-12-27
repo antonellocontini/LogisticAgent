@@ -443,7 +443,8 @@ void OnlineGlobalTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
   ros::spinOnce();
 }
 
-std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic_sim::Token &token, std::vector<logistic_sim::Mission> &missions)
+std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic_sim::Token &token,
+                                                                        std::vector<logistic_sim::Mission> &missions)
 {
   ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
@@ -462,11 +463,34 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
     init_vertex.push_back(token.TRAILS[i].PATH.back());
   }
 
+  // individuo vertici casa degli agenti
+  std::vector<uint> home_vertex;
+  ros::NodeHandle nh;
+  std::vector<double> list;
+  nh.getParam("initial_pos", list);
+
+  if (list.empty())
+  {
+    ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+    ros::shutdown();
+    exit(-1);
+  }
+
+  // dalle coordinate degli agenti individuo il nodo del grafo
+  for (int value = 0; value < TEAM_SIZE; value++)
+  {
+    double initial_x = list[2 * value];
+    double initial_y = list[2 * value + 1];
+    uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+    home_vertex.push_back(v);
+    // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
+  }
+
   for (int current_team_size = TEAM_SIZE; current_team_size >= 1; current_team_size--)
   {
     try
     {
-    //   c_print("Missions number: ", missions.size(), green, P);
+      c_print("Missions number: ", missions.size(), green, P);
       partition::iterator it(missions.size());
       int id_partition = 0;
 
@@ -526,7 +550,7 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
                       waypoints.push_back(v);
                     }
                   }
-                  waypoints.push_back(init_vertex[i % TEAM_SIZE]);
+                  waypoints.push_back(home_vertex[i % TEAM_SIZE]);
 
                   for (auto &w : waypoints)
                   {
@@ -625,6 +649,8 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
       {
         token.MISSIONS_COMPLETED = best_token.MISSIONS_COMPLETED;
         token.TASKS_COMPLETED = best_token.TASKS_COMPLETED;
+        token.TRAILS = best_token.TRAILS;
+        token.HOME_TRAILS = best_token.HOME_TRAILS;
         // stats_file << missions_stats[j].MISSIONS_COMPLETED[i] << "\n";
         // stats_file << missions_stats[j].TASKS_COMPLETED[i] << "\n\n";
         std::cout << "Percorso robot " << i << "\n";
