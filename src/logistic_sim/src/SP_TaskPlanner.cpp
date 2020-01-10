@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
     SPTP.init(argc, argv);
 
-    c_print("inizializzazione finita!", green);
+    c_print("initialization completed!", green);
 
     ros::AsyncSpinner spinner(2);
 

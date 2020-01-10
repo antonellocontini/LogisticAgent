@@ -306,6 +306,5 @@ std::vector<uint> GlobalAgent::token_dijkstra(const std::vector<uint> &waypoints
 	{
 		simple_paths[i] = other_paths[i].PATH;
 	}
-	c_print("Fine del space_dijkstra", green,P);
 	return spacetime_dijkstra(simple_paths, graph, dimension, waypoints);
 }

@@ -22,7 +22,7 @@ void DistrAgent::init(int argc, char **argv)
     init_tw_map();
 
     // notifico la mia presenza al taskplanner
-    c_print("Notifico presenza al task_planner", green, P);
+    c_print("Notyfing presence to task planner", green, P);
     ros::ServiceClient client = nh.serviceClient<logistic_sim::RobotReady>("robot_ready");
     logistic_sim::RobotReady srv_req;
     srv_req.request.ID_ROBOT = ID_ROBOT;
@@ -110,7 +110,7 @@ void DistrAgent::run()
             // interference venga calcolata
             t_interference = 0;
             sendGoal(next_vertex);
-            c_print("ID_ROBOT: ", ID_ROBOT, "\tInterferenza rilevata, vado in ", next_vertex, red, P);
+            c_print("ID_ROBOT: ", ID_ROBOT, "\tInterference detected, going to vertex ", next_vertex, red, P);
         }
 
         if (ResendGoal)
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 {
     distragent::DistrAgent TPA;
     TPA.init(argc, argv);
-    c_print("@ Inizializzazione finita!", green);
+    c_print("@ Initialization completed!", green);
     sleep(3);
     TPA.run();
     return 0;

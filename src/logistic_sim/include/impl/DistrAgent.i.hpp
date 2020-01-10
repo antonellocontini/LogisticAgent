@@ -287,7 +287,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 {
     std::vector<t_coalition> coalitions;
     c_print("tmp_CAPACITY: ", tmp_CAPACITY, green, P);
-    t_coalition best_coalition; //la migliore finore
+    t_coalition best_coalition; //la migliore finora
     static int id = 500;
     for (auto it = token.MISSION.begin(); it != token.MISSION.end(); it++)
     {
@@ -304,13 +304,11 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         for (auto jt = 0; jt < coalitions.size(); jt++)
         {
             t_coalition &c2 = coalitions[jt];
-            // c_print("iterazione n ", count, yellow, P);
             if (!(c1.second == c2.second))
             {
                 auto tmp_DEMAND = c1.second.TOT_DEMAND + c2.second.TOT_DEMAND;
                 if (tmp_DEMAND <= tmp_CAPACITY)
                 {
-                    // c_print("sono dentro", yellow, P);
                     logistic_sim::Mission m; // possibile coalizione
                     m.ID = id++;
 
@@ -320,7 +318,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                     copy(c1.second.DEMANDS.begin(), c1.second.DEMANDS.end(), back_inserter(m.DEMANDS));
                     // copy((*jt).DEMANDS.begin(), (*jt).DEMANDS.end(), back_inserter(m.DEMANDS));
 
-                    logistic_sim::Mission &m2 = c2.second; // seconda missione da unire a m
+                    logistic_sim::Mission &m2 = c2.second; // mission to merge with m
                     for (int zt = 0; zt < m2.DSTS.size(); zt++)
                     {
                         bool found = false;
@@ -341,26 +339,9 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                         }
                     }
 
-                    // stampe debug
                     logistic_sim::Mission &m1 = c1.second;
-                    // c_print("M1 ID ", m1.ID, red, P);
-                    // for (int i = 0; i < m1.DSTS.size(); i++)
-                    // {
-                    //     c_print("M1 DSTS ", m1.DSTS[i], "\tDEMANDS ", m1.DEMANDS[i], yellow, P);
-                    // }
-                    // c_print("M2 ID ", m2.ID, red, P);
-                    // for (int i = 0; i < m2.DSTS.size(); i++)
-                    // {
-                    //     c_print("M2 DSTS ", m2.DSTS[i], "\tDEMANDS ", m2.DEMANDS[i], yellow, P);
-                    // }
-                    // c_print("M_TOT ID ", m.ID, red, P);
-                    // for (int i = 0; i < m.DSTS.size(); i++)
-                    // {
-                    //     c_print("M_TOT DSTS ", m.DSTS[i], "\tDEMANDS ", m.DEMANDS[i], yellow, P);
-                    // }
 
                     m.TOT_DEMAND = std::accumulate(m.DEMANDS.begin(), m.DEMANDS.end(), 0);
-                    // c_print("capacita: m1 ", c1.second.TOT_DEMAND, " m2 ", m2.TOT_DEMAND, " totale ", m.TOT_DEMAND, yellow, P);
 
                     auto id_path = compute_id_path(m);
 
@@ -405,12 +386,8 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
                 }
                 else
                 {
-                    c_print("la capacita e' troppo alta", tmp_DEMAND, yellow, P);
+                    c_print("Demand is too high for robot capacity", tmp_DEMAND, yellow, P);
                 }
-            }
-            else
-            {
-                // c_print("siamo uguali", yellow, P);
             }
 
             // c_print("\n\n", P);
@@ -418,7 +395,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
         }
     }
 
-    c_print("size della coalitions: ", coalitions.size(), green);
+    c_print("coalitions size: ", coalitions.size(), green);
 
     std::sort(coalitions.begin(), coalitions.end(), less_V());
 
@@ -453,7 +430,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
 
     if (coit == coalitions.end())
     {
-        c_print("Robot ", ID_ROBOT, " Nessuna missione conflict-free", red);
+        c_print("Robot ", ID_ROBOT, " can't find conflict-free mission", red);
         // logistic_sim::Mission safe_mission;
         // safe_mission.ID = 123;
         // safe_mission.DSTS.push_back(26); //indice del nodo_safe
@@ -466,7 +443,7 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     }
 
     best_coalition.second.PICKUP = true;
-    // aggirnamento del token
+    // token update
     for (auto i = 0; i < best_coalition.first.size(); i++)
     {
         token.MISSION.erase(find(token.MISSION.begin(), token.MISSION.end(), best_coalition.first[i]));
@@ -475,8 +452,8 @@ logistic_sim::Mission DistrAgent::coalition_formation(logistic_sim::Token &token
     return best_coalition.second;
 }
 
-// il primo campo è il tipo di interferenza
-// il secondo è il robot che mi ha causato l'interferenza
+// first field of pair is type of interference
+// second is robot causing such interference
 std::pair<int,int> DistrAgent::check_interference_token(logistic_sim::Token &token)
 {
     int i;
@@ -526,7 +503,7 @@ std::pair<int,int> DistrAgent::check_interference_token(logistic_sim::Token &tok
             }
             else
             {
-                c_print("[DEBUG]\tDovrebbe andare ROBOT_ID: ", i, " in interferenza", red, P);
+                ROS_DEBUG_STREAM("ROBOT_ID: " << i << " should go in interference");
             }
             
         }
@@ -764,7 +741,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 need_task = false;
             }
         }
-        // controllo del next step degli altri robot 
+        // check next step of other robots
         init_tw_map();
         // c_print("[DEBUG]\tinit_tw_map() terminato\n\tAggiornamento mappa archi...", yellow);
         for (auto i = 0; i < TEAM_SIZE; i++)
@@ -775,26 +752,23 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                 src >= 0 && src < dimension &&
                 i != ID_ROBOT)
             {
-                // la penalità dipende da quanto tempo sono sull'arco
+                // penalty is proportional to the time spent on the same edge
                 int sec_diff = ros::Time::now().sec - goal_start_time.sec;
                 sec_diff = std::max(1, sec_diff);
                 // c_print("[DEBUG]\ttw_map updated: [", src, ",", dst, "]", yellow);
-                // svaforisco la mia direzione
+                // disadvantage robot going in my same direction on the same edge
                 if (t_interference != 2)
                 {
                     token_weight_map[src][dst] += sec_diff;
                 }
                 else
                 {
-                    // se sono fermo per far passare qualcun'altro
-                    // voglio evitare che qualcuno arrivi da dietro
+                    // if i'm still i don't want other robot going on my vertex
                     token_weight_map[src][dst] += sec_diff * 5;
                 }
-                // sfavorisco la direzione inversa
+                // disadvantage the opposing direction
                 token_weight_map[dst][src] += sec_diff * 4;
-                // sfavorisco tutti gli archi che entrano nella mia destinazione
-                // dovrebbe prevenire gli scontri agli incroci dove due robot
-                // arrivano da nodi diversi
+                // disadvantage edge going to my destination
                 for (int j = 0; j < dimension; j++)
                 {
                     if (j != src)
@@ -805,7 +779,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
         }
 
-        // metto nel token quale arco sto occupando
+        // put in the token the edge i'm currently traversing
         token.CURR_VERTEX[ID_ROBOT] = current_vertex;
         token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
         if (!current_mission.DSTS.empty())
@@ -821,7 +795,7 @@ void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         t_interference = interf_pair.first;
         id_interference = interf_pair.second;
         if (t_interference)
-            c_print("Robot in interferenza: ", ID_ROBOT, " contro ", id_interference, "\tTipo interferenza: ", t_interference, red, P);
+            c_print("Robot in interference: ", ID_ROBOT, " against ", id_interference, "\tInterference type: ", t_interference, red, P);
 
         if (goal_complete)
         {

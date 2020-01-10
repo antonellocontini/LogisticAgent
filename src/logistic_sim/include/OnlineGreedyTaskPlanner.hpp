@@ -146,7 +146,7 @@ void print_coalition(const t_coalition &coalition)
     //     std::cout << "\n";
   }
 
-  c_print("fine mission id: ", mission.ID, red, P);
+  // c_print("fine mission id: ", mission.ID, red, P);
 }
 
 const std::string PS_path = ros::package::getPath("logistic_sim");

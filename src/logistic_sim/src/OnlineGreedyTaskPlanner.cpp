@@ -28,13 +28,13 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
   GENERATION = argv[4];
   TEAM_CAPACITY = atoi(argv[5]);
 
-  // PARAMETRO TASKSET
+  // task set file name (if generation = FILE)
   task_set_file = argv[6];
 
   src_vertex = map_src[mapname];
   dst_vertex = map_dsts[mapname];
 
-  // costruisce percorsi per euristica
+  // building paths for task aggregation euristic
   for (uint dst : dst_vertex)
   {
     int result[100];
@@ -43,7 +43,7 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
     paths.push_back(std::vector<uint>(result, result + result_size));
   }
 
-  // alloco memoria per astar
+  // allocate memory for path planning algorithm
   allocate_memory();
   map_graph = std::vector<std::vector<unsigned int>>(dimension);
   for (int i = 0; i < dimension; i++)
@@ -56,13 +56,13 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
 
   min_hops_matrix = calculate_min_hops_matrix();
 
-  // avvio servizio
+  // starting service to check when all robots are ready
   robots_ready_status = std::vector<bool>(TEAM_SIZE);
   ros::NodeHandle nh;
   ros::ServiceServer service = nh.advertiseService("robot_ready", &OnlineGreedyTaskPlanner::robot_ready, this);
   ros::spinOnce();
 
-  // subscribe alle posizioni dei robot
+  // subscribe to robot's real and amcl position (to measure error)
   last_real_pos = std::vector<nav_msgs::Odometry>(TEAM_SIZE);
   last_amcl_pos = std::vector<geometry_msgs::PoseWithCovarianceStamped>(TEAM_SIZE);
   robot_pos_errors = std::vector<std::vector<double>>(TEAM_SIZE);
@@ -130,14 +130,14 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
   }
   else
   {
-    c_print("Lettura da file...", green, P);
+    c_print("Reading missions from file...", green, P);
     std::stringstream taskset_dir_name;
     taskset_dir_name << "missions/" << task_set_file;
     std::string filename(taskset_dir_name.str());
     boost::filesystem::path missions_path(filename);
     if (!boost::filesystem::exists(missions_path))
     {
-      c_print("File missioni ", filename, " non esistente!!!", red, P);
+      c_print("Missions file ", filename, " does not exists!!!", red, P);
       sleep(2);
       ros::shutdown();
       int cmd_result = system("./stop_experiment.sh");
@@ -149,7 +149,7 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
     missions_file.close();
   }
 
-  c_print("Numero di task: ", missions.size(), green, P);
+  c_print("Tasks number: ", missions.size(), green, P);
   // print missions
   // std::cout << "Single item task-set:\n";
   // for (const logistic_sim::Mission &m : missions)
@@ -168,14 +168,14 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
   //     std::cout << std::endl;
   // }
 
-  // inizializzo strutture statistiche
+  // initializing stats structure
   for (int i = 0; i < TEAM_SIZE; i++)
   {
     taskplanner::MonitorData data;
     robots_data.push_back(data);
   }
 
-  // aspetto che arrivino gli agenti
+  // waiting for agents to be ready
   while (robots_ready_count < TEAM_SIZE)
   {
     ros::Duration(1, 0).sleep();
@@ -187,7 +187,7 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
 
   logistic_sim::Token token;
 
-  // giro di inizializzazione
+  // initialization round
   token.ID_SENDER = TASK_PLANNER_ID;
   token.ID_RECEIVER = 0;
   token.INIT = true;
@@ -204,13 +204,12 @@ void OnlineGreedyTaskPlanner::init(int argc, char **argv)
 
 void OnlineGreedyTaskPlanner::run()
 {
-  std::cout << "Genero finestre di task" << std::endl;
+  std::cout << "Generating mission windows" << std::endl;
   while (!missions.empty())
   {
     /*
-     * in questo loop creo le finestre di task multi-item
-     * da inserire nel token, ogni task dovrebbe indicare
-     * a quale finestra appartiene in modo da non intervallarli
+     * in this loop single-item tasks are divided in windows
+     * and each window is aggregated to form multi-item tasks windows
      */
     auto first_it = missions.begin();
     auto last_it = missions.end();
@@ -221,37 +220,26 @@ void OnlineGreedyTaskPlanner::run()
     std::vector<logistic_sim::Mission> tasks(first_it, last_it);
     missions.erase(first_it, last_it);
     std::vector<logistic_sim::Mission> window = set_partition(tasks);
-    // il mutex è necessario perchè nella thread del token
-    // si accede al vettore delle finestre
+    // mission_windows is accessed also in the token callback thread, hence the mutex
     window_mutex.lock();
     mission_windows.push_back(window);
-    c_print("Nuova finestra calcolata - Finestre rimanenti: ", mission_windows.size(), yellow, P);
-    c_print("Task ancora da unire: ", missions.size(), green, P);
+    c_print("New window aggregated - to be inserted into token: ", mission_windows.size(), yellow, P);
+    c_print("Tasks not yet aggregated: ", missions.size(), green, P);
     c_print("");
     window_mutex.unlock();
   }
 
-  // una volta calcolata l'ultima finestra si attende la terminazione
+  // after computing the last window we wait for shutdown
   ros::waitForShutdown();
 }
 
 /*
- * qua gestisco la raccolta delle statistiche (come sempre)
- * inoltre devo gestire l'inserimento di nuovi task multi-item
- * quando sono pronti (necessario meccanismo di sincronizzazione)
+ * handles statistics (as all task planners)
+ * handles insertion of new tasks in the token
  *
- * una volta inseriti i nuovi task nel token si abilita una flag
- * che indica agli agenti che nuovi task sono stati inseriti e che
- * devono allocare e pianificare
+ * the NEW_MISSIONS_AVAILABLE is set to true to signal to agent
+ * that new missions have been added
  *
- * per ora facciamo tornare gli agenti a casa alla fine di ogni
- * finestra quindi non ci dovrebbero essere problemi con la pianificazione
- *
- * deve sempre valere il solito meccanismo di rimozione robot in
- * caso di fallimento
- *
- * con una nuova finestra i robot spenti devono essere
- * riabilitati
  */
 void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -283,17 +271,17 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
   {
     token.HEADER.seq += 1;
 
-    // stampa task rimanenti
+    // prints remaining tasks
     // if (token.MISSION.size() != last_mission_size)
     // {
     //     last_mission_size = token.MISSION.size();
-    //     c_print("Task rimanenti: ", last_mission_size, green);
+    //     c_print("Remaining tasks: ", last_mission_size, green);
     // }
 
-    // se c'è una nuova finestra pronta la aggiungo al token
+    // the mutex is necessary because the window is updated in another thread
     window_mutex.lock();
-    // la flag viene messa a false dagli agenti quando
-    // hanno finito di distribuirsi le nuove missioni
+    // signals to the robots that new missions are in the token
+    // robots will set this flag to false when this missions have been accepted
     if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
     {
       token.NEW_MISSIONS_AVAILABLE = true;
@@ -304,18 +292,18 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
       //   token.TAKEN_MISSION = std::vector<int>(token.MISSION.size(), -1);
       path_partition(token, mission_windows.front());
       mission_windows.pop_front();
-      // se non ci sono più missioni da inserire si indica nel token
+      // signals in the token when all the missions have been inserted
       if (missions.empty())
       {
         token.ALL_MISSIONS_INSERTED = true;
       }
-      c_print("Finestra inserita nel token - Finestre rimanenti: ", mission_windows.size(), yellow, P);
+      c_print("Mission window inserted in token - remaining windows: ", mission_windows.size(), yellow, P);
       token.SYNCED_ROBOTS = false;
       token.NEW_MISSIONS_AVAILABLE = false;
     }
     window_mutex.unlock();
 
-    // controllo liveness dei robot
+    // checking robot liveness
     if (std::equal(token.GOAL_STATUS.begin(), token.GOAL_STATUS.end(), last_goal_status.begin()))
     {
       auto delta = ros::Time::now() - last_goal_time;
@@ -343,7 +331,8 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
       }
     }
 
-    // controllo conflitti nei percorsi
+    // checking conflicts on paths, this must be done
+    // when robots are goal-synchronized
     bool eq = true;
     int v = token.GOAL_STATUS[0];
     for (int i = 0; i < TEAM_SIZE; i++)
@@ -365,7 +354,7 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
       // check_paths_conflicts(token.TRAILS); VECCHIA VERSIONE
     }
 
-    // aggiorno la mia struttura con i dati del token
+    // updating robot stats from token
     for (int i = 0; i < TEAM_SIZE; i++)
     {
       robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
@@ -375,7 +364,7 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
       robots_data[i].total_time = (ros::Time::now() - start_time).sec;
     }
 
-    // all'uscita scrivo le statistiche su disco
+    // at shutdown stats must be written on disk
     if (token.SHUTDOWN)
     {
       boost::filesystem::path results_directory("results");
@@ -398,10 +387,10 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
       std::ifstream check_new;
       if (GENERATION != "file")
       {
-        // loop per controllare se il file già esiste
+        // checking file existence by name
         do
         {
-          filename.str("");  // cancella la stringa
+          filename.str("");
           filename << conf_dir_name.str() << "/" << run_number << ".csv";
           check_new = std::ifstream(filename.str());
           run_number++;
@@ -414,8 +403,7 @@ void OnlineGreedyTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &
       }
 
       ofstream stats(filename.str());
-      // esplicitare il namespace
-      // per usare l'operatore corretto
+      // the stream operator is defined in the taskplanner namespace
       taskplanner::operator<<(stats, robots_data);
       // stats << robots_data;
       stats.close();
@@ -448,7 +436,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
 {
   ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
-  // unsico le due parti di percorso di tutti i robot
+  // merging task paths with home paths
   std::vector<logistic_sim::Path> robot_paths;
   std::vector<std::vector<logistic_sim::Path>> best_paths(TEAM_SIZE);
   std::vector<uint> best_paths_length(TEAM_SIZE, std::numeric_limits<uint>::max());
@@ -456,14 +444,14 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
   std::vector<logistic_sim::Token> missions_stats(TEAM_SIZE);
   logistic_sim::Token best_token;
 
-  // individuo vertici iniziali degli agenti
+  // find starting vertex for new paths (that is the last vertex in the already planned path)
   std::vector<uint> init_vertex;
   for (int i = 0; i < TEAM_SIZE; i++)
   {
     init_vertex.push_back(token.TRAILS[i].PATH.back());
   }
 
-  // individuo vertici casa degli agenti
+  // home_vertex will contain the home vertex of each robot
   std::vector<uint> home_vertex;
   ros::NodeHandle nh;
   std::vector<double> list;
@@ -476,12 +464,12 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
     exit(-1);
   }
 
-  // dalle coordinate degli agenti individuo il nodo del grafo
+  // read each agent home coordinates to find their home vertex
   for (int value = 0; value < TEAM_SIZE; value++)
   {
-    double initial_x = list[2 * value];
-    double initial_y = list[2 * value + 1];
-    uint v = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
+    double home_x = list[2 * value];
+    double home_y = list[2 * value + 1];
+    uint v = IdentifyVertex(vertex_web, dimension, home_x, home_y);
     home_vertex.push_back(v);
     // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
   }
@@ -506,7 +494,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
         if (n_subsets == current_team_size)
         {
           // std::cout << "partition for " << n_subsets << " robots" << std::endl;
-          // per i robot fermi
+          // add empty missions for the inactive robots
           if (n_subsets < TEAM_SIZE)
           {
             partitions.insert(partitions.end(), TEAM_SIZE - n_subsets, std::vector<logistic_sim::Mission>());
@@ -518,7 +506,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
             {
               std::vector<std::vector<logistic_sim::Mission>> permutation = *jt;
 
-              // assegno la permutazione corrente ai robot e provo a calcolare i percorsi
+              // try calculating paths for the current permutation
               temp_token.TRAILS = token.TRAILS;
               temp_token.HOME_TRAILS = token.HOME_TRAILS;
               robot_paths = temp_token.TRAILS;
@@ -596,7 +584,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
 
               if (empty_paths == 0)
               {
-                std::cout << "Trovato!" << std::endl;
+                std::cout << "Found valid paths!" << std::endl;
                 //   stats_file << TEAM_SIZE << "\n\n";
                 for (int i = 0; i < TEAM_SIZE; i++)
                 {
@@ -606,7 +594,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
                   token.HOME_TRAILS = temp_token.HOME_TRAILS;
                   // stats_file << missions_stats[j].MISSIONS_COMPLETED[i] << "\n";
                   // stats_file << missions_stats[j].TASKS_COMPLETED[i] << "\n\n";
-                  std::cout << "Percorso robot " << i << "\n";
+                  std::cout << "Robot " << i << " path\n";
                   for (uint v : robot_paths[i].PATH)
                   {
                     std::cout << v << " ";
@@ -673,7 +661,7 @@ std::vector<logistic_sim::Mission> OnlineGreedyTaskPlanner::set_partition(const 
           copy(subset[j].ITEM.begin(), subset[j].ITEM.end(), back_inserter(candidate_subset.ITEM));
         }
 
-        // rimuovo doppioni adiacenti in DSTS
+        // removing doubles from DSTS
         for (int j = 0; j < candidate_subset.DSTS.size() - 1; j++)
         {
           if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j + 1])
@@ -683,8 +671,7 @@ std::vector<logistic_sim::Mission> OnlineGreedyTaskPlanner::set_partition(const 
           }
         }
 
-        // calcolo la lunghezza del percorso di questa missione
-        // per poter stimare la metrica V
+        // calculate mission path, needed to find the V value
         std::vector<uint> path;
         int dijkstra_result[64];
         uint dijkstra_size;
@@ -705,9 +692,7 @@ std::vector<logistic_sim::Mission> OnlineGreedyTaskPlanner::set_partition(const 
         {
           candidate.second.GOOD++;
         }
-        // uso PICKUP == true se non è buona
-        // prima soglio e controllo che la partizione sia composta da sottoinsiemi processabili dai robot poi calcolo il
-        // percorso e metto in ordine per V poi prendo la prima buona
+
         m.push_back(candidate_subset);
       }
 
@@ -744,7 +729,7 @@ std::vector<logistic_sim::Mission> OnlineGreedyTaskPlanner::set_partition(const 
 }
 
 /*
- * Floyd-Warshall per trovare il minimo numero di hop tra ogni coppia di vertici
+ * Floyd-Warshall to find the least number of hops between each pair of vertices
  */
 std::vector<std::vector<unsigned int>> OnlineGreedyTaskPlanner::calculate_min_hops_matrix()
 {
@@ -800,7 +785,7 @@ bool OnlineGreedyTaskPlanner::check_paths_conflicts(const std::vector<logistic_s
           conflicts++;
           good = false;
           std::stringstream ss;
-          ss << "[WARN] Robot " << ri << " e " << rj << " si incontrano in " << p1.PATH[i] << " all'istante " << i;
+          ss << "[WARN] Robot " << ri << " and " << rj << " will meet in vertex " << p1.PATH[i] << " at timestep " << i;
           c_print(ss.str(), yellow, print);
         }
         if (p1.PATH[i] == p2.PATH[i + 1] && p2.PATH[i] == p1.PATH[i + 1])
@@ -808,8 +793,8 @@ bool OnlineGreedyTaskPlanner::check_paths_conflicts(const std::vector<logistic_s
           conflicts++;
           good = false;
           std::stringstream ss;
-          ss << "[WARN] Robot " << ri << " e " << rj << "si incontrano nell'arco (" << p1.PATH[i] << ","
-             << p1.PATH[i + 1] << ") all'istante " << i;
+          ss << "[WARN] Robot " << ri << " and " << rj << " will meet at edge (" << p1.PATH[i] << ","
+             << p1.PATH[i + 1] << ") in timestep " << i;
           c_print(ss.str(), yellow, print);
         }
       }
@@ -818,7 +803,7 @@ bool OnlineGreedyTaskPlanner::check_paths_conflicts(const std::vector<logistic_s
 
   if (conflicts > 0)
   {
-    c_print("[WARN] individuati ", conflicts, "conflitti", yellow, print);
+    c_print("[WARN] ", conflicts, "conflicts detected", yellow, print);
   }
 
   return good;
@@ -832,7 +817,7 @@ void OnlineGreedyTaskPlanner::write_simple_missions(std::ostream &os,
   {
     os << m.ID << "\n";
     uint dst = m.DSTS[0];
-    // cerco indice nel vettore di destinazioni
+    // find index in DSTS vector
     auto it = std::find(dst_vertex.begin(), dst_vertex.end(), dst);
     os << it - dst_vertex.begin() << "\n";
 
@@ -863,7 +848,7 @@ std::vector<logistic_sim::Mission> OnlineGreedyTaskPlanner::read_simple_missions
     is >> dms;
     m.DEMANDS.push_back(dms);
 
-    // genero percorso e metrica V
+    // calculate path and V metric
     copy(paths[dst_index].begin(), paths[dst_index].end(), back_inserter(m.ROUTE));
     m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
     m.TOT_DEMAND = dms;
@@ -902,7 +887,7 @@ int main(int argc, char *argv[])
   ros::NodeHandle nh_;
   onlinegreedytaskplanner::OnlineGreedyTaskPlanner OGTP(nh_);
   OGTP.init(argc, argv);
-  c_print("inizializzazione finita!", green);
+  c_print("initialization completed!", green);
   ros::AsyncSpinner spinner(2);
   spinner.start();
   OGTP.run();

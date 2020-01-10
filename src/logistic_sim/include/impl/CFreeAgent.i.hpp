@@ -76,12 +76,12 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 	if (msg->CHECK)
 	{
 		int id_vertex_stuck;
-		// controlliamo che non ci siano situazioni ti stuck lungo tutti i percorsi calcolati
+		// check if calculated paths are conflict free
 		for (int i = 0; i < TEAM_SIZE; i++)
 		{
 			if (!token_check_pt(token.TRAILS[i].PATH, token.TRAILS, i, &id_vertex_stuck))
 			{
-				c_print("Non sono CFree i percorsi calcolati per ID: ", i, " vertex: ", id_vertex_stuck, red, P);
+				c_print("NON conflict-free paths, check robot ", i, " at vertex: ", id_vertex_stuck, red, P);
 				token.END_SIMULATION = true;
 			}
 		}
@@ -817,7 +817,7 @@ std::vector<uint> CFreeAgent::token_dijkstra(const std::vector<uint> &waypoints,
 	{
 		simple_paths[i] = other_paths[i].PATH;
 	}
-	c_print("Fine del space_dijkstra", green, P);
+	
 	if (!still_robots.empty())
 	{
 		return spacetime_dijkstra(simple_paths, graph, dimension, waypoints, still_robots);

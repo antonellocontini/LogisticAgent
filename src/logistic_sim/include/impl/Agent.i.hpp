@@ -61,12 +61,12 @@ void Agent::ready()
     // }until nodes are ready
     while (initialize)
     {
-        c_print("aspetto inizializzazione", red, P);
+        c_print("waiting for initialization", red, P);
         ros::spinOnce();
         loop_rate.sleep();
     }
 
-    c_print("finalmente", magenta, P);
+    c_print("initialization completed", magenta, P);
 }
 
 void Agent::readParams()

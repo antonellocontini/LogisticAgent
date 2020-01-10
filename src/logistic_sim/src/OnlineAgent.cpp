@@ -66,7 +66,7 @@ void OnlineAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
   if (msg->INIT)
   {
-    c_print("Inizializzazione...", green, P);
+    c_print("Initialization...", green, P);
     token.CAPACITY.push_back(CAPACITY);
     token.INIT_POS.push_back(initial_vertex);
     token.CURR_VERTEX.push_back(initial_vertex);
@@ -493,10 +493,9 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
 
   if (equal_status && still)
   {
-    // se ci sono nuove missioni disponibili bisogna allocarle
-    // IMPORTANTE: è essenziale che i robot siano sincronizzati
-    // sul goal altrimenti la pianificazione si baserà
-    // su dei percorsi sfasati
+    // if new missions are avaiable they must be allocated
+    // it's essential that robots are synchronized in terms of goal
+    // otherwise paths would not be synched and the planning would not be valid
     bool first_to_see_equal = false;
     status = msg->GOAL_STATUS[0];
     for (int i = 1; i < TEAM_SIZE; i++)
@@ -509,7 +508,7 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
     {
       token.ALLOCATE = true;
 
-      // individuo il robot più scarico e gli mando il token
+      // send the token to the robot with the shortest path
       int id_next_robot = 0;
       int min_path_len = token.TRAILS[0].PATH.size();
       for (int i = 1; i < TEAM_SIZE; i++)
@@ -543,7 +542,7 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
     }
   }
 
-  // metto nel token quale arco sto occupando
+  // put in the token the current edge
   token.CURR_VERTEX[ID_ROBOT] = current_vertex;
   token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
 }
@@ -551,22 +550,17 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
 void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   /* uso solo fase ALLOCATE
-   * alloco e pianifico un task alla volta
-   * se riesco a pianficare rimuovo il task dal token
-   * dopo mando il token al robot con il percorso più corto
-   * proseguo così finchè tutti i task non sono allocati
-   * a questo punto giro il token al task planner e si procede
-   * normalmente
-   *
-   * devo spezzare nel token i percorsi in modo da poter
-   * rimuovere l'ultimo pezzo del percorso (ritorno a casa)
-   * N.B. cambia leggermente token_coordination
+   * the multi-item tasks in the window are allocated one by one
+   * the token is sent to the robot with the shortest path, if such
+   * robot can't find a valid planning the token is sent to the robot with
+   * the second shortest path and so on until the task is not allocated
+   * (the last robot will always be able to allocate such task)
    */
 
-  // il planner ha mandato il token al robot più scarico
+  // planner has sent the token to the robot with the shortest path
   logistic_sim::Mission m = token.MISSION.front();
 
-  // unsico le due parti di percorso di tutti i robot
+  // merge task path with return to home path
   std::vector<logistic_sim::Path> robot_paths = token.TRAILS;
   for (int i = 0; i < TEAM_SIZE; i++)
   {
@@ -589,8 +583,6 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
       waypoints.push_back(dst);
     }
     waypoints.push_back(initial_vertex);
-    // std::vector<unsigned int> bfs_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg);
-    // test euristica astar
     auto f = boost::bind(astar_cmp_function, min_hops_matrix, waypoints, _1, _2);
     std::vector<unsigned int> astar_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1,
                                                                 &last_leg, &first_leg, &f);
@@ -609,22 +601,23 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), first_leg.begin(), first_leg.end());
     token.HOME_TRAILS[ID_ROBOT].PATH = last_leg;
 
-    // aggiorno percorso in variabile locale (per sapere a chi mandare il token)
+    // update task + home path (to find who has the shortest one between all robots)
     robot_paths[ID_ROBOT].PATH = token.TRAILS[ID_ROBOT].PATH;
     robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(),
                                       token.HOME_TRAILS[ID_ROBOT].PATH.end());
 
-    // aggiorno le statistiche nel token
+    // update token statistics
     token.MISSIONS_COMPLETED[ID_ROBOT]++;
     token.TASKS_COMPLETED[ID_ROBOT] += m.DEMANDS.size();
 
-    // rimuovo la missione dal token
+    // remove mission from token
     token.MISSION.erase(token.MISSION.begin());
 
-    // i campi bool dei messaggi diventano uint8_t
+    // booleans in ros msgs becomes uint8_t
     token.FAILED_ALLOCATION = std::vector<uint8_t>(TEAM_SIZE, false);
 
-    // se ci sono altre missioni mando al robot col percorso più corto
+    // if there are still missions to assign the token is sent
+    // to the robot with the shortest path
     if (!token.MISSION.empty())
     {
       id_next_robot = 0;
@@ -653,7 +646,7 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
   }
   catch (std::string &e)
   {
-    c_print("Impossibile calcolare percorso", yellow, P);
+    c_print("Can't find a valid path", yellow, P);
 
     token.FAILED_ALLOCATION[ID_ROBOT] = true;
 
@@ -673,7 +666,7 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
 }
 
 /*
- * Floyd-Warshall per trovare il minimo numero di hop tra ogni coppia di vertici
+ * Floyd-Warshall to find the least number of hops between each pair of vertices
  */
 std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
 {

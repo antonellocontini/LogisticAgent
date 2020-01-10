@@ -151,7 +151,7 @@ void Agent::init(int argc, char** argv) {
 
     readParams();
 
-    c_print("Fine inizializzazione e lettura dei parametri", green,P);
+    c_print("End of initialization, reading parameters", green,P);
 }
 
 int Agent::compute_next_vertex()

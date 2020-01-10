@@ -495,7 +495,6 @@ std::vector<uint> SP_TaskPlanner::token_dijkstra(std::vector<uint> &waypoints,
   // {
   //   simple_paths[i] = other_paths[i].PATH;
   // }
-  // c_print("Fine del space_dijkstra", green, P);
   if (!still_robots.empty())
   {
     return spacetime_dijkstra(other_paths, graph, dimension, waypoints, still_robots, ID_ROBOT);

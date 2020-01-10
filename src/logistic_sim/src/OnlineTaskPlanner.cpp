@@ -53,7 +53,7 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     last_real_pos = std::vector<nav_msgs::Odometry>(TEAM_SIZE);
     last_amcl_pos = std::vector<geometry_msgs::PoseWithCovarianceStamped>(TEAM_SIZE);
     robot_pos_errors = std::vector<std::vector<double>>(TEAM_SIZE);
-    for (int i=0; i<TEAM_SIZE; i++)
+    for (int i = 0; i < TEAM_SIZE; i++)
     {
         std::stringstream real_ss, amcl_ss;
         real_ss << "/robot_" << i << "/base_pose_ground_truth";
@@ -114,14 +114,14 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     }
     else
     {
-        c_print("Lettura da file...", green, P);
+        c_print("Reading missions from disk...", green, P);
         std::stringstream taskset_dir_name;
         taskset_dir_name << "missions/" << task_set_file;
         std::string filename(taskset_dir_name.str());
         boost::filesystem::path missions_path(filename);
         if (!boost::filesystem::exists(missions_path))
         {
-            c_print("File missioni ", filename, " non esistente!!!", red, P);
+            c_print("Missions file ", filename, " does not exists!!!", red, P);
             sleep(2);
             ros::shutdown();
             int cmd_result = system("./stop_experiment.sh");
@@ -133,7 +133,7 @@ void OnlineTaskPlanner::init(int argc, char **argv)
         missions_file.close();
     }
 
-    c_print("Numero di task: ", missions.size(), green, P);
+    c_print("Tasks number: ", missions.size(), green, P);
     // print missions
     // std::cout << "Single item task-set:\n";
     // for (const logistic_sim::Mission &m : missions)
@@ -152,14 +152,14 @@ void OnlineTaskPlanner::init(int argc, char **argv)
     //     std::cout << std::endl;
     // }
 
-    // inizializzo strutture statistiche
+    // initialize stats structure
     for (int i = 0; i < TEAM_SIZE; i++)
     {
         taskplanner::MonitorData data;
         robots_data.push_back(data);
     }
 
-    // aspetto che arrivino gli agenti
+    // wait for all agents to be ready
     while (robots_ready_count < TEAM_SIZE)
     {
         ros::Duration(1, 0).sleep();
@@ -171,7 +171,7 @@ void OnlineTaskPlanner::init(int argc, char **argv)
 
     logistic_sim::Token token;
 
-    // giro di inizializzazione
+    // initialization round
     token.ID_SENDER = TASK_PLANNER_ID;
     token.ID_RECEIVER = 0;
     token.INIT = true;
@@ -188,14 +188,13 @@ void OnlineTaskPlanner::init(int argc, char **argv)
 
 void OnlineTaskPlanner::run()
 {
-    std::cout << "Genero finestre di task" << std::endl;
+    std::cout << "Generating mission windows" << std::endl;
     while (!missions.empty())
     {
         /*
-         * in questo loop creo le finestre di task multi-item
-         * da inserire nel token, ogni task dovrebbe indicare
-         * a quale finestra appartiene in modo da non intervallarli
-         */
+        * in this loop single-item tasks are divided in windows
+        * and each window is aggregated to form multi-item tasks windows
+        */
         auto first_it = missions.begin();
         auto last_it = missions.end();
         if (missions.size() >= window_size)
@@ -205,37 +204,26 @@ void OnlineTaskPlanner::run()
         std::vector<logistic_sim::Mission> tasks(first_it, last_it);
         missions.erase(first_it, last_it);
         std::vector<logistic_sim::Mission> window = set_partition(tasks);
-        // il mutex è necessario perchè nella thread del token
-        // si accede al vettore delle finestre
+        // mission_windows is accessed also in the token callback thread, hence the mutex
         window_mutex.lock();
         mission_windows.push_back(window);
-        c_print("Nuova finestra calcolata - Finestre rimanenti: ", mission_windows.size(), yellow, P);
-        c_print("Task ancora da unire: ", missions.size(), green, P);
+        c_print("New window aggregated - to be inserted into token: ", mission_windows.size(), yellow, P);
+        c_print("Tasks not yet aggregated: ", missions.size(), green, P);
         c_print("");
         window_mutex.unlock();
     }
 
-    // una volta calcolata l'ultima finestra si attende la terminazione
+    // after computing the last window we wait for shutdown
     ros::waitForShutdown();
 }
 
 /*
- * qua gestisco la raccolta delle statistiche (come sempre)
- * inoltre devo gestire l'inserimento di nuovi task multi-item
- * quando sono pronti (necessario meccanismo di sincronizzazione)
- * 
- * una volta inseriti i nuovi task nel token si abilita una flag
- * che indica agli agenti che nuovi task sono stati inseriti e che
- * devono allocare e pianificare
- * 
- * per ora facciamo tornare gli agenti a casa alla fine di ogni
- * finestra quindi non ci dovrebbero essere problemi con la pianificazione
- * 
- * deve sempre valere il solito meccanismo di rimozione robot in
- * caso di fallimento
- * 
- * con una nuova finestra i robot spenti devono essere
- * riabilitati
+ * handles statistics (as all task planners)
+ * handles insertion of new tasks in the token
+ *
+ * the NEW_MISSIONS_AVAILABLE is set to true to signal to agent
+ * that new missions have been added
+ *
  */
 void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -267,28 +255,28 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
         token.HEADER.seq += 1;
 
-        // stampa task rimanenti
+        // prints remaining tasks
         // if (token.MISSION.size() != last_mission_size)
         // {
         //     last_mission_size = token.MISSION.size();
-        //     c_print("Task rimanenti: ", last_mission_size, green);
+        //     c_print("Remaining tasks: ", last_mission_size, green);
         // }
 
-        // se c'è una nuova finestra pronta la aggiungo al token
+        // the mutex is necessary because the window is updated in another thread
         window_mutex.lock();
-        // la flag viene messa a false dagli agenti quando
-        // hanno finito di distribuirsi le nuove missioni
+        // signals to the robots that new missions are in the token
+        // robots will set this flag to false when this missions have been accepted
         if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
         {
             token.MISSION = mission_windows.front();
             token.TAKEN_MISSION = std::vector<int>(token.MISSION.size(), -1);
             mission_windows.pop_front();
-            // se non ci sono più missioni da inserire si indica nel token
+            // signals in the token when all the missions have been inserted
             if (missions.empty())
             {
                 token.ALL_MISSIONS_INSERTED = true;
             }
-            c_print("Finestra inserita nel token - Finestre rimanenti: ", mission_windows.size(), yellow, P);
+            c_print("Mission window inserted in token - remaining windows: ", mission_windows.size(), yellow, P);
             token.NEW_MISSIONS_AVAILABLE = true;
 
             // mando il token al robot più scarico
@@ -314,7 +302,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         }
         window_mutex.unlock();
 
-        // controllo liveness dei robot
+        // checking robot liveness
         if (std::equal(token.GOAL_STATUS.begin(), token.GOAL_STATUS.end(), last_goal_status.begin()))
         {
             auto delta = ros::Time::now() - last_goal_time;
@@ -341,9 +329,9 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
                 warning_occured = false;
             }
         }
-        
 
-        // controllo conflitti nei percorsi
+        // checking conflicts on paths, this must be done
+        // when robots are goal-synchronized
         bool eq = true;
         int v = token.GOAL_STATUS[0];
         for (int i = 0; i < TEAM_SIZE; i++)
@@ -365,7 +353,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             // check_paths_conflicts(token.TRAILS); VECCHIA VERSIONE
         }
 
-        // aggiorno la mia struttura con i dati del token
+        // updating robot stats from token
         for (int i = 0; i < TEAM_SIZE; i++)
         {
             robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
@@ -375,7 +363,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             robots_data[i].total_time = (ros::Time::now() - start_time).sec;
         }
 
-        // all'uscita scrivo le statistiche su disco
+        // at shutdown stats must be written on disk
         if (token.SHUTDOWN)
         {
             boost::filesystem::path results_directory("results");
@@ -398,10 +386,10 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             std::ifstream check_new;
             if (GENERATION != "file")
             {
-                // loop per controllare se il file già esiste
+                // checking file existence by name
                 do
                 {
-                    filename.str(""); // cancella la stringa
+                    filename.str("");
                     filename << conf_dir_name.str() << "/" << run_number << ".csv";
                     check_new = std::ifstream(filename.str());
                     run_number++;
@@ -414,13 +402,12 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             }
 
             ofstream stats(filename.str());
-            // esplicitare il namespace
-            // per usare l'operatore corretto
+            // the stream operator is defined in the taskplanner namespace
             taskplanner::operator<<(stats, robots_data);
             // stats << robots_data;
             stats.close();
 
-            for (int i=0; i<TEAM_SIZE; i++)
+            for (int i = 0; i < TEAM_SIZE; i++)
             {
                 std::stringstream ss;
                 ss << filename.str() << "_robot_" << i << "_error.txt";
@@ -481,7 +468,7 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                     copy(subset[j].ITEM.begin(), subset[j].ITEM.end(), back_inserter(candidate_subset.ITEM));
                 }
 
-                // rimuovo doppioni adiacenti in DSTS
+                // removing doubles from DSTS
                 for (int j = 0; j < candidate_subset.DSTS.size() - 1; j++)
                 {
                     if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j + 1])
@@ -491,8 +478,7 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                     }
                 }
 
-                // calcolo la lunghezza del percorso di questa missione
-                // per poter stimare la metrica V
+                // calculate mission path, needed to find the V value
                 std::vector<uint> path;
                 int dijkstra_result[64];
                 uint dijkstra_size;
@@ -513,9 +499,6 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
                 {
                     candidate.second.GOOD++;
                 }
-                // uso PICKUP == true se non è buona
-                // prima soglio e controllo che la partizione sia composta da sottoinsiemi processabili dai robot poi calcolo il
-                // percorso e metto in ordine per V poi prendo la prima buona
                 m.push_back(candidate_subset);
             }
 
@@ -572,8 +555,8 @@ bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Pa
                     conflicts++;
                     good = false;
                     std::stringstream ss;
-                    ss << "[WARN] Robot " << ri << " e " << rj << " si incontrano in " << p1.PATH[i]
-                       << " all'istante " << i;
+                    ss << "[WARN] Robot " << ri << " and " << rj << " will meet in vertex " << p1.PATH[i]
+                       << " at timestep " << i;
                     c_print(ss.str(), yellow, print);
                 }
                 if (p1.PATH[i] == p2.PATH[i + 1] &&
@@ -582,8 +565,8 @@ bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Pa
                     conflicts++;
                     good = false;
                     std::stringstream ss;
-                    ss << "[WARN] Robot " << ri << " e " << rj << "si incontrano nell'arco (" << p1.PATH[i]
-                       << "," << p1.PATH[i + 1] << ") all'istante " << i;
+                    ss << "[WARN] Robot " << ri << " and " << rj << " will meet in edge (" << p1.PATH[i]
+                       << "," << p1.PATH[i + 1] << ") at timestep " << i;
                     c_print(ss.str(), yellow, print);
                 }
             }
@@ -592,7 +575,7 @@ bool OnlineTaskPlanner::check_paths_conflicts(const std::vector<logistic_sim::Pa
 
     if (conflicts > 0)
     {
-        c_print("[WARN] individuati ", conflicts, "conflitti", yellow, print);
+        c_print("[WARN] ", conflicts, " conflicts detected", yellow, print);
     }
 
     return good;
@@ -605,7 +588,7 @@ void OnlineTaskPlanner::write_simple_missions(std::ostream &os, const std::vecto
     {
         os << m.ID << "\n";
         uint dst = m.DSTS[0];
-        // cerco indice nel vettore di destinazioni
+        // find index in DSTS vector
         auto it = std::find(dst_vertex.begin(), dst_vertex.end(), dst);
         os << it - dst_vertex.begin() << "\n";
 
@@ -636,7 +619,7 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::read_simple_missions(std::
         is >> dms;
         m.DEMANDS.push_back(dms);
 
-        // genero percorso e metrica V
+        // calculate path and V metric
         copy(paths[dst_index].begin(), paths[dst_index].end(), back_inserter(m.ROUTE));
         m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
         m.TOT_DEMAND = dms;
@@ -657,9 +640,8 @@ void OnlineTaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianc
 {
     last_amcl_pos[id_robot] = *msg;
     nav_msgs::Odometry *real_pos = &last_real_pos[id_robot];
-    
-    double distance = sqrt((msg->pose.pose.position.x - real_pos->pose.pose.position.x)*(msg->pose.pose.position.x - real_pos->pose.pose.position.x) 
-                        + (msg->pose.pose.position.y - real_pos->pose.pose.position.y)*(msg->pose.pose.position.y - real_pos->pose.pose.position.y));
+
+    double distance = sqrt((msg->pose.pose.position.x - real_pos->pose.pose.position.x) * (msg->pose.pose.position.x - real_pos->pose.pose.position.x) + (msg->pose.pose.position.y - real_pos->pose.pose.position.y) * (msg->pose.pose.position.y - real_pos->pose.pose.position.y));
     ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
     robot_pos_errors[id_robot].push_back(distance);
 }
@@ -672,7 +654,7 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh_;
     onlinetaskplanner::OnlineTaskPlanner OTP(nh_);
     OTP.init(argc, argv);
-    c_print("inizializzazione finita!", green);
+    c_print("initialization completed!", green);
     ros::AsyncSpinner spinner(2);
     spinner.start();
     OTP.run();

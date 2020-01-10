@@ -493,7 +493,7 @@ void TaskPlanner::init(int argc, char **argv)
       }
       else
       {
-        c_print("Impossibile scrivere percorsi su disco!!!", red, P);
+        c_print("Can't write paths on disk!!!", red, P);
       }
       paths_file.close();
     }
@@ -680,7 +680,7 @@ void TaskPlanner::missions_generator(std::string &type_gen)
     boost::filesystem::path missions_path(filename);
     if (!boost::filesystem::exists(missions_path))
     {
-      c_print("File missioni ", filename, " non esistente!!!", red, P);
+      c_print("Missions file ", filename, " does not exists!!!", red, P);
       sleep(2);
       ros::shutdown();
       int cmd_result = system("./stop_experiment.sh");
@@ -755,7 +755,7 @@ void TaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (token.MISSION.size() < last_mission_size)
     {
       last_mission_size = token.MISSION.size();
-      c_print("Task rimanenti: ", last_mission_size, green);
+      c_print("Remaining tasks: ", last_mission_size, green);
     }
 
     // stampa quando avviene interferenza
@@ -764,7 +764,7 @@ void TaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
       if (token.INTERFERENCE_COUNTER[i] > last_interf_count[i])
       {
         last_interf_count[i] = token.INTERFERENCE_COUNTER[i];
-        c_print("Interferenza rilevata dal robot ", i, "!", red);
+        c_print("Interference detected from robot ", i, "!", red);
       }
     }
 
@@ -887,7 +887,7 @@ void TaskPlanner::write_missions_on_file(std::string filename)
   ofstream missions_file(filename);
   if (missions_file.fail())
   {
-    c_print("Impossibile scrivere missioni su disco!!!", red, P);
+    c_print("Can't write missions on disk!!!", red, P);
   }
   else
   {

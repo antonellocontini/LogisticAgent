@@ -88,8 +88,6 @@ void print_coalition(const t_coalition &coalition)
         //     }
         //     std::cout << "\n";
     }
-
-    c_print("fine mission id: ", mission.ID, red, P);
 }
 
 
