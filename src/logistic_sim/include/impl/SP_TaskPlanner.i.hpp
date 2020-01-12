@@ -1,5 +1,6 @@
 #pragma once
 #include "permutations.hpp"
+#include "partition.hpp"
 
 namespace sp_taskplanner
 {

@@ -1,3 +1,4 @@
+include "../kairos.inc"
 include "../hokuyo.inc"
 include "../crobot.inc"
 include "../floorplan.inc"
@@ -16,6 +17,8 @@ floorplan (
   pose [12.000 3.150 0.000 0.000]
   bitmap "icelab_black.pgm"
 )
+
+#kairos( pose [ 15.44  3.22  0  0 ]   name "robot8"  color "blue")
 
 include "point.inc"
 include "robots.inc"

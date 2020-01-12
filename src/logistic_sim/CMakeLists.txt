@@ -129,6 +129,14 @@ add_library(DistrAgentLib
   src/DistrAgent.cpp
 )
 
+add_library(algorithmsLib
+  src/algorithms.cpp
+)
+
+add_library(partitionLib
+  src/partition.cpp
+)
+
 add_dependencies(DistrAgentLib ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 ########################################################################################################################
 
@@ -144,31 +152,31 @@ add_dependencies(DistrAgentLib ${PROJECT_NAME}_generate_messages_cpp  ${catkin_E
 add_executable(DistrAgent src/DistrAgent.cpp)
 add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(DistrAgent Agent ${catkin_LIBRARIES})
+target_link_libraries(DistrAgent Agent algorithmsLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(CFreeAgent src/CFreeAgent.cpp)
 add_dependencies(CFreeAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(CFreeAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+target_link_libraries(CFreeAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(GlobalAgent src/GlobalAgent.cpp)
 add_dependencies(GlobalAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(GlobalAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+target_link_libraries(GlobalAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(OnlineAgent src/OnlineAgent.cpp)
 add_dependencies(OnlineAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+target_link_libraries(OnlineAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(OnlineCentralizedAgent src/OnlineCentralizedAgent.cpp)
 add_dependencies(OnlineCentralizedAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineCentralizedAgent Agent DistrAgentLib ${catkin_LIBRARIES})
+target_link_libraries(OnlineCentralizedAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
 
 ##################
 ## TaskPlanners ##
@@ -185,37 +193,37 @@ add_library(libTaskPlanner
 add_executable(TaskPlanner src/TaskPlanner.cpp)
 add_dependencies(TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # ## Specify libraries to link a library or executable target against
-target_link_libraries(TaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(TaskPlanner algorithmsLib ${catkin_LIBRARIES})
 
 add_executable(SP_TaskPlanner src/SP_TaskPlanner.cpp)
 add_dependencies(SP_TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
-target_link_libraries(SP_TaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(SP_TaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
 
 add_executable(GlobalTaskPlanner src/GlobalTaskPlanner.cpp)
 add_dependencies(GlobalTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
-target_link_libraries(GlobalTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(GlobalTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
 
 add_executable(GreedyTaskPlanner src/GreedyTaskPlanner.cpp)
 add_dependencies(GreedyTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
-target_link_libraries(GreedyTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(GreedyTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
 
 add_executable(OnlineTaskPlanner src/OnlineTaskPlanner.cpp)
 add_dependencies(OnlineTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(OnlineTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
 
-add_executable(OnlineGlobalTaskPlanner src/OnlineGlobalTaskPlanner.cpp)
+add_executable(OnlineGlobalTaskPlanner src/OnlineGlobalTaskPlanner.cpp src/OnlineCentralizedTaskPlanner.cpp)
 add_dependencies(OnlineGlobalTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineGlobalTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(OnlineGlobalTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
 
-add_executable(OnlineGreedyTaskPlanner src/OnlineGreedyTaskPlanner.cpp)
+add_executable(OnlineGreedyTaskPlanner src/OnlineGreedyTaskPlanner.cpp src/OnlineCentralizedTaskPlanner.cpp)
 add_dependencies(OnlineGreedyTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineGreedyTaskPlanner libTaskPlanner ${catkin_LIBRARIES})
+target_link_libraries(OnlineGreedyTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
 
 ########################################################################################################################
 

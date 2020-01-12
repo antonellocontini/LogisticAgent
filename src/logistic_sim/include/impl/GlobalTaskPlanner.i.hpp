@@ -1,5 +1,7 @@
 #pragma once
 #include "permutations.hpp"
+#include "partition.hpp"
+#include "algorithms.hpp"
 
 namespace globaltaskplanner
 {

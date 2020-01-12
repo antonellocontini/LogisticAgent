@@ -1,4 +1,7 @@
 #include "OnlineTaskPlanner.hpp"
+#include "boost/filesystem.hpp"
+#include "algorithms.hpp"
+#include "partition.hpp"
 
 namespace onlinetaskplanner
 {

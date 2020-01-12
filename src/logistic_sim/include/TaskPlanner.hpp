@@ -27,8 +27,8 @@
 
 #include "struct_vertex.hpp"
 #include "message_types.hpp"
-#include "partition.hpp"
-#include "get_graph.hpp"
+// #include "partition.hpp"
+// #include "get_graph.hpp"
 #include "color_cout.hpp"
 
 #include "logistic_sim/RobotReady.h"

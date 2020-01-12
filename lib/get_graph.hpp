@@ -11,7 +11,7 @@
 
 extern uint WIDTH_PX;
 extern uint HEIGHT_PX;
-float RESOLUTION = 1.0;
+extern float RESOLUTION;
 // extern float WIDTH_M;
 // extern float HEIGHT_M;
 extern float OFFSET_X;
@@ -28,4 +28,4 @@ uint GetNumberEdges (vertex *vertex_web, uint dimension);
 //integer to array (itoa for linux c)
 char* itoa(int value, char* str, int radix);
 
-#include "impl/get_graph.i.hpp"
+// #include "impl/get_graph.i.hpp"

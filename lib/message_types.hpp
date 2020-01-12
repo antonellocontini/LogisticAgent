@@ -43,7 +43,8 @@
 #define SHARE_MSG 33
 #define DELTA_TIME_SEQUENTIAL_START 15
 #define SIMULATE_FOREVER false // WARNING: Set this to false, if you want a finishing condition.
-#define P true  //print
+// #define P true  //print
+const bool P = true;
 #define DBG true
 
 #define INITIALIZE_MSG_TYPE 10
