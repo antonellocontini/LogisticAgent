@@ -103,7 +103,7 @@ class OnlineTaskPlanner : public taskplanner::TaskPlanner
 {
 public:
     OnlineTaskPlanner(ros::NodeHandle &nh_, const std::string &name = "OnlineTaskPlanner");
-    void init(int argc, char **argv);
+    // void init(int argc, char **argv);
     void run();
     void token_callback(const logistic_sim::TokenConstPtr &msg) override;
     std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
@@ -119,8 +119,10 @@ public:
     // in particolare andrebbero usate solo per missioni con singola destinazione
     // inoltre identificano la destinazione non con il vertice nel grafo ma con un indice
     // per garantire compatibilità con mappe diverse
-    void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
-    std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
+    // void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
+    // std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
+    void allocate_memory() override;
+
 protected:
     bool offline_mode = false;
     int window_size = 12; //11;

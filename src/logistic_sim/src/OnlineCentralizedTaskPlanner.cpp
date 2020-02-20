@@ -123,208 +123,6 @@ OnlineCentralizedTaskPlanner::OnlineCentralizedTaskPlanner(ros::NodeHandle &nh_,
   }
 }
 
-void OnlineCentralizedTaskPlanner::init(int argc, char **argv)
-{
-  srand(time(NULL));
-  int cmd_result = chdir(PS_path.c_str());
-  mapname = string(argv[1]);
-  std::string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
-  dimension = GetGraphDimension(graph_file.c_str());
-  vertex_web = new vertex[dimension];
-  GetGraphInfo(vertex_web, dimension, graph_file.c_str());
-  uint nedges = GetNumberEdges(vertex_web, dimension);
-  printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
-
-  ALGORITHM = argv[2];
-  TEAM_SIZE = atoi(argv[3]);
-  GENERATION = argv[4];
-  TEAM_CAPACITY = atoi(argv[5]);
-
-  // task set file name (if generation = FILE)
-  task_set_file = argv[6];
-
-  src_vertex = map_src[mapname];
-  dst_vertex = map_dsts[mapname];
-
-  // building paths for task aggregation euristic
-  for (uint dst : dst_vertex)
-  {
-    int result[100];
-    uint result_size;
-    dijkstra(src_vertex, dst, result, result_size, vertex_web, dimension);
-    paths.push_back(std::vector<uint>(result, result + result_size));
-  }
-
-  // allocate memory for path planning algorithm
-  allocate_memory();
-  map_graph = std::vector<std::vector<unsigned int>>(dimension);
-  for (int i = 0; i < dimension; i++)
-  {
-    for (int j = 0; j < vertex_web[i].num_neigh; j++)
-    {
-      map_graph[i].push_back(vertex_web[i].id_neigh[j]);
-    }
-  }
-
-  min_hops_matrix = calculate_min_hops_matrix();
-
-  // starting service to check when all robots are ready
-  robots_ready_status = std::vector<bool>(TEAM_SIZE);
-  ros::NodeHandle nh;
-  ros::ServiceServer service = nh.advertiseService("robot_ready", &OnlineCentralizedTaskPlanner::robot_ready, this);
-  ros::spinOnce();
-
-  // subscribe to robot's real and amcl position (to measure error)
-  last_real_pos = std::vector<nav_msgs::Odometry>(TEAM_SIZE);
-  last_amcl_pos = std::vector<geometry_msgs::PoseWithCovarianceStamped>(TEAM_SIZE);
-  robot_pos_errors = std::vector<std::vector<double>>(TEAM_SIZE);
-  for (int i = 0; i < TEAM_SIZE; i++)
-  {
-    std::stringstream real_ss, amcl_ss;
-    real_ss << "/robot_" << i << "/base_pose_ground_truth";
-    amcl_ss << "/robot_" << i << "/amcl_pose";
-    ros::Subscriber real_sub = nh.subscribe<nav_msgs::Odometry>(
-        real_ss.str(), 10, boost::bind(&OnlineCentralizedTaskPlanner::real_pos_callback, this, _1, i));
-    ros::Subscriber amcl_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
-        amcl_ss.str(), 10, boost::bind(&OnlineCentralizedTaskPlanner::amcl_pos_callback, this, _1, i));
-
-    if (real_sub)
-    {
-      real_pos_sub.push_back(real_sub);
-      ROS_INFO_STREAM("Subscribed to " << real_ss.str());
-    }
-    else
-    {
-      ROS_WARN_STREAM("Can't subscribe to " << real_ss.str());
-    }
-
-    if (amcl_sub)
-    {
-      amcl_pos_sub.push_back(amcl_sub);
-      ROS_INFO_STREAM("Subscribed to " << amcl_ss.str());
-    }
-    else
-    {
-      ROS_WARN_STREAM("Can't subscribe to " << amcl_ss.str());
-    }
-  }
-
-  allocate_memory();
-  if (GENERATION != "file")
-  {
-    missions_generator(GENERATION);
-    std::stringstream conf_dir_name;
-    conf_dir_name << "missions";
-    //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_"
-    //<< mapname;
-    boost::filesystem::path conf_directory(conf_dir_name.str());
-    if (!boost::filesystem::exists(conf_directory))
-    {
-      boost::filesystem::create_directory(conf_directory);
-    }
-
-    std::string filename;
-    int run_number = 1;
-    std::stringstream filenamestream;
-    std::ifstream check_new;
-    // loop per controllare se il file già esiste
-    do
-    {
-      filenamestream.str(""); // cancella la stringa
-      filenamestream << conf_dir_name.str() << "/" << run_number << ".txt";
-      check_new = std::ifstream(filenamestream.str());
-      run_number++;
-    } while (check_new);
-    check_new.close();
-    filename = filenamestream.str();
-    std::ofstream file(filename);
-    write_simple_missions(file, missions);
-  }
-  else
-  {
-    c_print("Reading missions from file...", green, P);
-    std::stringstream taskset_dir_name;
-    taskset_dir_name << "missions/" << task_set_file;
-    std::string filename(taskset_dir_name.str());
-    boost::filesystem::path missions_path(filename);
-    if (!boost::filesystem::exists(missions_path))
-    {
-      c_print("Missions file ", filename, " does not exists!!!", red, P);
-      sleep(2);
-      ros::shutdown();
-      int cmd_result = system("./stop_experiment.sh");
-    }
-    ifstream missions_file(filename);
-    // missions_file >> missions;
-    missions = read_simple_missions(missions_file);
-    nTask = missions.size();
-    missions_file.close();
-  }
-
-  c_print("Tasks number: ", missions.size(), green, P);
-  // print missions
-  // std::cout << "Single item task-set:\n";
-  // for (const logistic_sim::Mission &m : missions)
-  // {
-  //     std::cout << "ID: " << m.ID << "\n";
-  //     std::cout << "DEMANDS:\n";
-  //     for (auto v : m.DEMANDS)
-  //     {
-  //         std::cout << v << " ";
-  //     }
-  //     std::cout << "DSTS:\n";
-  //     for (auto v : m.DSTS)
-  //     {
-  //         std::cout << v << " ";
-  //     }
-  //     std::cout << std::endl;
-  // }
-
-  // initializing stats structure
-  for (int i = 0; i < TEAM_SIZE; i++)
-  {
-    taskplanner::MonitorData data;
-    robots_data.push_back(data);
-  }
-
-  times_file = std::ofstream("times_file.txt", std::ofstream::out | std::ofstream::app);
-  times_file << "\n"
-             << mapname << "_" << name << "_" << ALGORITHM << "_" << TEAM_SIZE << "_" << task_set_file << "\n";
-
-  // waiting for agents to be ready
-  while (robots_ready_count < TEAM_SIZE)
-  {
-    ros::Duration(1, 0).sleep();
-    ros::spinOnce();
-  }
-
-  // wait
-  ros::Duration(3.0).sleep();
-
-  logistic_sim::Token token;
-
-  // initialization round
-  token.ID_SENDER = TASK_PLANNER_ID;
-  token.ID_RECEIVER = 0;
-  token.INIT = true;
-  token.NEW_MISSIONS_AVAILABLE = false;
-  token.SHUTDOWN = false;
-
-  pub_token.publish(token);
-  ros::spinOnce();
-
-  sleep(1);
-
-  // only one window == offline time measurement
-  if (missions.size() == window_size)
-  {
-    ROS_INFO("Running in offline mode");
-    offline_mode = true;
-  }
-
-  c_print("INIT", green);
-}
-
 void OnlineCentralizedTaskPlanner::run()
 {
   std::cout << "Generating mission windows" << std::endl;
@@ -674,6 +472,20 @@ std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::set_partition(c
   return ele.first;
 }
 
+void OnlineCentralizedTaskPlanner::build_map_graph()
+{
+  allocate_memory();
+  map_graph = std::vector<std::vector<unsigned int>>(dimension);
+  for (int i = 0; i < dimension; i++)
+  {
+    for (int j = 0; j < vertex_web[i].num_neigh; j++)
+    {
+      map_graph[i].push_back(vertex_web[i].id_neigh[j]);
+    }
+  }
+  min_hops_matrix = calculate_min_hops_matrix();
+}
+
 /*
  * Floyd-Warshall to find the least number of hops between each pair of vertices
  */
@@ -755,74 +567,74 @@ bool OnlineCentralizedTaskPlanner::check_paths_conflicts(const std::vector<logis
   return good;
 }
 
-void OnlineCentralizedTaskPlanner::write_simple_missions(std::ostream &os,
-                                                         const std::vector<logistic_sim::Mission> &missions)
-{
-  os << missions.size() << "\n\n";
-  for (const logistic_sim::Mission &m : missions)
-  {
-    os << m.ID << "\n";
-    uint dst = m.DSTS[0];
-    // find index in DSTS vector
-    auto it = std::find(dst_vertex.begin(), dst_vertex.end(), dst);
-    os << it - dst_vertex.begin() << "\n";
+// void OnlineCentralizedTaskPlanner::write_simple_missions(std::ostream &os,
+//                                                          const std::vector<logistic_sim::Mission> &missions)
+// {
+//   os << missions.size() << "\n\n";
+//   for (const logistic_sim::Mission &m : missions)
+//   {
+//     os << m.ID << "\n";
+//     uint dst = m.DSTS[0];
+//     // find index in DSTS vector
+//     auto it = std::find(dst_vertex.begin(), dst_vertex.end(), dst);
+//     os << it - dst_vertex.begin() << "\n";
 
-    uint dms = m.DEMANDS[0];
-    os << dms << "\n";
+//     uint dms = m.DEMANDS[0];
+//     os << dms << "\n";
 
-    os << "\n";
-  }
+//     os << "\n";
+//   }
 
-  os << std::flush;
-}
+//   os << std::flush;
+// }
 
-std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::read_simple_missions(std::istream &is)
-{
-  std::vector<logistic_sim::Mission> missions;
-  int n_missions;
-  is >> n_missions;
+// std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::read_simple_missions(std::istream &is)
+// {
+//   std::vector<logistic_sim::Mission> missions;
+//   int n_missions;
+//   is >> n_missions;
 
-  for (int i = 0; i < n_missions; i++)
-  {
-    logistic_sim::Mission m;
-    is >> m.ID;
-    uint dst_index;
-    is >> dst_index;
-    m.DSTS.push_back(dst_vertex[dst_index]);
+//   for (int i = 0; i < n_missions; i++)
+//   {
+//     logistic_sim::Mission m;
+//     is >> m.ID;
+//     uint dst_index;
+//     is >> dst_index;
+//     m.DSTS.push_back(dst_vertex[dst_index]);
 
-    uint dms;
-    is >> dms;
-    m.DEMANDS.push_back(dms);
+//     uint dms;
+//     is >> dms;
+//     m.DEMANDS.push_back(dms);
 
-    // calculate path and V metric
-    copy(paths[dst_index].begin(), paths[dst_index].end(), back_inserter(m.ROUTE));
-    m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
-    m.TOT_DEMAND = dms;
-    m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
+//     // calculate path and V metric
+//     copy(paths[dst_index].begin(), paths[dst_index].end(), back_inserter(m.ROUTE));
+//     m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+//     m.TOT_DEMAND = dms;
+//     m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
 
-    missions.push_back(m);
-  }
+//     missions.push_back(m);
+//   }
 
-  return missions;
-}
+//   return missions;
+// }
 
-void OnlineCentralizedTaskPlanner::real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot)
-{
-  last_real_pos[id_robot] = *msg;
-}
+// void OnlineCentralizedTaskPlanner::real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot)
+// {
+//   last_real_pos[id_robot] = *msg;
+// }
 
-void OnlineCentralizedTaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg,
-                                                     int id_robot)
-{
-  last_amcl_pos[id_robot] = *msg;
-  nav_msgs::Odometry *real_pos = &last_real_pos[id_robot];
+// void OnlineCentralizedTaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg,
+//                                                      int id_robot)
+// {
+//   last_amcl_pos[id_robot] = *msg;
+//   nav_msgs::Odometry *real_pos = &last_real_pos[id_robot];
 
-  double distance = sqrt((msg->pose.pose.position.x - real_pos->pose.pose.position.x) *
-                             (msg->pose.pose.position.x - real_pos->pose.pose.position.x) +
-                         (msg->pose.pose.position.y - real_pos->pose.pose.position.y) *
-                             (msg->pose.pose.position.y - real_pos->pose.pose.position.y));
-  ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
-  robot_pos_errors[id_robot].push_back(distance);
-}
+//   double distance = sqrt((msg->pose.pose.position.x - real_pos->pose.pose.position.x) *
+//                              (msg->pose.pose.position.x - real_pos->pose.pose.position.x) +
+//                          (msg->pose.pose.position.y - real_pos->pose.pose.position.y) *
+//                              (msg->pose.pose.position.y - real_pos->pose.pose.position.y));
+//   ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
+//   robot_pos_errors[id_robot].push_back(distance);
+// }
 
 } // namespace onlinecentralizedtaskplanner

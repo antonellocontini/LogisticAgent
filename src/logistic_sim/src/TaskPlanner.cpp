@@ -3,8 +3,8 @@
 #include "algorithms.hpp"
 #include "boost/filesystem.hpp"
 
-namespace taskplanner {
-
+namespace taskplanner
+{
 ostream &operator<<(ostream &os, const MonitorData &md)
 {
   os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions << "," << md.completed_tasks
@@ -372,139 +372,33 @@ vector<logistic_sim::Mission> TaskPlanner::read_missions(istream &is)
 
 TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(name)
 {
-  sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_callback, this);
-  pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
+  // sub_token = nh_.subscribe("token", 1, &TaskPlanner::token_callback, this);
+  // pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
 
   nh_.setParam("/simulation_running", "true");
 }
 
 void TaskPlanner::init(int argc, char **argv)
 {
-  srand(time(NULL));
-  int cmd_result = chdir(PS_path.c_str());
-  mapname = string(argv[1]);
-  std::string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
-  dimension = GetGraphDimension(graph_file.c_str());
-  vertex_web = new vertex[dimension];
-  GetGraphInfo(vertex_web, dimension, graph_file.c_str());
-  uint nedges = GetNumberEdges(vertex_web, dimension);
-  printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
-
-  ALGORITHM = argv[2];
-  TEAM_SIZE = atoi(argv[3]);
-  GENERATION = argv[4];
-  TEAM_CAPACITY = atoi(argv[5]);
-
-  // PARAMETRO TASKSET
-  task_set_file = argv[6];
-
-  src_vertex = map_src[mapname];
-  dst_vertex = map_dsts[mapname];
-
-  // costruisce percorsi per euristica
-  for (uint dst : dst_vertex)
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
   {
-    int result[100];
-    uint result_size;
-    dijkstra(src_vertex, dst, result, result_size, vertex_web, dimension);
-    paths.push_back(std::vector<uint>(result, result + result_size));
+    ros::console::notifyLoggerLevelsChanged();
   }
-
-  // avvio servizio
-  robots_ready_status = std::vector<bool>(TEAM_SIZE);
+  read_cmdline_parameters(argc, argv);
+  calculate_aggregation_paths();
+  build_map_graph();  // ONLY CENTRALIZED
   ros::NodeHandle nh;
-  ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
-  ros::spinOnce();
+  advertise_robot_ready_service(nh);
+  initialize_amcl_callbacks(nh);
+  generate_missions();
+  initialize_stats_structure();
+  open_times_file();
+  sleep(3);
+  wait_agents();
+  initialize_token();
+  detect_offline_mode();
 
-  allocate_memory();
-  missions_generator(GENERATION);
-
-  // print missions
-  for (const logistic_sim::Mission &m : missions)
-  {
-    std::cout << "ID: " << m.ID << "\n";
-    std::cout << "DEMANDS:\n";
-    for (auto v : m.DEMANDS)
-    {
-      std::cout << v << " ";
-    }
-    std::cout << "DSTS:\n";
-    for (auto v : m.DSTS)
-    {
-      std::cout << v << " ";
-    }
-    std::cout << std::endl;
-  }
-
-  logistic_sim::Token token;
-
-  // GENERAZIONE PARTIZIONI
-  // se non leggo da file scrivo su disco le partizioni generate
-  if (GENERATION != "file")
-  {
-    set_partition();
-    // scrivo le partizioni generate su file
-    write_missions_on_file();
-  }
-
-  // GENERAZIONE PERCORSI
-  static std::vector<logistic_sim::Path> paths(TEAM_SIZE, logistic_sim::Path());
-  paths = path_partition(token);
-
-  // for(int i=0; i<TEAM_SIZE; i++)
-  // {
-  //     std::cout << "Robot " << i << " path:\n";
-  //     for (uint v : paths[i].PATH)
-  //     {
-  //         std::cout << setw(2) << v << " ";
-  //     }
-  //     std::cout << "\n\n";
-  // }
-  // std::cout << std::endl;
-
-  c_print("TEAM: ", TEAM_SIZE, " nTask: ", nTask, magenta);
-
-  // aspetto che arrivino gli agenti
-  while (robots_ready_count < TEAM_SIZE)
-  {
-    ros::Duration(1, 0).sleep();
-    ros::spinOnce();
-  }
-
-  // giro di inizializzazione
-  token.ID_SENDER = TASK_PLANNER_ID;
-  token.ID_RECEIVER = 0;
-  token.INIT = true;
-  token.GOOD_PATHS = true;
-  token.CALCULATE_PATHS = false;
-  token.TAKEN_MISSION = std::vector<int>(missions.size(), -1);
-  // se il task planner ha calcolato i percorsi li metto nel token
-  if (name == "GlobalTaskPlanner" || name == "GreedyTaskPlanner")
-  {
-    token.TRAILS = paths;
-    // se ho generato i percorsi li scrivo su disco
-    if (GENERATION != "file")
-    {
-      std::string filename("paths_file.txt");
-      ofstream paths_file(filename);
-      if (!paths_file.fail())
-      {
-        paths_file << paths;
-      }
-      else
-      {
-        c_print("Can't write paths on disk!!!", red, P);
-      }
-      paths_file.close();
-    }
-  }
-
-  pub_token.publish(token);
-  ros::spinOnce();
-
-  sleep(1);
-
-  c_print("INIT", green);
+  ROS_INFO("Initialization completed");
 }
 
 int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
@@ -530,7 +424,7 @@ int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
 
 logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
 {
-  static uint d[3] = {0, 0, 0};
+  static uint d[3] = { 0, 0, 0 };
   logistic_sim::Mission m;
   m.PICKUP = false;
   m.ID = id;
@@ -702,132 +596,6 @@ void TaskPlanner::missions_generator(std::string &type_gen)
   }
 }
 
-void TaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
-{
-  static int last_mission_size = 0;
-  static vector<int> last_interf_count;
-  if (msg->ID_RECEIVER != TASK_PLANNER_ID)
-    return;
-
-  logistic_sim::Token token;
-  token = *msg;
-  token.ID_SENDER = TASK_PLANNER_ID;
-  token.ID_RECEIVER = 0;
-  if (msg->INIT)
-  {
-    token.HEADER.seq = 1;
-    CAPACITY = msg->CAPACITY;
-    token.INIT = false;
-    for (auto m : missions)
-    {
-      for (auto dst : m.DSTS)
-      {
-        std::cout << dst << " ";
-      }
-      std::cout << "\n";
-    }
-    std::cout << "\n";
-    token.MISSION = missions;
-    token.END_SIMULATION = false;
-    start_time = ros::Time::now();
-    last_mission_size = missions.size();
-  }
-  else
-  {
-    token.HEADER.seq += 1;
-    // calcolo quanti robot ci sono e preparo la struttura dati
-    if (first_round)
-    {
-      // per come i robot sono ordinati l'ID del sender equivale al numero di robot meno 1
-      num_robots = msg->ID_SENDER + 1;
-      for (int i = 0; i < num_robots; i++)
-      {
-        MonitorData data;
-        robots_data.push_back(data);
-      }
-
-      last_interf_count = vector<int>(num_robots, 0);
-
-      first_round = false;
-    }
-
-    // stampa task rimanenti
-    if (token.MISSION.size() < last_mission_size)
-    {
-      last_mission_size = token.MISSION.size();
-      c_print("Remaining tasks: ", last_mission_size, green);
-    }
-
-    // stampa quando avviene interferenza
-    for (int i = 0; i < last_interf_count.size(); i++)
-    {
-      if (token.INTERFERENCE_COUNTER[i] > last_interf_count[i])
-      {
-        last_interf_count[i] = token.INTERFERENCE_COUNTER[i];
-        c_print("Interference detected from robot ", i, "!", red);
-      }
-    }
-
-    // aggiorno la mia struttura con i dati del token
-    for (int i = 0; i < num_robots; i++)
-    {
-      robots_data[i].interference_num = token.INTERFERENCE_COUNTER[i];
-      robots_data[i].completed_missions = token.MISSIONS_COMPLETED[i];
-      robots_data[i].completed_tasks = token.TASKS_COMPLETED[i];
-      robots_data[i].tot_distance = token.TOTAL_DISTANCE[i];
-      robots_data[i].total_time = (ros::Time::now() - start_time).sec;
-    }
-
-    if (token.INIT_POS.empty())
-    {
-      boost::filesystem::path results_directory("results");
-      if (!boost::filesystem::exists(results_directory))
-      {
-        boost::filesystem::create_directory(results_directory);
-      }
-
-      std::stringstream conf_dir_name;
-      conf_dir_name << "results/" << name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << num_robots
-                    << "capacity" << CAPACITY[0] << "_" << mapname;
-      boost::filesystem::path conf_directory(conf_dir_name.str());
-      if (!boost::filesystem::exists(conf_directory))
-      {
-        boost::filesystem::create_directory(conf_directory);
-      }
-
-      int run_number = 1;
-      std::stringstream filename;
-      std::ifstream check_new;
-      // loop per controllare se il file già esiste
-      // do
-      // {
-      //   filename.str("");  // cancella la stringa
-      //   filename << conf_dir_name.str() << "/" << run_number << ".csv";
-      //   check_new = std::ifstream(filename.str());
-      //   run_number++;
-      // } while (check_new);
-      // check_new.close();
-
-      filename << conf_dir_name.str() << "/" << task_set_file << ".csv";
-
-      ofstream stats(filename.str());
-      stats << robots_data;
-      stats.close();
-      ros::NodeHandle nh;
-      nh.setParam("/simulation_running", "false");
-      token.END_SIMULATION = true;
-    }
-  }
-
-  pub_token.publish(token);
-  ros::spinOnce();
-  if (token.END_SIMULATION)
-  {
-    ros::shutdown();
-    int cmd_result = system("./stop_experiment.sh");
-  }
-}
-
 bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req, logistic_sim::RobotReady::Response &res)
 {
   uint id_robot = req.ID_ROBOT;
@@ -843,7 +611,6 @@ bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req, logistic_s
 
 void TaskPlanner::write_missions_on_file(std::string filename)
 {
-
   // scrivo le partizioni generate su file
   boost::filesystem::path results_directory("results");
   if (!boost::filesystem::exists(results_directory))
@@ -853,7 +620,8 @@ void TaskPlanner::write_missions_on_file(std::string filename)
 
   std::stringstream conf_dir_name;
   conf_dir_name << "missions";
-  //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_" << mapname;
+  //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_"
+  //<< mapname;
   boost::filesystem::path conf_directory(conf_dir_name.str());
   if (!boost::filesystem::exists(conf_directory))
   {
@@ -875,7 +643,7 @@ void TaskPlanner::write_missions_on_file(std::string filename)
     // loop per controllare se il file già esiste
     do
     {
-      filenamestream.str(""); // cancella la stringa
+      filenamestream.str("");  // cancella la stringa
       filenamestream << conf_dir_name.str() << "/" << run_number << ".txt";
       check_new = std::ifstream(filenamestream.str());
       run_number++;
@@ -908,26 +676,296 @@ std::vector<logistic_sim::Path> TaskPlanner::path_partition(logistic_sim::Token 
   return std::vector<logistic_sim::Path>(TEAM_SIZE, logistic_sim::Path());
 }
 
-} // namespace taskplanner
-
-//------------------------------------------------------------------------------
-int main(int argc, char **argv)
+// initialization methods
+void TaskPlanner::read_cmdline_parameters(int argc, char **argv)
 {
-  ros::init(argc, argv, "task_planner");
-
-  ros::NodeHandle nh_;  // con ~ avremmo il prefisso sui topic
-
-  taskplanner::TaskPlanner TP(nh_);
-
-  TP.init(argc, argv);
-
-  c_print("initialization completed!", green);
-
-  ros::AsyncSpinner spinner(2);
-
-  spinner.start();
-
-  ros::waitForShutdown();
-
-  return 0;
+  srand(time(NULL));
+  int cmd_result = chdir(PS_path.c_str());
+  mapname = string(argv[1]);
+  std::string graph_file = "maps/" + mapname + "/" + mapname + ".graph";
+  dimension = GetGraphDimension(graph_file.c_str());
+  vertex_web = new vertex[dimension];
+  GetGraphInfo(vertex_web, dimension, graph_file.c_str());
+  uint nedges = GetNumberEdges(vertex_web, dimension);
+  printf("Loaded graph %s with %d nodes and %d edges\n", mapname.c_str(), dimension, nedges);
+  ALGORITHM = argv[2];
+  TEAM_SIZE = atoi(argv[3]);
+  GENERATION = argv[4];
+  TEAM_CAPACITY = atoi(argv[5]);
+  // task set file name (if generation = FILE)
+  task_set_file = argv[6];
+  src_vertex = map_src[mapname];
+  dst_vertex = map_dsts[mapname];
 }
+
+void TaskPlanner::calculate_aggregation_paths()
+{
+  for (uint dst : dst_vertex)
+  {
+    int result[100];
+    uint result_size;
+    dijkstra(src_vertex, dst, result, result_size, vertex_web, dimension);
+    paths.push_back(std::vector<uint>(result, result + result_size));
+  }
+}
+
+void TaskPlanner::build_map_graph()
+{
+}
+
+void TaskPlanner::advertise_robot_ready_service(ros::NodeHandle &nh)
+{
+  ROS_DEBUG_STREAM("Advertising robot_ready service");
+  robots_ready_status = std::vector<bool>(TEAM_SIZE);
+  ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
+  if (!service)
+  {
+    ROS_ERROR_STREAM("Can't create robot_ready service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("robot_ready service advertised successfully");
+  }
+  
+  ros::spinOnce();
+}
+
+void TaskPlanner::real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot)
+{
+  last_real_pos[id_robot] = *msg;
+}
+
+void TaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg, int id_robot)
+{
+  last_amcl_pos[id_robot] = *msg;
+  nav_msgs::Odometry *real_pos = &last_real_pos[id_robot];
+
+  double distance = sqrt((msg->pose.pose.position.x - real_pos->pose.pose.position.x) *
+                             (msg->pose.pose.position.x - real_pos->pose.pose.position.x) +
+                         (msg->pose.pose.position.y - real_pos->pose.pose.position.y) *
+                             (msg->pose.pose.position.y - real_pos->pose.pose.position.y));
+  ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
+  robot_pos_errors[id_robot].push_back(distance);
+}
+
+void TaskPlanner::initialize_amcl_callbacks(ros::NodeHandle &nh)
+{
+  // COMUNE, diventa initialize_amcl_callbacks()
+  // subscribe to robot's real and amcl position (to measure error)
+  last_real_pos = std::vector<nav_msgs::Odometry>(TEAM_SIZE);
+  last_amcl_pos = std::vector<geometry_msgs::PoseWithCovarianceStamped>(TEAM_SIZE);
+  robot_pos_errors = std::vector<std::vector<double>>(TEAM_SIZE);
+  for (int i = 0; i < TEAM_SIZE; i++)
+  {
+    std::stringstream real_ss, amcl_ss;
+    real_ss << "/robot_" << i << "/base_pose_ground_truth";
+    amcl_ss << "/robot_" << i << "/amcl_pose";
+    ros::Subscriber real_sub =
+        nh.subscribe<nav_msgs::Odometry>(real_ss.str(), 10, boost::bind(&TaskPlanner::real_pos_callback, this, _1, i));
+    ros::Subscriber amcl_sub = nh.subscribe<geometry_msgs::PoseWithCovarianceStamped>(
+        amcl_ss.str(), 10, boost::bind(&TaskPlanner::amcl_pos_callback, this, _1, i));
+
+    if (real_sub)
+    {
+      real_pos_sub.push_back(real_sub);
+      ROS_INFO_STREAM("Subscribed to " << real_ss.str());
+    }
+    else
+    {
+      ROS_WARN_STREAM("Can't subscribe to " << real_ss.str());
+    }
+
+    if (amcl_sub)
+    {
+      amcl_pos_sub.push_back(amcl_sub);
+      ROS_INFO_STREAM("Subscribed to " << amcl_ss.str());
+    }
+    else
+    {
+      ROS_WARN_STREAM("Can't subscribe to " << amcl_ss.str());
+    }
+  }
+}
+
+void TaskPlanner::write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission)
+{
+  os << missions.size() << "\n\n";
+  for (const logistic_sim::Mission &m : missions)
+  {
+    os << m.ID << "\n";
+    uint dst = m.DSTS[0];
+    // find index in DSTS vector
+    auto it = std::find(dst_vertex.begin(), dst_vertex.end(), dst);
+    os << it - dst_vertex.begin() << "\n";
+
+    uint dms = m.DEMANDS[0];
+    os << dms << "\n";
+
+    os << "\n";
+  }
+
+  os << std::flush;
+}
+
+std::vector<logistic_sim::Mission> TaskPlanner::read_simple_missions(std::istream &is)
+{
+  std::vector<logistic_sim::Mission> missions;
+  int n_missions;
+  is >> n_missions;
+
+  for (int i = 0; i < n_missions; i++)
+  {
+    logistic_sim::Mission m;
+    is >> m.ID;
+    uint dst_index;
+    is >> dst_index;
+    m.DSTS.push_back(dst_vertex[dst_index]);
+
+    uint dms;
+    is >> dms;
+    m.DEMANDS.push_back(dms);
+
+    // calculate path and V metric
+    copy(paths[dst_index].begin(), paths[dst_index].end(), back_inserter(m.ROUTE));
+    m.PATH_DISTANCE = compute_cost_of_route(m.ROUTE);
+    m.TOT_DEMAND = dms;
+    m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
+
+    missions.push_back(m);
+  }
+
+  return missions;
+}
+
+void TaskPlanner::generate_missions()
+{
+  if (GENERATION != "file")
+  {
+    missions_generator(GENERATION);
+    std::stringstream conf_dir_name;
+    conf_dir_name << "missions";
+    //<< name << "_" << ALGORITHM << "_" << GENERATION << "_teamsize" << TEAM_SIZE << "capacity" << TEAM_CAPACITY << "_"
+    //<< mapname;
+    boost::filesystem::path conf_directory(conf_dir_name.str());
+    if (!boost::filesystem::exists(conf_directory))
+    {
+      boost::filesystem::create_directory(conf_directory);
+    }
+
+    std::string filename;
+    int run_number = 1;
+    std::stringstream filenamestream;
+    std::ifstream check_new;
+    // loop per controllare se il file già esiste
+    do
+    {
+      filenamestream.str("");  // cancella la stringa
+      filenamestream << conf_dir_name.str() << "/" << run_number << ".txt";
+      check_new = std::ifstream(filenamestream.str());
+      run_number++;
+    } while (check_new);
+    check_new.close();
+    filename = filenamestream.str();
+    std::ofstream file(filename);
+    write_simple_missions(file, missions);
+  }
+  else
+  {
+    c_print("Reading missions from file...", green, P);
+    std::stringstream taskset_dir_name;
+    taskset_dir_name << "missions/" << task_set_file;
+    std::string filename(taskset_dir_name.str());
+    boost::filesystem::path missions_path(filename);
+    if (!boost::filesystem::exists(missions_path))
+    {
+      c_print("Missions file ", filename, " does not exists!!!", red, P);
+      sleep(2);
+      ros::shutdown();
+      int cmd_result = system("./stop_experiment.sh");
+    }
+    ifstream missions_file(filename);
+    // missions_file >> missions;
+    missions = read_simple_missions(missions_file);
+    nTask = missions.size();
+    missions_file.close();
+  }
+
+  c_print("Tasks number: ", missions.size(), green, P);
+}
+
+void TaskPlanner::initialize_stats_structure()
+{
+  // initializing stats structure
+  for (int i = 0; i < TEAM_SIZE; i++)
+  {
+    taskplanner::MonitorData data;
+    robots_data.push_back(data);
+  }
+}
+
+void TaskPlanner::open_times_file()
+{
+  times_file = std::ofstream("times_file.txt", std::ofstream::out | std::ofstream::app);
+  times_file << "\n" << mapname << "_" << name << "_" << ALGORITHM << "_" << TEAM_SIZE << "_" << task_set_file << "\n";
+}
+
+void TaskPlanner::wait_agents()
+{
+  while (robots_ready_count < TEAM_SIZE)
+  {
+    ROS_DEBUG_STREAM("Missing agents: " << TEAM_SIZE - robots_ready_count);
+    ros::Duration(1, 0).sleep();
+    ros::spinOnce();
+  }
+}
+
+void TaskPlanner::initialize_token()
+{
+  logistic_sim::Token token;
+
+  // initialization round
+  token.ID_SENDER = TASK_PLANNER_ID;
+  token.ID_RECEIVER = 0;
+  token.INIT = true;
+  token.NEW_MISSIONS_AVAILABLE = false;
+  token.SHUTDOWN = false;
+
+  pub_token.publish(token);
+  ros::spinOnce();
+
+  sleep(1);
+}
+
+void TaskPlanner::detect_offline_mode()
+{
+  // only one window == offline time measurement
+  if (missions.size() == window_size)
+  {
+    ROS_INFO("Running in offline mode");
+    offline_mode = true;
+  }
+}
+
+}  // namespace taskplanner
+
+// //------------------------------------------------------------------------------
+// int main(int argc, char **argv)
+// {
+//   ros::init(argc, argv, "task_planner");
+
+//   ros::NodeHandle nh_;  // con ~ avremmo il prefisso sui topic
+
+//   taskplanner::TaskPlanner TP(nh_);
+
+//   TP.init(argc, argv);
+
+//   c_print("initialization completed!", green);
+
+//   ros::AsyncSpinner spinner(2);
+
+//   spinner.start();
+
+//   ros::waitForShutdown();
+
+//   return 0;
+// }

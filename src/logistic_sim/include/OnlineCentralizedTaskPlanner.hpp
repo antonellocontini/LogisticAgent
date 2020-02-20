@@ -2,8 +2,6 @@
 
 #include "TaskPlanner.hpp"
 // #include "boost/filesystem.hpp"
-#include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include <nav_msgs/Odometry.h>
 #include <boost/thread.hpp>
 // #include "message_types.hpp"
 
@@ -85,11 +83,13 @@ public:
     delete[] queue;
   }
 
-  void init(int argc, char **argv);
+  // void init(int argc, char **argv);
   void run();
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
   virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token, std::vector<logistic_sim::Mission> &missions) = 0;
   std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
+
+  void build_map_graph() override;
 
   // definito per come ros vuole il tipo della funzione, chiamo quella della base class
   bool robot_ready(logistic_sim::RobotReady::Request &req, logistic_sim::RobotReady::Response &res)
@@ -115,8 +115,8 @@ public:
   // in particolare andrebbero usate solo per missioni con singola destinazione
   // inoltre identificano la destinazione non con il vertice nel grafo ma con un indice
   // per garantire compatibilità con mappe diverse
-  void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
-  std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
+  // void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
+  // std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
 
 protected:
   // adjacency list of the graph, contains only neighbour of vertices, without edge lengths
@@ -172,15 +172,6 @@ protected:
   ros::Duration shutdown_timeout = ros::Duration(5 * 60.0), shutdown_warning = ros::Duration(4 * 60.0);
   bool warning_occured = false;
   logistic_sim::Token::_GOAL_STATUS_type last_goal_status;
-
-  std::vector<ros::Subscriber> real_pos_sub, amcl_pos_sub;
-  std::vector<nav_msgs::Odometry> last_real_pos;
-  std::vector<geometry_msgs::PoseWithCovarianceStamped> last_amcl_pos;
-  std::vector<std::vector<double>> robot_pos_errors;
-
-  // callback per leggere posizioni reali e misurate dei robot
-  void real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot);
-  void amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg, int id_robot);
 };
 
 }  // namespace onlinecentralizedtaskplanner
