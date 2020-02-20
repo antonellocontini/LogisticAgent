@@ -144,26 +144,8 @@ function set_footprints {
 # echo ""
 # sleep 1
 
-# ALG=OnlineAgent
-# TP_NAME=OnlineTaskPlanner
-# for i in $(echo 2)
-# do
-# 	NROBOTS=$i
-# 	prepare_tmux
-# 	launch_ros
-# 	launch_stage
-# 	launch_robots
-# 	launch_taskplanner
-# 	launch_agents
-# 	set_footprints
-# 	date
-# 	tmux -2 attach-session -t $SESSION
-# 	echo ""
-# 	sleep 1
-# done
-
-ALG=OnlineCentralizedAgent
-TP_NAME=OnlineGlobalTaskPlanner
+ALG=OnlineAgent
+TP_NAME=OnlineTaskPlanner
 for i in $(echo 2)
 do
 	NROBOTS=$i
@@ -179,6 +161,24 @@ do
 	echo ""
 	sleep 1
 done
+
+# ALG=OnlineCentralizedAgent
+# TP_NAME=OnlineGlobalTaskPlanner
+# for i in $(echo 2)
+# do
+# 	NROBOTS=$i
+# 	prepare_tmux
+# 	launch_ros
+# 	launch_stage
+# 	launch_robots
+# 	launch_taskplanner
+# 	launch_agents
+# 	set_footprints
+# 	date
+# 	tmux -2 attach-session -t $SESSION
+# 	echo ""
+# 	sleep 1
+# done
 
 # ALG=OnlineCentralizedAgent
 # TP_NAME=OnlineGreedyTaskPlanner

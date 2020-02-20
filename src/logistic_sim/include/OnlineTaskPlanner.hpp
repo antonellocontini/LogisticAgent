@@ -122,6 +122,7 @@ public:
     void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
     std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
 protected:
+    bool offline_mode = false;
     int window_size = 12; //11;
     std::list<std::vector<logistic_sim::Mission>> mission_windows;
     boost::mutex window_mutex;

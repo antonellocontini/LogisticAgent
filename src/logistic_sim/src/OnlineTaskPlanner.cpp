@@ -191,6 +191,13 @@ void OnlineTaskPlanner::init(int argc, char **argv)
 
     sleep(1);
 
+    // only one window == offline time measurement
+    if (missions.size() == window_size)
+    {
+        ROS_INFO("Running in offline mode");
+        offline_mode = true;
+    }
+
     c_print("INIT", green);
 }
 
@@ -212,6 +219,11 @@ void OnlineTaskPlanner::run()
         std::vector<logistic_sim::Mission> tasks(first_it, last_it);
         missions.erase(first_it, last_it);
         std::vector<logistic_sim::Mission> window = set_partition(tasks);
+        if (offline_mode)
+        {
+            ROS_DEBUG("offline mode -- start time setted after allocation");
+            start_time = ros::Time::now();
+        }
         // mission_windows is accessed also in the token callback thread, hence the mutex
         window_mutex.lock();
         mission_windows.push_back(window);
@@ -254,7 +266,11 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.INIT = false;
         token.END_SIMULATION = false;
         token.ALL_MISSIONS_INSERTED = false;
-        start_time = ros::Time::now();
+        if (!offline_mode)
+        {
+            ROS_DEBUG("online mode -- start time setted inside token init phase");
+            start_time = ros::Time::now();
+        }
         last_goal_time = ros::Time::now();
         last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
         last_mission_size = 0;
@@ -278,8 +294,8 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
             allocation_phase = false;
             end = std::chrono::system_clock::now();
             std::chrono::duration<double> elapsed_seconds = end - start;
-                times_file << "allocation:\t" << elapsed_seconds.count() << "\n";
-                times_file.flush();
+            times_file << "allocation:\t" << elapsed_seconds.count() << "\n";
+            times_file.flush();
         }
 
         // signals to the robots that new missions are in the token
