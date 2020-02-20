@@ -164,7 +164,8 @@ protected:
     queue = new st_location[MAX_TIME * MAX_TIME];
   }
 
-  int window_size = 4;
+  bool offline_mode = false;
+  int window_size = 12; //4;
   std::list<std::vector<logistic_sim::Mission>> mission_windows;
   boost::mutex window_mutex;
   ros::Time last_goal_time;

@@ -2,6 +2,7 @@
 #include "boost/filesystem.hpp"
 #include "algorithms.hpp"
 #include "partition.hpp"
+#include <chrono>
 
 namespace onlinetaskplanner
 {
@@ -162,6 +163,10 @@ void OnlineTaskPlanner::init(int argc, char **argv)
         robots_data.push_back(data);
     }
 
+    times_file = std::ofstream("times_file.txt", std::ofstream::out | std::ofstream::app);
+    times_file << "\n"
+               << mapname << "_" << ALGORITHM << "_" << TEAM_SIZE << "_" << task_set_file << "\n";
+
     // wait for all agents to be ready
     while (robots_ready_count < TEAM_SIZE)
     {
@@ -267,10 +272,22 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 
         // the mutex is necessary because the window is updated in another thread
         window_mutex.lock();
+
+        if (allocation_phase)
+        {
+            allocation_phase = false;
+            end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed_seconds = end - start;
+                times_file << "allocation:\t" << elapsed_seconds.count() << "\n";
+                times_file.flush();
+        }
+
         // signals to the robots that new missions are in the token
         // robots will set this flag to false when this missions have been accepted
         if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
         {
+            start = std::chrono::system_clock::now();
+            allocation_phase = true;
             token.MISSION = mission_windows.front();
             token.TAKEN_MISSION = std::vector<int>(token.MISSION.size(), -1);
             mission_windows.pop_front();
@@ -369,6 +386,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
         // at shutdown stats must be written on disk
         if (token.SHUTDOWN)
         {
+            times_file.close();
             boost::filesystem::path results_directory("results");
             if (!boost::filesystem::exists(results_directory))
             {
@@ -435,6 +453,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 
 std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
 {
+    auto start = std::chrono::system_clock::now();
     c_print("Calculating partitions", green, P);
     std::vector<t_coalition> good_partition;
     try
@@ -534,6 +553,10 @@ std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::v
 
     // print_coalition(ele);
 
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    times_file << "aggregation:\t" << elapsed_seconds.count() << "\n";
+    times_file.flush();
     return ele.first;
 }
 

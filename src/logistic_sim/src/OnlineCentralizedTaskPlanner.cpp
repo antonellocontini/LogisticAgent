@@ -3,6 +3,7 @@
 #include "algorithms.hpp"
 #include "boost/filesystem.hpp"
 #include <memory>
+#include <chrono>
 
 namespace onlinecentralizedtaskplanner
 {
@@ -115,6 +116,11 @@ OnlineCentralizedTaskPlanner::OnlineCentralizedTaskPlanner(ros::NodeHandle &nh_,
   pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
 
   nh_.setParam("/simulation_running", "true");
+
+  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
+  {
+    ros::console::notifyLoggerLevelsChanged();
+  }
 }
 
 void OnlineCentralizedTaskPlanner::init(int argc, char **argv)
@@ -224,7 +230,7 @@ void OnlineCentralizedTaskPlanner::init(int argc, char **argv)
     // loop per controllare se il file già esiste
     do
     {
-      filenamestream.str("");  // cancella la stringa
+      filenamestream.str(""); // cancella la stringa
       filenamestream << conf_dir_name.str() << "/" << run_number << ".txt";
       check_new = std::ifstream(filenamestream.str());
       run_number++;
@@ -281,6 +287,10 @@ void OnlineCentralizedTaskPlanner::init(int argc, char **argv)
     robots_data.push_back(data);
   }
 
+  times_file = std::ofstream("times_file.txt", std::ofstream::out | std::ofstream::app);
+  times_file << "\n"
+             << mapname << "_" << name << "_" << ALGORITHM << "_" << TEAM_SIZE << "_" << task_set_file << "\n";
+
   // waiting for agents to be ready
   while (robots_ready_count < TEAM_SIZE)
   {
@@ -304,6 +314,13 @@ void OnlineCentralizedTaskPlanner::init(int argc, char **argv)
   ros::spinOnce();
 
   sleep(1);
+
+  // only one window == offline time measurement
+  if (missions.size() == window_size)
+  {
+    ROS_INFO("Running in offline mode");
+    offline_mode = true;
+  }
 
   c_print("INIT", green);
 }
@@ -368,7 +385,11 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
     token.INIT = false;
     token.END_SIMULATION = false;
     token.ALL_MISSIONS_INSERTED = false;
-    start_time = ros::Time::now();
+    if (!offline_mode)
+    {
+      ROS_DEBUG("online mode -- start time setted inside token init phase");
+      start_time = ros::Time::now();
+    }
     last_goal_time = ros::Time::now();
     last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
     last_mission_size = 0;
@@ -406,6 +427,11 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
       c_print("Mission window inserted in token - remaining windows: ", mission_windows.size(), yellow, P);
       token.SYNCED_ROBOTS = false;
       token.NEW_MISSIONS_AVAILABLE = false;
+      if (offline_mode)
+      {
+        ROS_DEBUG("offline mode -- start time setted after allocation");
+        start_time = ros::Time::now();
+      }
     }
     window_mutex.unlock();
 
@@ -473,6 +499,7 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
     // at shutdown stats must be written on disk
     if (token.SHUTDOWN)
     {
+      times_file.close();
       boost::filesystem::path results_directory("results");
       if (!boost::filesystem::exists(results_directory))
       {
@@ -539,6 +566,7 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
 
 std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
 {
+  auto start = std::chrono::system_clock::now();
   c_print("Calculating partitions", green, P);
   std::vector<t_coalition> good_partition;
   try
@@ -639,6 +667,10 @@ std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::set_partition(c
 
   // print_coalition(ele);
 
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  times_file << "aggregation:\t" << elapsed_seconds.count() << "\n";
+  times_file.flush();
   return ele.first;
 }
 
@@ -724,7 +756,7 @@ bool OnlineCentralizedTaskPlanner::check_paths_conflicts(const std::vector<logis
 }
 
 void OnlineCentralizedTaskPlanner::write_simple_missions(std::ostream &os,
-                                                    const std::vector<logistic_sim::Mission> &missions)
+                                                         const std::vector<logistic_sim::Mission> &missions)
 {
   os << missions.size() << "\n\n";
   for (const logistic_sim::Mission &m : missions)
@@ -780,7 +812,7 @@ void OnlineCentralizedTaskPlanner::real_pos_callback(const nav_msgs::OdometryCon
 }
 
 void OnlineCentralizedTaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg,
-                                                int id_robot)
+                                                     int id_robot)
 {
   last_amcl_pos[id_robot] = *msg;
   nav_msgs::Odometry *real_pos = &last_real_pos[id_robot];
@@ -793,4 +825,4 @@ void OnlineCentralizedTaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWi
   robot_pos_errors[id_robot].push_back(distance);
 }
 
-}  // namespace onlinecentralizedtaskplanner
+} // namespace onlinecentralizedtaskplanner

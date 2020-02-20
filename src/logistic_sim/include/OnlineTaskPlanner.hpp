@@ -4,6 +4,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <boost/thread.hpp>
 #include "TaskPlanner.hpp"
+#include<chrono>
 
 namespace onlinetaskplanner
 {
@@ -121,7 +122,7 @@ public:
     void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
     std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
 protected:
-    int window_size = 11;
+    int window_size = 12; //11;
     std::list<std::vector<logistic_sim::Mission>> mission_windows;
     boost::mutex window_mutex;
     ros::Time last_goal_time;
@@ -137,6 +138,10 @@ protected:
     // callback per leggere posizioni reali e misurate dei robot
     void real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot);
     void amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStampedConstPtr &msg, int id_robot);
+
+    bool allocation_phase = false;
+    std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
 };
 
 } // namespace onlinetaskplanner

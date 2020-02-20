@@ -1,0 +1,267 @@
+
+icelab_black_OnlineCentralizedAgent_2
+aggregation:	0.000515283
+aggregation:	0.000370165
+aggregation:	0.000502397
+aggregation:	0.000408622
+aggregation:	0.000509621
+aggregation:	0.000373169
+aggregation:	0.000465178
+aggregation:	4.9995e-05
+allocation:	0.0186335
+allocation:	0.0461632
+allocation:	0.0745943
+allocation:	0.0771565
+allocation:	0.0972953
+allocation:	0.104857
+allocation:	0.114223
+allocation:	0.111977
+
+icelab_black_OnlineCentralizedAgent_2_2.txt
+aggregation:	0.0025052
+aggregation:	0.00193792
+aggregation:	0.00238481
+aggregation:	0.0020709
+aggregation:	0.00228708
+aggregation:	0.00180725
+aggregation:	0.00166163
+aggregation:	0.000232312
+
+icelab_black_OnlineCentralizedAgent_2_2.txt
+aggregation:	0.00200196
+aggregation:	0.00149484
+aggregation:	0.00166349
+aggregation:	0.00131063
+aggregation:	0.00201315
+aggregation:	0.00132675
+aggregation:	0.00182893
+aggregation:	0.000237664
+allocation:	0.00882781
+allocation:	0.118187
+allocation:	0.10986
+allocation:	0.128405
+allocation:	0.150456
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_6_2.txt
+aggregation:	0.000706667
+aggregation:	0.000388849
+aggregation:	0.000372013
+aggregation:	0.00028909
+aggregation:	0.00032224
+aggregation:	0.000406658
+aggregation:	0.000411605
+aggregation:	5.1087e-05
+allocation:	2.46385
+allocation:	4.90259
+allocation:	4.59797
+
+icelab_black_OnlineAgent_6_2.txt
+aggregation:	32.1215
+aggregation:	29.4122
+aggregation:	0.162634
+
+icelab_black_OnlineAgent_6_2.txt
+aggregation:	32.1702
+allocation:	1.20039
+aggregation:	28.8639
+aggregation:	0.161566
+allocation:	0.614638
+allocation:	0.591217
+
+OFFLINE
+----------------------------------------------------------
+icelab_black_OnlineAgent_2_2short.txt
+aggregation:	208.18
+allocation:	1.00837
+
+icelab_black_OnlineAgent_4_2short.txt
+aggregation:	215.229
+allocation:	1.09609
+
+icelab_black_OnlineAgent_6_2short.txt
+aggregation:	225.944
+allocation:	1.2245
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_2_2short.txt
+aggregation:	209.112
+allocation:	29.5356
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_4_2short.txt
+aggregation:	496.941
+allocation:	3990.22
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_6_2short.txt
+aggregation:	511.088
+allocation:	9975.65
+
+icelab_black_OnlineGreedyTaskPlanner_OnlineCentralizedAgent_2_2short.txt
+aggregation:	485.635
+allocation:	2.02561
+
+icelab_black_OnlineGreedyTaskPlanner_OnlineCentralizedAgent_4_2short.txt
+aggregation:	501.535
+allocation:	0.30495
+
+icelab_black_OnlineGreedyTaskPlanner_OnlineCentralizedAgent_6_2short.txt
+aggregation:	687.802
+allocation:	0.150393
+
+ONLINE
+------------------------------------------------------------------------
+icelab_black_OnlineAgent_2_2.txt
+aggregation:	31.2284
+allocation:	0.798261
+aggregation:	28.1837
+aggregation:	0.148811
+allocation:	0.206772
+allocation:	0.195131
+
+icelab_black_OnlineAgent_4_2.txt
+aggregation:	31.5523
+allocation:	1.09821
+aggregation:	28.2811
+aggregation:	0.150837
+allocation:	0.402404
+allocation:	0.397393
+
+icelab_black_OnlineAgent_6_2.txt
+aggregation:	32.4824
+allocation:	0.996041
+aggregation:	29.0651
+aggregation:	0.153738
+allocation:	0.599556
+allocation:	0.602588
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_2_2.txt
+aggregation:	0.00205557
+aggregation:	0.00126615
+aggregation:	0.00191104
+aggregation:	0.00118251
+aggregation:	0.00164578
+aggregation:	0.00139105
+aggregation:	0.00132114
+aggregation:	0.000144969
+allocation:	0.0376378
+allocation:	0.0935267
+allocation:	0.104807
+allocation:	0.10698
+allocation:	0.111431
+allocation:	0.0346432
+allocation:	0.104709
+allocation:	0.0384792
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_4_2.txt
+aggregation:	0.00218337
+aggregation:	0.00157759
+aggregation:	0.00183361
+aggregation:	0.00168363
+aggregation:	0.00177991
+aggregation:	0.00148497
+aggregation:	0.00142779
+aggregation:	0.000135077
+allocation:	0.157462
+allocation:	0.21383
+allocation:	0.226399
+allocation:	0.194817
+allocation:	0.263043
+allocation:	0.16412
+allocation:	0.253905
+allocation:	0.162659
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_6_2.txt
+aggregation:	0.00231831
+aggregation:	0.00182101
+aggregation:	0.00197623
+aggregation:	0.0015444
+aggregation:	0.00200602
+aggregation:	0.00170819
+aggregation:	0.00227821
+aggregation:	0.000244085
+allocation:	2.37899
+allocation:	4.69505
+allocation:	4.41599
+allocation:	3.68646
+allocation:	4.41428
+allocation:	2.96583
+allocation:	4.83846
+allocation:	2.72479
+
+icelab_black_OnlineGreedyTaskPlanner_OnlineCentralizedAgent_2_2.txt
+aggregation:	0.00220405
+aggregation:	0.00149404
+aggregation:	0.00169152
+aggregation:	0.00136464
+aggregation:	0.00171155
+aggregation:	0.00135785
+aggregation:	0.00142591
+aggregation:	0.000226935
+allocation:	0.00435382
+allocation:	0.0411069
+allocation:	0.0610875
+allocation:	0.0591883
+allocation:	0.0819513
+allocation:	0.0810671
+allocation:	0.0796021
+allocation:	0.114357
+
+icelab_black_OnlineGreedyTaskPlanner_OnlineCentralizedAgent_4_2.txt
+aggregation:	0.00225534
+aggregation:	0.00177813
+aggregation:	0.00231777
+aggregation:	0.00222291
+aggregation:	0.00197314
+aggregation:	0.00136744
+aggregation:	0.00201189
+aggregation:	0.000223241
+allocation:	0.0297373
+allocation:	0.0340259
+allocation:	0.0417069
+allocation:	0.0367649
+allocation:	0.0338386
+allocation:	0.0218435
+allocation:	0.05328
+allocation:	0.0208459
+
+icelab_black_OnlineGreedyTaskPlanner_OnlineCentralizedAgent_6_2.txt
+aggregation:	0.00342733
+aggregation:	0.00199526
+aggregation:	0.00243507
+aggregation:	0.00218177
+aggregation:	0.00240934
+aggregation:	0.00216686
+aggregation:	0.00222194
+aggregation:	0.000223603
+allocation:	0.0320503
+allocation:	0.0378579
+allocation:	0.0366206
+allocation:	0.00999111
+allocation:	0.0340411
+allocation:	0.0240092
+allocation:	0.0598707
+allocation:	0.0236759
+
+icelab_black_OnlineAgent_6_2.txt
+aggregation:	32.3459
+allocation:	1.09614
+aggregation:	28.9387
+aggregation:	0.148489
+allocation:	0.617469
+allocation:	0.571709
+
+MISSING_DATA
+---------------------------------------------------------------
+icelab_black_OnlineAgent_2_2short.txt
+aggregation:	215.72
+allocation:	0.899306
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_4_2short.txt
+aggregation:	219.509
+allocation:	1799.94
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_6_2short.txt
+aggregation:	222.858
+allocation:	5505.24
+
+icelab_black_OnlineGlobalTaskPlanner_OnlineCentralizedAgent_2_2short.txt
+aggregation:	215.997
+allocation:	30.0389

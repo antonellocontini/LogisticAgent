@@ -4,7 +4,7 @@ SESSION=log_sim
 MAP=icelab_black
 NROBOTS=6
 INITPOS=default
-ALG=OnlineCentralizedAgent
+ALG=OnlineAgent
 LOC=AMCL
 # LOC=fake_localization
 NAV=ros
@@ -12,10 +12,10 @@ GWAIT=0
 COMMDELAY=0.2
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=OnlineGreedyTaskPlanner
-GEN=rand
+TP_NAME=OnlineTaskPlanner
+GEN=file
 DEBUG=false
-MISSIONS_FILE=1.txt
+MISSIONS_FILE=2short.txt
 NRUNS=1
 
 function prepare_tmux {
@@ -132,23 +132,59 @@ function set_footprints {
 	tmux selectw -t $SESSION:2
 }
 
-prepare_tmux
-launch_ros
-launch_stage
-launch_robots
-launch_taskplanner
-launch_agents
-set_footprints
-date
-tmux -2 attach-session -t $SESSION
-echo ""
-sleep 1
+# prepare_tmux
+# launch_ros
+# launch_stage
+# launch_robots
+# launch_taskplanner
+# launch_agents
+# set_footprints
+# date
+# tmux -2 attach-session -t $SESSION
+# echo ""
+# sleep 1
 
-MAP=icelab_black
-# NROBOTS=2
-# for i in $(seq 1 10)
+# ALG=OnlineAgent
+# TP_NAME=OnlineTaskPlanner
+# for i in $(echo 2)
 # do
-# 	MISSIONS_FILE="$i.txt"
+# 	NROBOTS=$i
+# 	prepare_tmux
+# 	launch_ros
+# 	launch_stage
+# 	launch_robots
+# 	launch_taskplanner
+# 	launch_agents
+# 	set_footprints
+# 	date
+# 	tmux -2 attach-session -t $SESSION
+# 	echo ""
+# 	sleep 1
+# done
+
+ALG=OnlineCentralizedAgent
+TP_NAME=OnlineGlobalTaskPlanner
+for i in $(echo 2)
+do
+	NROBOTS=$i
+	prepare_tmux
+	launch_ros
+	launch_stage
+	launch_robots
+	launch_taskplanner
+	launch_agents
+	set_footprints
+	date
+	tmux -2 attach-session -t $SESSION
+	echo ""
+	sleep 1
+done
+
+# ALG=OnlineCentralizedAgent
+# TP_NAME=OnlineGreedyTaskPlanner
+# for i in $(echo 2 4 6)
+# do
+# 	NROBOTS=$i
 # 	prepare_tmux
 # 	launch_ros
 # 	launch_stage

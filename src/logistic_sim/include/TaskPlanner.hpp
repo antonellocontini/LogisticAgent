@@ -157,6 +157,9 @@ protected:
     ros::Publisher pub_token;
     std::string name;
 
+    // temporaneo
+    std::ofstream times_file;
+
     void write_missions_on_file(std::string filename = "");
 };
 

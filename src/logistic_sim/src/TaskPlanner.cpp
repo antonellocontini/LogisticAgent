@@ -694,7 +694,7 @@ void TaskPlanner::missions_generator(std::string &type_gen)
   else if (type_gen == "rand")
   {
     c_print("creating random mission");
-    random_mission(30);
+    random_mission(12);
   }
   else
   {

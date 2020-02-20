@@ -12,6 +12,7 @@ OnlineGlobalTaskPlanner::OnlineGlobalTaskPlanner(ros::NodeHandle &nh_, const std
 std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic_sim::Token &token,
                                                                         std::vector<logistic_sim::Mission> &missions)
 {
+  auto start = std::chrono::system_clock::now();
   ofstream stats_file("stats_file.txt");
   c_print("Calculating tasks distribution", green, P);
   // merging task paths with home paths
@@ -224,9 +225,14 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
         {
           std::cout << v << " ";
         }
-        std::cout << "\n" << std::endl;
+        std::cout << "\n"
+                  << std::endl;
       }
       stats_file.close();
+      auto end = std::chrono::system_clock::now();
+      std::chrono::duration<double> elapsed_seconds = end - start;
+      times_file << "allocation:\t" << elapsed_seconds.count() << "\n";
+      times_file.flush();
       return best_paths[j];
     }
   }
@@ -235,7 +241,7 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
   return std::vector<logistic_sim::Path>(TEAM_SIZE, logistic_sim::Path());
 }
 
-}  // namespace onlineglobaltaskplanner
+} // namespace onlineglobaltaskplanner
 
 int main(int argc, char *argv[])
 {
