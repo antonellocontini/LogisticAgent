@@ -125,7 +125,7 @@ public:
 
 protected:
     bool offline_mode = false;
-    int window_size = 12; //11;
+    int window_size = 11;
     std::list<std::vector<logistic_sim::Mission>> mission_windows;
     boost::mutex window_mutex;
     ros::Time last_goal_time;

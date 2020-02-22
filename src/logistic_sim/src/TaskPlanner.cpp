@@ -380,10 +380,10 @@ TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(n
 
 void TaskPlanner::init(int argc, char **argv)
 {
-  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
-  {
-    ros::console::notifyLoggerLevelsChanged();
-  }
+  // if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
+  // {
+  //   ros::console::notifyLoggerLevelsChanged();
+  // }
   read_cmdline_parameters(argc, argv);
   calculate_aggregation_paths();
   build_map_graph();  // ONLY CENTRALIZED
@@ -599,7 +599,8 @@ void TaskPlanner::missions_generator(std::string &type_gen)
 bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req, logistic_sim::RobotReady::Response &res)
 {
   uint id_robot = req.ID_ROBOT;
-  c_print("Robot ", id_robot, " is ready", green, P);
+  ROS_INFO_STREAM("Robot " << id_robot << " is ready");
+  // c_print("Robot ", id_robot, " is ready", green, P);
   if (!robots_ready_status[id_robot])
   {
     robots_ready_status[id_robot] = true;
@@ -717,8 +718,8 @@ void TaskPlanner::advertise_robot_ready_service(ros::NodeHandle &nh)
 {
   ROS_DEBUG_STREAM("Advertising robot_ready service");
   robots_ready_status = std::vector<bool>(TEAM_SIZE);
-  ros::ServiceServer service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
-  if (!service)
+  robot_ready_service = nh.advertiseService("robot_ready", &TaskPlanner::robot_ready, this);
+  if (!robot_ready_service)
   {
     ROS_ERROR_STREAM("Can't create robot_ready service");
   }
@@ -726,8 +727,8 @@ void TaskPlanner::advertise_robot_ready_service(ros::NodeHandle &nh)
   {
     ROS_INFO_STREAM("robot_ready service advertised successfully");
   }
-  
   ros::spinOnce();
+  // sleep(30);
 }
 
 void TaskPlanner::real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot)

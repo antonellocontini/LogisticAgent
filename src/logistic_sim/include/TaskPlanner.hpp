@@ -166,6 +166,8 @@ protected:
   void read_cmdline_parameters(int argc, char **argv);
   void calculate_aggregation_paths();
   virtual void build_map_graph();
+
+  ros::ServiceServer robot_ready_service;
   void advertise_robot_ready_service(ros::NodeHandle &nh);
 
   std::vector<ros::Subscriber> real_pos_sub, amcl_pos_sub;

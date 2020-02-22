@@ -284,7 +284,8 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 std::vector<logistic_sim::Mission> OnlineTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
 {
     auto start = std::chrono::system_clock::now();
-    c_print("Calculating partitions", green, P);
+    // c_print("Calculating partitions", green, P);
+    ROS_INFO_STREAM("Calculating partitions");
     std::vector<t_coalition> good_partition;
     try
     {
