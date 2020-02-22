@@ -191,27 +191,6 @@ add_dependencies(libTaskPlanner ${PROJECT_NAME}_generate_messages_cpp  ${catkin_
 
 ########################################################################################################################
 
-# ## Declare a cpp executable 
-# add_executable(TaskPlanner src/TaskPlanner.cpp)
-# add_dependencies(TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# # ## Specify libraries to link a library or executable target against
-# target_link_libraries(TaskPlanner algorithmsLib ${catkin_LIBRARIES})
-
-# add_executable(SP_TaskPlanner src/SP_TaskPlanner.cpp)
-# add_dependencies(SP_TaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#  ## Specify libraries to link a library or executable target against
-# target_link_libraries(SP_TaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
-
-# add_executable(GlobalTaskPlanner src/GlobalTaskPlanner.cpp)
-# add_dependencies(GlobalTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#  ## Specify libraries to link a library or executable target against
-# target_link_libraries(GlobalTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
-
-# add_executable(GreedyTaskPlanner src/GreedyTaskPlanner.cpp)
-# add_dependencies(GreedyTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-#  ## Specify libraries to link a library or executable target against
-# target_link_libraries(GreedyTaskPlanner libTaskPlanner algorithmsLib partitionLib ${catkin_LIBRARIES})
-
 add_executable(OnlineTaskPlanner src/OnlineTaskPlanner.cpp)
 add_dependencies(OnlineTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
  ## Specify libraries to link a library or executable target against
