@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <boost/thread.hpp>
+
 #include <ros/package.h>  //to get pkg path
 #include <ros/ros.h>
 #include <sys/stat.h>
@@ -39,6 +41,18 @@
 namespace taskplanner
 {
 const std::string PS_path = ros::package::getPath("logistic_sim");
+
+using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
+
+struct less_V
+{
+  inline bool operator()(const t_coalition &A, const t_coalition &B)
+  {
+    return A.second.V < B.second.V;
+  }
+};
+
+void print_coalition(const t_coalition &coalition);
 
 // dati relativi al singolo robot
 struct MonitorData
@@ -140,10 +154,11 @@ public:
 
   logistic_sim::Mission create_mission(uint type, int id);
 
-  virtual void set_partition();
+  virtual std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
   virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token);
 
   void init(int argc, char **argv);
+  void run();
 
   virtual void token_callback(const logistic_sim::TokenConstPtr &msg) = 0;
 
@@ -156,6 +171,9 @@ protected:
   ros::Subscriber sub_token;
   ros::Publisher pub_token;
   std::string name;
+
+  std::list<std::vector<logistic_sim::Mission>> mission_windows;
+  boost::mutex window_mutex;
 
   // temporaneo
   std::ofstream times_file;

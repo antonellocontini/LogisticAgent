@@ -1,9 +1,7 @@
 #pragma once
 
 #include "TaskPlanner.hpp"
-// #include "boost/filesystem.hpp"
 #include <boost/thread.hpp>
-// #include "message_types.hpp"
 
 namespace onlinecentralizedtaskplanner
 {
@@ -40,18 +38,6 @@ struct st_location
 bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_matrix,
                         const std::vector<unsigned int> &waypoints, const st_location &lhs, const st_location &rhs);
 
-using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
-
-struct less_V
-{
-  inline bool operator()(const t_coalition &A, const t_coalition &B)
-  {
-    return A.second.V < B.second.V;
-  }
-};
-
-void print_coalition(const t_coalition &coalition);
-
 const std::string PS_path = ros::package::getPath("logistic_sim");
 
 class OnlineCentralizedTaskPlanner : public taskplanner::TaskPlanner
@@ -83,19 +69,11 @@ public:
     delete[] queue;
   }
 
-  // void init(int argc, char **argv);
-  void run();
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
   virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token, std::vector<logistic_sim::Mission> &missions) = 0;
-  std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
 
   void build_map_graph() override;
 
-  // definito per come ros vuole il tipo della funzione, chiamo quella della base class
-  bool robot_ready(logistic_sim::RobotReady::Request &req, logistic_sim::RobotReady::Response &res)
-  {
-    return TaskPlanner::robot_ready(req, res);
-  }
   bool check_paths_conflicts(const std::vector<logistic_sim::Path> &paths, bool print = true);
 
   // template versions of the dijkstra functions
@@ -110,13 +88,6 @@ public:
 
   template <class T = bool(const st_location &, const st_location &)>
   unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc, T *cmp_function = nullptr);
-
-  // queste due funzioni scrivono/leggono una versione semplificata della struttura mission
-  // in particolare andrebbero usate solo per missioni con singola destinazione
-  // inoltre identificano la destinazione non con il vertice nel grafo ma con un indice
-  // per garantire compatibilità con mappe diverse
-  // void write_simple_missions(std::ostream &os, const std::vector<logistic_sim::Mission> &mission);
-  // std::vector<logistic_sim::Mission> read_simple_missions(std::istream &is);
 
 protected:
   // adjacency list of the graph, contains only neighbour of vertices, without edge lengths
@@ -165,9 +136,6 @@ protected:
   }
 
   bool offline_mode = false;
-  int window_size = 4;
-  std::list<std::vector<logistic_sim::Mission>> mission_windows;
-  boost::mutex window_mutex;
   ros::Time last_goal_time;
   ros::Duration shutdown_timeout = ros::Duration(5 * 60.0), shutdown_warning = ros::Duration(4 * 60.0);
   bool warning_occured = false;

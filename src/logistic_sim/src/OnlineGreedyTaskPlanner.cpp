@@ -8,6 +8,7 @@ namespace onlinegreedytaskplanner
 {
 OnlineGreedyTaskPlanner::OnlineGreedyTaskPlanner(ros::NodeHandle &nh_, const std::string &name) : OnlineCentralizedTaskPlanner(nh_, name)
 {
+  
 }
 
 std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic_sim::Token &token,

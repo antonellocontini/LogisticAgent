@@ -2,9 +2,9 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=6
+NROBOTS=2
 INITPOS=default
-ALG=OnlineCentralizedAgent
+ALG=OnlineAgent
 LOC=AMCL
 # LOC=fake_localization
 NAV=ros
@@ -12,9 +12,9 @@ GWAIT=0
 COMMDELAY=0.2
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=OnlineGreedyTaskPlanner
+TP_NAME=OnlineTaskPlanner
 GEN=file
-DEBUG=false
+DEBUG=true
 MISSIONS_FILE=2.txt
 NRUNS=1
 

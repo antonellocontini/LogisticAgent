@@ -33,126 +33,123 @@ bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_m
   return false;
 }
 
-void print_coalition(const t_coalition &coalition)
-{
-  auto tasks = coalition.first;
-  auto mission = coalition.second;
-  c_print("Mission id: ", mission.ID, green, P);
-  // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
-  std::cout << "td: " << mission.TOT_DEMAND << "\n";
-  // std::cout << " V: " << mission.V << "\n";
-  // auto size_dsts = mission.DSTS.size();
-  // std::cout << "dsts"
-  //           << "\n";
-  // for (int i = 0; i < size_dsts; i++)
-  // {
-  //     std::cout << mission.DSTS[i] << " ";
-  // }
-  // std::cout << "\n";
+// void print_coalition(const t_coalition &coalition)
+// {
+//   auto tasks = coalition.first;
+//   auto mission = coalition.second;
+//   c_print("Mission id: ", mission.ID, green, P);
+//   // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
+//   std::cout << "td: " << mission.TOT_DEMAND << "\n";
+//   // std::cout << " V: " << mission.V << "\n";
+//   // auto size_dsts = mission.DSTS.size();
+//   // std::cout << "dsts"
+//   //           << "\n";
+//   // for (int i = 0; i < size_dsts; i++)
+//   // {
+//   //     std::cout << mission.DSTS[i] << " ";
+//   // }
+//   // std::cout << "\n";
 
-  auto size_boh = mission.DEMANDS.size();
-  std::cout << "demands"
-            << "\n";
-  for (int i = 0; i < size_boh; i++)
-  {
-    std::cout << mission.DEMANDS[i] << " ";
-  }
-  std::cout << "\n";
+//   auto size_boh = mission.DEMANDS.size();
+//   std::cout << "demands"
+//             << "\n";
+//   for (int i = 0; i < size_boh; i++)
+//   {
+//     std::cout << mission.DEMANDS[i] << " ";
+//   }
+//   std::cout << "\n";
 
-  // auto size_route = mission.ROUTE.size();
-  // std::cout << "route"
-  //           << "\n";
-  // for (int i = 0; i < size_route; i++)
-  // {
-  // std::cout << mission.ROUTE[i] << " ";
-  // }
-  // std::cout << "\n";
+//   // auto size_route = mission.ROUTE.size();
+//   // std::cout << "route"
+//   //           << "\n";
+//   // for (int i = 0; i < size_route; i++)
+//   // {
+//   // std::cout << mission.ROUTE[i] << " ";
+//   // }
+//   // std::cout << "\n";
 
-  // c_print("tasks", magenta, P);
+//   // c_print("tasks", magenta, P);
 
-  auto size_tasks = tasks.size();
+//   auto size_tasks = tasks.size();
 
-  for (auto i = 0; i < size_tasks; i++)
-  {
-    auto t = tasks[i];
-    c_print("task id: ", t.ID, magenta, P);
-    //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
-    std::cout << "td: " << t.TOT_DEMAND << "\n";
-    //     std::cout << " V: " << t.V << "\n";
-    auto size_dsts = t.DSTS.size();
-    std::cout << "dsts"
-              << "\n";
-    for (int i = 0; i < size_dsts; i++)
-    {
-      std::cout << t.DSTS[i] << " ";
-    }
-    std::cout << "\n";
+//   for (auto i = 0; i < size_tasks; i++)
+//   {
+//     auto t = tasks[i];
+//     c_print("task id: ", t.ID, magenta, P);
+//     //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
+//     std::cout << "td: " << t.TOT_DEMAND << "\n";
+//     //     std::cout << " V: " << t.V << "\n";
+//     auto size_dsts = t.DSTS.size();
+//     std::cout << "dsts"
+//               << "\n";
+//     for (int i = 0; i < size_dsts; i++)
+//     {
+//       std::cout << t.DSTS[i] << " ";
+//     }
+//     std::cout << "\n";
 
-    auto size_boh = t.DEMANDS.size();
-    std::cout << "demands"
-              << "\n";
-    for (int i = 0; i < size_boh; i++)
-    {
-      std::cout << t.DEMANDS[i] << " ";
-    }
-    std::cout << "\n";
+//     auto size_boh = t.DEMANDS.size();
+//     std::cout << "demands"
+//               << "\n";
+//     for (int i = 0; i < size_boh; i++)
+//     {
+//       std::cout << t.DEMANDS[i] << " ";
+//     }
+//     std::cout << "\n";
 
-    //     auto size_route = t.ROUTE.size();
-    //     std::cout << "route"
-    //               << "\n";
-    //     for (int i = 0; i < size_route; i++)
-    //     {
-    //         std::cout << t.ROUTE[i] << " ";
-    //     }
-    //     std::cout << "\n";
-  }
+//     //     auto size_route = t.ROUTE.size();
+//     //     std::cout << "route"
+//     //               << "\n";
+//     //     for (int i = 0; i < size_route; i++)
+//     //     {
+//     //         std::cout << t.ROUTE[i] << " ";
+//     //     }
+//     //     std::cout << "\n";
+//   }
 
-  // c_print("fine mission id: ", mission.ID, red, P);
-}
+//   // c_print("fine mission id: ", mission.ID, red, P);
+// }
 
 OnlineCentralizedTaskPlanner::OnlineCentralizedTaskPlanner(ros::NodeHandle &nh_, const std::string &name) : TaskPlanner(nh_, name)
 {
+  window_size = 4;
+
   sub_token = nh_.subscribe("token", 1, &OnlineCentralizedTaskPlanner::token_callback, this);
   pub_token = nh_.advertise<logistic_sim::Token>("token", 1);
 
   nh_.setParam("/simulation_running", "true");
-
-  if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
-  {
-    ros::console::notifyLoggerLevelsChanged();
-  }
 }
 
-void OnlineCentralizedTaskPlanner::run()
-{
-  std::cout << "Generating mission windows" << std::endl;
-  while (!missions.empty())
-  {
-    /*
-     * in this loop single-item tasks are divided in windows
-     * and each window is aggregated to form multi-item tasks windows
-     */
-    auto first_it = missions.begin();
-    auto last_it = missions.end();
-    if (missions.size() >= window_size)
-    {
-      last_it = first_it + window_size;
-    }
-    std::vector<logistic_sim::Mission> tasks(first_it, last_it);
-    missions.erase(first_it, last_it);
-    std::vector<logistic_sim::Mission> window = set_partition(tasks);
-    // mission_windows is accessed also in the token callback thread, hence the mutex
-    window_mutex.lock();
-    mission_windows.push_back(window);
-    c_print("New window aggregated - to be inserted into token: ", mission_windows.size(), yellow, P);
-    c_print("Tasks not yet aggregated: ", missions.size(), green, P);
-    c_print("");
-    window_mutex.unlock();
-  }
+// void OnlineCentralizedTaskPlanner::run()
+// {
+//   std::cout << "Generating mission windows" << std::endl;
+//   while (!missions.empty())
+//   {
+//     /*
+//      * in this loop single-item tasks are divided in windows
+//      * and each window is aggregated to form multi-item tasks windows
+//      */
+//     auto first_it = missions.begin();
+//     auto last_it = missions.end();
+//     if (missions.size() >= window_size)
+//     {
+//       last_it = first_it + window_size;
+//     }
+//     std::vector<logistic_sim::Mission> tasks(first_it, last_it);
+//     missions.erase(first_it, last_it);
+//     std::vector<logistic_sim::Mission> window = set_partition(tasks);
+//     // mission_windows is accessed also in the token callback thread, hence the mutex
+//     window_mutex.lock();
+//     mission_windows.push_back(window);
+//     c_print("New window aggregated - to be inserted into token: ", mission_windows.size(), yellow, P);
+//     c_print("Tasks not yet aggregated: ", missions.size(), green, P);
+//     c_print("");
+//     window_mutex.unlock();
+//   }
 
-  // after computing the last window we wait for shutdown
-  ros::waitForShutdown();
-}
+//   // after computing the last window we wait for shutdown
+//   ros::waitForShutdown();
+// }
 
 /*
  * handles statistics (as all task planners)
@@ -362,115 +359,115 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
   ros::spinOnce();
 }
 
-std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
-{
-  auto start = std::chrono::system_clock::now();
-  c_print("Calculating partitions", green, P);
-  std::vector<t_coalition> good_partition;
-  try
-  {
-    int num_tasks = ts.size();
-    // c_print(num_tasks);
-    partition::iterator it(num_tasks);
-    static int id_partition = 0;
+// std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
+// {
+//   auto start = std::chrono::system_clock::now();
+//   c_print("Calculating partitions", green, P);
+//   std::vector<t_coalition> good_partition;
+//   try
+//   {
+//     int num_tasks = ts.size();
+//     // c_print(num_tasks);
+//     partition::iterator it(num_tasks);
+//     static int id_partition = 0;
 
-    t_coalition candidate;
-    while (true)
-    {
-      std::vector<std::vector<logistic_sim::Mission>> partitions = *it[ts];
-      auto n_subsets = it.subsets();
-      logistic_sim::Mission candidate_partition;
-      candidate_partition.ID = id_partition;
-      // c_print(id_partition);
-      id_partition++;
-      int id_subset = 0;
-      double V = 0;
-      candidate.second = candidate_partition;
-      std::vector<logistic_sim::Mission> m;
-      for (int i = 0; i < n_subsets; i++)
-      {
-        std::vector<logistic_sim::Mission> subset = partitions[i];
-        logistic_sim::Mission candidate_subset;
-        candidate_subset.ID = id_subset;
-        id_subset++;
-        for (int j = 0; j < subset.size(); j++)
-        {
-          candidate_subset.TOT_DEMAND += subset[j].TOT_DEMAND;
-          copy(subset[j].DEMANDS.begin(), subset[j].DEMANDS.end(), back_inserter(candidate_subset.DEMANDS));
-          copy(subset[j].DSTS.begin(), subset[j].DSTS.end(), back_inserter(candidate_subset.DSTS));
-          copy(subset[j].ITEM.begin(), subset[j].ITEM.end(), back_inserter(candidate_subset.ITEM));
-        }
+//     t_coalition candidate;
+//     while (true)
+//     {
+//       std::vector<std::vector<logistic_sim::Mission>> partitions = *it[ts];
+//       auto n_subsets = it.subsets();
+//       logistic_sim::Mission candidate_partition;
+//       candidate_partition.ID = id_partition;
+//       // c_print(id_partition);
+//       id_partition++;
+//       int id_subset = 0;
+//       double V = 0;
+//       candidate.second = candidate_partition;
+//       std::vector<logistic_sim::Mission> m;
+//       for (int i = 0; i < n_subsets; i++)
+//       {
+//         std::vector<logistic_sim::Mission> subset = partitions[i];
+//         logistic_sim::Mission candidate_subset;
+//         candidate_subset.ID = id_subset;
+//         id_subset++;
+//         for (int j = 0; j < subset.size(); j++)
+//         {
+//           candidate_subset.TOT_DEMAND += subset[j].TOT_DEMAND;
+//           copy(subset[j].DEMANDS.begin(), subset[j].DEMANDS.end(), back_inserter(candidate_subset.DEMANDS));
+//           copy(subset[j].DSTS.begin(), subset[j].DSTS.end(), back_inserter(candidate_subset.DSTS));
+//           copy(subset[j].ITEM.begin(), subset[j].ITEM.end(), back_inserter(candidate_subset.ITEM));
+//         }
 
-        // removing doubles from DSTS
-        for (int j = 0; j < candidate_subset.DSTS.size() - 1; j++)
-        {
-          if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j + 1])
-          {
-            candidate_subset.DSTS.erase(candidate_subset.DSTS.begin() + j + 1);
-            j--;
-          }
-        }
+//         // removing doubles from DSTS
+//         for (int j = 0; j < candidate_subset.DSTS.size() - 1; j++)
+//         {
+//           if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j + 1])
+//           {
+//             candidate_subset.DSTS.erase(candidate_subset.DSTS.begin() + j + 1);
+//             j--;
+//           }
+//         }
 
-        // calculate mission path, needed to find the V value
-        std::vector<uint> path;
-        int dijkstra_result[64];
-        uint dijkstra_size;
-        dijkstra(src_vertex, *candidate_subset.DSTS.begin(), dijkstra_result, dijkstra_size, vertex_web, dimension);
-        path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
-        for (auto it = candidate_subset.DSTS.begin(); it + 1 != candidate_subset.DSTS.end(); it++)
-        {
-          dijkstra(*it, *(it + 1), dijkstra_result, dijkstra_size, vertex_web, dimension);
-          path.pop_back();
-          path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
-        }
-        candidate_subset.PATH_DISTANCE = compute_cost_of_route(path);
-        candidate_subset.V = (double)candidate_subset.PATH_DISTANCE / (double)candidate_subset.TOT_DEMAND;
+//         // calculate mission path, needed to find the V value
+//         std::vector<uint> path;
+//         int dijkstra_result[64];
+//         uint dijkstra_size;
+//         dijkstra(src_vertex, *candidate_subset.DSTS.begin(), dijkstra_result, dijkstra_size, vertex_web, dimension);
+//         path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
+//         for (auto it = candidate_subset.DSTS.begin(); it + 1 != candidate_subset.DSTS.end(); it++)
+//         {
+//           dijkstra(*it, *(it + 1), dijkstra_result, dijkstra_size, vertex_web, dimension);
+//           path.pop_back();
+//           path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
+//         }
+//         candidate_subset.PATH_DISTANCE = compute_cost_of_route(path);
+//         candidate_subset.V = (double)candidate_subset.PATH_DISTANCE / (double)candidate_subset.TOT_DEMAND;
 
-        candidate.second.V += candidate_subset.V;
+//         candidate.second.V += candidate_subset.V;
 
-        if (candidate_subset.TOT_DEMAND > TEAM_CAPACITY)
-        {
-          candidate.second.GOOD++;
-        }
+//         if (candidate_subset.TOT_DEMAND > TEAM_CAPACITY)
+//         {
+//           candidate.second.GOOD++;
+//         }
 
-        m.push_back(candidate_subset);
-      }
+//         m.push_back(candidate_subset);
+//       }
 
-      ++it;
-      candidate.first = m;
-      if (candidate.second.GOOD == 0)
-      {
-        // c_print("ok", green);
-        // print_coalition(*it);
-        good_partition.push_back(candidate);
-      }
-    }
-  }
-  catch (std::overflow_error &)
-  {
-  }
+//       ++it;
+//       candidate.first = m;
+//       if (candidate.second.GOOD == 0)
+//       {
+//         // c_print("ok", green);
+//         // print_coalition(*it);
+//         good_partition.push_back(candidate);
+//       }
+//     }
+//   }
+//   catch (std::overflow_error &)
+//   {
+//   }
 
-  std::sort(good_partition.begin(), good_partition.end(), less_V());
+//   std::sort(good_partition.begin(), good_partition.end(), less_V());
 
-  t_coalition ele;
-  if (!good_partition.empty())
-  {
-    ele = good_partition.front();
-  }
-  else
-  {
-    ele.first = ts;
-    ele.second = logistic_sim::Mission();
-  }
+//   t_coalition ele;
+//   if (!good_partition.empty())
+//   {
+//     ele = good_partition.front();
+//   }
+//   else
+//   {
+//     ele.first = ts;
+//     ele.second = logistic_sim::Mission();
+//   }
 
-  // print_coalition(ele);
+//   // print_coalition(ele);
 
-  auto end = std::chrono::system_clock::now();
-  std::chrono::duration<double> elapsed_seconds = end - start;
-  times_file << "aggregation:\t" << elapsed_seconds.count() << "\n";
-  times_file.flush();
-  return ele.first;
-}
+//   auto end = std::chrono::system_clock::now();
+//   std::chrono::duration<double> elapsed_seconds = end - start;
+//   times_file << "aggregation:\t" << elapsed_seconds.count() << "\n";
+//   times_file.flush();
+//   return ele.first;
+// }
 
 void OnlineCentralizedTaskPlanner::build_map_graph()
 {
