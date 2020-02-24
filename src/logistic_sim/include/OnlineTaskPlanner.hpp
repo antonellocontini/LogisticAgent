@@ -21,7 +21,6 @@ public:
     void allocate_memory() override;
 
 protected:
-    bool offline_mode = false;
     ros::Time last_goal_time;
     ros::Duration shutdown_timeout = ros::Duration(5 * 60.0), shutdown_warning = ros::Duration(4 * 60.0);
     bool warning_occured = false;

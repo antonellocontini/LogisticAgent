@@ -8,7 +8,7 @@ namespace onlinetaskplanner
 {
 OnlineTaskPlanner::OnlineTaskPlanner(ros::NodeHandle &nh_, const std::string &name) : TaskPlanner(nh_, name)
 {
-  window_size = 11;
+  window_size = 12;
   
   sub_token = nh_.subscribe("token", 1, &OnlineTaskPlanner::token_callback, this);
   pub_token = nh_.advertise<logistic_sim::Token>("token", 1);

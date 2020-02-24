@@ -26,10 +26,10 @@ void print_coalition(const t_coalition &coalition)
     // }
     // std::cout << "\n";
 
-    auto size_boh = mission.DEMANDS.size();
+    auto missions_number = mission.DEMANDS.size();
     std::cout << "demands"
               << "\n";
-    for (int i = 0; i < size_boh; i++)
+    for (int i = 0; i < missions_number; i++)
     {
         std::cout << mission.DEMANDS[i] << " ";
     }
@@ -882,7 +882,7 @@ std::vector<logistic_sim::Mission> TaskPlanner::set_partition(const std::vector<
     ele.second = logistic_sim::Mission();
   }
 
-  // print_coalition(ele);
+  print_coalition(ele);
 
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
@@ -1160,9 +1160,10 @@ void TaskPlanner::initialize_token()
 void TaskPlanner::detect_offline_mode()
 {
   // only one window == offline time measurement
+  ROS_DEBUG_STREAM("# of items: " << missions.size() << "\twindow size: " << window_size);
   if (missions.size() == window_size)
   {
-    ROS_INFO("Running in offline mode");
+    ROS_INFO_STREAM("Running in offline mode");
     offline_mode = true;
   }
 }
