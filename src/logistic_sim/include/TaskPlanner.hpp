@@ -185,6 +185,7 @@ protected:
 
   // methods needed for initialization
   void read_cmdline_parameters(int argc, char **argv);
+  void set_map_endpoints(ros::NodeHandle &nh);
   void calculate_aggregation_paths();
   virtual void build_map_graph();
 

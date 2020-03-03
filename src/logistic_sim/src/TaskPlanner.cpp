@@ -3,6 +3,7 @@
 #include "partition.hpp"
 #include "algorithms.hpp"
 #include "boost/filesystem.hpp"
+#include <xmlrpcpp/XmlRpcValue.h>
 
 #include <chrono>
 
@@ -465,10 +466,11 @@ void TaskPlanner::init(int argc, char **argv)
   {
     ros::console::notifyLoggerLevelsChanged();
   }
+  ros::NodeHandle nh;
   read_cmdline_parameters(argc, argv);
+  set_map_endpoints(nh);
   calculate_aggregation_paths();
   build_map_graph();  // ONLY CENTRALIZED
-  ros::NodeHandle nh;
   advertise_robot_ready_service(nh);
   initialize_amcl_callbacks(nh);
   generate_missions();
@@ -917,6 +919,45 @@ void TaskPlanner::read_cmdline_parameters(int argc, char **argv)
   task_set_file = argv[6];
   src_vertex = map_src[mapname];
   dst_vertex = map_dsts[mapname];
+}
+
+void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
+{
+  XmlRpc::XmlRpcValue src, dst;
+  if (nh.getParam("/src_vertex", src))
+  {
+    // TODO: single source supported - move to multiple sources!
+    ROS_ASSERT(src.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    XmlRpc::XmlRpcValue v = src[0];
+    ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
+    src_vertex = (int) v;
+    ROS_INFO_STREAM("src_vertex: " << src_vertex);
+    // src.begin();
+    // src_vertex = *src.begin();
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Can't read param /src_vertex!!!");
+    ros::shutdown();
+  }
+  
+  if (nh.getParam("/dst_vertex", dst))
+  {
+    ROS_ASSERT(dst.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    dst_vertex.clear();
+    for(int i=0; i<dst.size(); i++)
+    {
+      XmlRpc::XmlRpcValue v = dst[i];
+      ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
+      dst_vertex.push_back((int) v);
+      ROS_INFO_STREAM("dst_vertex: " << (int) v);
+    }
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Can't read param /dst_vertex!!!");
+    ros::shutdown();
+  }
 }
 
 void TaskPlanner::calculate_aggregation_paths()

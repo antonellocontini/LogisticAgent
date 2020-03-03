@@ -1,8 +1,8 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=icelab_black
-NROBOTS=3
+MAP=grid
+NROBOTS=2
 INITPOS=default
 ALG=OnlineAgent
 LOC=AMCL
@@ -14,7 +14,7 @@ SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=file
-DEBUG=true
+DEBUG=false
 MISSIONS_FILE=video.txt
 NRUNS=1
 

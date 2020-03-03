@@ -7,11 +7,11 @@
   <arg name="robots_capacity" default="3"/>
   <arg name="gen_type" default="file"/>
   <arg name="missions_file" default="1.txt"/>
-  <arg name="debug_mode" default="true"/>
+  <arg name="debug_mode" default="false"/>
   <arg name="gdb_file" default=""/>
 
 
-  <!-- <rosparam file="$(find logistic_sim)/maps/$(arg mapname)/vertex.yaml" command="load" /> -->
+  <rosparam file="$(find logistic_sim)/maps/$(arg mapname)/vertex.yaml" command="load" />
 
   <!-- launch without gdb -->
   <node name="task_planner" pkg="logistic_sim" type="$(arg planner_type)" output="screen"
