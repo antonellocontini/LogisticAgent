@@ -917,8 +917,6 @@ void TaskPlanner::read_cmdline_parameters(int argc, char **argv)
   TEAM_CAPACITY = atoi(argv[5]);
   // task set file name (if generation = FILE)
   task_set_file = argv[6];
-  src_vertex = map_src[mapname];
-  dst_vertex = map_dsts[mapname];
 }
 
 void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
@@ -932,8 +930,6 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
     ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
     src_vertex = (int) v;
     ROS_INFO_STREAM("src_vertex: " << src_vertex);
-    // src.begin();
-    // src_vertex = *src.begin();
   }
   else
   {

@@ -115,7 +115,6 @@ public:
 
   ros::Time start_time;
 
-  // TODO: move this in external parameter file
   // map_homes is currently not used, the home locations depend on the configuration
   // currently they are found by querying the robots about their initial position and
   // finding the nearest vertex
@@ -123,16 +122,6 @@ public:
                                                          { "grid", { 1, 2, 3, 21, 22, 23 } },
                                                          { { "icelab" }, { 0, 1, 2, 26, 27, 28 } },
                                                          { "model5", { 0, 1, 2, 25, 26, 27 } } };
-  std::map<std::string, uint> map_src = { { "model6", 13 },
-                                          { "grid", 7 },
-                                          { "icelab", 22 },
-                                          { "icelab_black", 2 },
-                                          { "model5", 6 } };
-  std::map<std::string, std::vector<uint>> map_dsts = { { "model6", { 18, 23, 28 } },
-                                                        { "grid", { 16, 17, 18 } },
-                                                        { "icelab", { 10, 13, 16 } },
-                                                        { "icelab_black", { 26, 33, 42 } },
-                                                        { "model5", { 11, 16, 21 } } };
   uint src_vertex;
   std::vector<uint> dst_vertex;
   std::vector<uint> home_vertex;
