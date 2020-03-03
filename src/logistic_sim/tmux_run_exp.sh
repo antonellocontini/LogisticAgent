@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=2
+NROBOTS=3
 INITPOS=default
 ALG=OnlineAgent
 LOC=AMCL
@@ -15,7 +15,7 @@ CAPACITY=3
 TP_NAME=OnlineTaskPlanner
 GEN=file
 DEBUG=true
-MISSIONS_FILE=2.txt
+MISSIONS_FILE=video.txt
 NRUNS=1
 
 function prepare_tmux {
@@ -84,16 +84,17 @@ function launch_robots {
 
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
-	if [ $DEBUG = true ] ; then
-		if [ -f "commands_taskplanner.txt" ] ; then
-			echo "Debug mode activated, gdb commands from file..."
-			tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
-		else
-			tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
-		fi
-	else
-		tmux send-keys "rosrun logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
-	fi
+	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=$DEBUG --wait" C-m
+	# if [ $DEBUG = true ] ; then
+	# 	if [ -f "commands_taskplanner.txt" ] ; then
+	# 		echo "Debug mode activated, gdb commands from file..."
+	# 		tmux send-keys "rosrun --prefix 'gdb -x commands_taskplanner.txt --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
+	# 	else
+	# 		tmux send-keys "rosrun --prefix 'gdb -ex run --args' logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
+	# 	fi
+	# else
+	# 	tmux send-keys "rosrun logistic_sim $TP_NAME $MAP $ALG $NROBOTS $GEN $CAPACITY $MISSIONS_FILE; tmux kill-session" C-m
+	# fi
 
 	echo "Launching TaskPlanner $TP_NAME..."
 	sleep 5

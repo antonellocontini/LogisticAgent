@@ -116,6 +116,9 @@ public:
   ros::Time start_time;
 
   // TODO: move this in external parameter file
+  // map_homes is currently not used, the home locations depend on the configuration
+  // currently they are found by querying the robots about their initial position and
+  // finding the nearest vertex
   std::map<std::string, std::vector<uint>> map_homes = { { "model6", { 0, 1, 2, 3, 4, 5 } },
                                                          { "grid", { 1, 2, 3, 21, 22, 23 } },
                                                          { { "icelab" }, { 0, 1, 2, 26, 27, 28 } },

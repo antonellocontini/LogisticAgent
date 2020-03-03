@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<launch>
+  <arg name="mapname" default="grid" />
+  <arg name="planner_type" default="OnlineTaskPlanner"/>
+  <arg name="agents_type" default="OnlineAgent"/>
+  <arg name="agents_number" default="2"/>
+  <arg name="robots_capacity" default="3"/>
+  <arg name="gen_type" default="file"/>
+  <arg name="missions_file" default="1.txt"/>
+  <arg name="debug_mode" default="true"/>
+  <arg name="gdb_file" default=""/>
+
+
+  <!-- <rosparam file="$(find logistic_sim)/maps/$(arg mapname)/vertex.yaml" command="load" /> -->
+
+  <!-- launch without gdb -->
+  <node name="task_planner" pkg="logistic_sim" type="$(arg planner_type)" output="screen"
+        unless="$(arg debug_mode)"
+        args="$(arg mapname) $(arg agents_type) $(arg agents_number) $(arg gen_type) $(arg robots_capacity) $(arg missions_file)" />
+
+  <node name="task_planner" pkg="logistic_sim" type="$(arg planner_type)" output="screen"
+        if="$(arg debug_mode)"
+        launch-prefix="gdb -ex run --args"
+        args="$(arg mapname) $(arg agents_type) $(arg agents_number) $(arg gen_type) $(arg robots_capacity) $(arg missions_file)" />
+</launch>
