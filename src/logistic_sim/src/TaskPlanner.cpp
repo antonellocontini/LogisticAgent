@@ -1125,6 +1125,12 @@ std::vector<logistic_sim::Mission> TaskPlanner::read_simple_missions(std::istrea
 
 void TaskPlanner::generate_missions()
 {
+  if (GENERATION == "null")
+  {
+    nTask = 0;
+    return;
+  }
+  
   if (GENERATION != "file")
   {
     missions_generator(GENERATION);
