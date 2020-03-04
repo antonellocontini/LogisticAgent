@@ -1,90 +1,89 @@
 #include "TaskPlanner.hpp"
 
-#include "partition.hpp"
+#include <xmlrpcpp/XmlRpcValue.h>
 #include "algorithms.hpp"
 #include "boost/filesystem.hpp"
-#include <xmlrpcpp/XmlRpcValue.h>
+#include "partition.hpp"
 
 #include <chrono>
 
 namespace taskplanner
 {
-
 void print_coalition(const t_coalition &coalition)
 {
-    auto tasks = coalition.first;
-    auto mission = coalition.second;
-    c_print("Mission id: ", mission.ID, green, P);
-    // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
-    std::cout << "td: " << mission.TOT_DEMAND << "\n";
-    // std::cout << " V: " << mission.V << "\n";
-    // auto size_dsts = mission.DSTS.size();
-    // std::cout << "dsts"
-    //           << "\n";
-    // for (int i = 0; i < size_dsts; i++)
-    // {
-    //     std::cout << mission.DSTS[i] << " ";
-    // }
-    // std::cout << "\n";
+  auto tasks = coalition.first;
+  auto mission = coalition.second;
+  c_print("Mission id: ", mission.ID, green, P);
+  // std::cout << "pd: " << mission.PATH_DISTANCE << "\n";
+  std::cout << "td: " << mission.TOT_DEMAND << "\n";
+  // std::cout << " V: " << mission.V << "\n";
+  // auto size_dsts = mission.DSTS.size();
+  // std::cout << "dsts"
+  //           << "\n";
+  // for (int i = 0; i < size_dsts; i++)
+  // {
+  //     std::cout << mission.DSTS[i] << " ";
+  // }
+  // std::cout << "\n";
 
-    auto missions_number = mission.DEMANDS.size();
-    std::cout << "demands"
+  auto missions_number = mission.DEMANDS.size();
+  std::cout << "demands"
+            << "\n";
+  for (int i = 0; i < missions_number; i++)
+  {
+    std::cout << mission.DEMANDS[i] << " ";
+  }
+  std::cout << "\n";
+
+  // auto size_route = mission.ROUTE.size();
+  // std::cout << "route"
+  //           << "\n";
+  // for (int i = 0; i < size_route; i++)
+  // {
+  // std::cout << mission.ROUTE[i] << " ";
+  // }
+  // std::cout << "\n";
+
+  // c_print("tasks", magenta, P);
+
+  auto size_tasks = tasks.size();
+
+  for (auto i = 0; i < size_tasks; i++)
+  {
+    auto t = tasks[i];
+    c_print("task id: ", t.ID, magenta, P);
+    //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
+    std::cout << "td: " << t.TOT_DEMAND << "\n";
+    //     std::cout << " V: " << t.V << "\n";
+    auto size_dsts = t.DSTS.size();
+    std::cout << "dsts"
               << "\n";
-    for (int i = 0; i < missions_number; i++)
+    for (int i = 0; i < size_dsts; i++)
     {
-        std::cout << mission.DEMANDS[i] << " ";
+      std::cout << t.DSTS[i] << " ";
     }
     std::cout << "\n";
 
-    // auto size_route = mission.ROUTE.size();
-    // std::cout << "route"
-    //           << "\n";
-    // for (int i = 0; i < size_route; i++)
-    // {
-    // std::cout << mission.ROUTE[i] << " ";
-    // }
-    // std::cout << "\n";
-
-    // c_print("tasks", magenta, P);
-
-    auto size_tasks = tasks.size();
-
-    for (auto i = 0; i < size_tasks; i++)
+    auto size_boh = t.DEMANDS.size();
+    std::cout << "demands"
+              << "\n";
+    for (int i = 0; i < size_boh; i++)
     {
-        auto t = tasks[i];
-        c_print("task id: ", t.ID, magenta, P);
-        //     std::cout << "pd: " << t.PATH_DISTANCE << "\n";
-        std::cout << "td: " << t.TOT_DEMAND << "\n";
-        //     std::cout << " V: " << t.V << "\n";
-            auto size_dsts = t.DSTS.size();
-            std::cout << "dsts"
-                      << "\n";
-            for (int i = 0; i < size_dsts; i++)
-            {
-                std::cout << t.DSTS[i] << " ";
-            }
-            std::cout << "\n";
-
-        auto size_boh = t.DEMANDS.size();
-        std::cout << "demands"
-                  << "\n";
-        for (int i = 0; i < size_boh; i++)
-        {
-            std::cout << t.DEMANDS[i] << " ";
-        }
-        std::cout << "\n";
-
-        //     auto size_route = t.ROUTE.size();
-        //     std::cout << "route"
-        //               << "\n";
-        //     for (int i = 0; i < size_route; i++)
-        //     {
-        //         std::cout << t.ROUTE[i] << " ";
-        //     }
-        //     std::cout << "\n";
+      std::cout << t.DEMANDS[i] << " ";
     }
+    std::cout << "\n";
 
-    c_print("fine mission id: ", mission.ID, red, P);
+    //     auto size_route = t.ROUTE.size();
+    //     std::cout << "route"
+    //               << "\n";
+    //     for (int i = 0; i < size_route; i++)
+    //     {
+    //         std::cout << t.ROUTE[i] << " ";
+    //     }
+    //     std::cout << "\n";
+  }
+
+  c_print("fine mission id: ", mission.ID, red, P);
 }
 
 ostream &operator<<(ostream &os, const MonitorData &md)
@@ -472,6 +471,7 @@ void TaskPlanner::init(int argc, char **argv)
   calculate_aggregation_paths();
   build_map_graph();  // ONLY CENTRALIZED
   advertise_robot_ready_service(nh);
+  advertise_add_missions_service(nh);
   initialize_amcl_callbacks(nh);
   generate_missions();
   initialize_stats_structure();
@@ -503,15 +503,12 @@ void TaskPlanner::run()
     std::vector<logistic_sim::Mission> tasks(first_it, last_it);
     missions.erase(first_it, last_it);
     std::vector<logistic_sim::Mission> window = set_partition(tasks);
-    // mission_windows is accessed also in the token callback thread, hence the mutex
-    window_mutex.lock();
-    mission_windows.push_back(window);
-    ROS_INFO_STREAM("New window aggreagted - to be inserted into token: " << mission_windows.size());
-    ROS_INFO_STREAM("Tasks not yet aggregated: " << missions.size() << "\n");
-    // c_print("New window aggregated - to be inserted into token: ", mission_windows.size(), yellow, P);
-    // c_print("Tasks not yet aggregated: ", missions.size(), green, P);
-    // c_print("");
-    window_mutex.unlock();
+    insert_mission_window(window);
+    // window_mutex.lock();
+    // mission_windows.push_back(window);
+    // ROS_INFO_STREAM("New window aggreagted - to be inserted into token: " << mission_windows.size());
+    // ROS_INFO_STREAM("Tasks not yet aggregated: " << missions.size() << "\n");
+    // window_mutex.unlock();
   }
 
   // after computing the last window we wait for shutdown
@@ -558,6 +555,16 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
   m.V = (double)m.PATH_DISTANCE / (double)m.TOT_DEMAND;
 
   return m;
+}
+
+void TaskPlanner::insert_mission_window(std::vector<logistic_sim::Mission> &window)
+{
+  // mission_windows is accessed also in the token callback thread, hence the mutex
+  window_mutex.lock();
+  mission_windows.push_back(window);
+  ROS_INFO_STREAM("New window aggreagted - to be inserted into token: " << mission_windows.size());
+  ROS_INFO_STREAM("Tasks not yet aggregated: " << missions.size() << "\n");
+  window_mutex.unlock();
 }
 
 int TaskPlanner::my_random(int n)
@@ -928,7 +935,7 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
     ROS_ASSERT(src.getType() == XmlRpc::XmlRpcValue::TypeArray);
     XmlRpc::XmlRpcValue v = src[0];
     ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
-    src_vertex = (int) v;
+    src_vertex = (int)v;
     ROS_INFO_STREAM("src_vertex: " << src_vertex);
   }
   else
@@ -936,17 +943,17 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
     ROS_ERROR_STREAM("Can't read param /src_vertex!!!");
     ros::shutdown();
   }
-  
+
   if (nh.getParam("/dst_vertex", dst))
   {
     ROS_ASSERT(dst.getType() == XmlRpc::XmlRpcValue::TypeArray);
     dst_vertex.clear();
-    for(int i=0; i<dst.size(); i++)
+    for (int i = 0; i < dst.size(); i++)
     {
       XmlRpc::XmlRpcValue v = dst[i];
       ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
-      dst_vertex.push_back((int) v);
-      ROS_INFO_STREAM("dst_vertex: " << (int) v);
+      dst_vertex.push_back((int)v);
+      ROS_INFO_STREAM("dst_vertex: " << (int)v);
     }
   }
   else
@@ -986,6 +993,27 @@ void TaskPlanner::advertise_robot_ready_service(ros::NodeHandle &nh)
   }
   ros::spinOnce();
   // sleep(30);
+}
+
+void TaskPlanner::advertise_add_missions_service(ros::NodeHandle &nh)
+{
+  ROS_DEBUG_STREAM("Advertising add_missions service");
+  add_missions_service = nh.advertiseService("add_missions", &TaskPlanner::add_missions, this);
+  if (!add_missions_service)
+  {
+    ROS_ERROR_STREAM("Can't create add_missions service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("add_missions service advertised successfully");
+  }
+  ros::spinOnce();
+}
+
+bool TaskPlanner::add_missions(logistic_sim::AddMissions::Request &msg, logistic_sim::AddMissions::Response &res)
+{
+  insert_mission_window(msg.MISSION);
+  return true;
 }
 
 void TaskPlanner::real_pos_callback(const nav_msgs::OdometryConstPtr &msg, int id_robot)

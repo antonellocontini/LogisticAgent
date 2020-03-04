@@ -37,6 +37,7 @@
 #include "color_cout.hpp"
 
 #include "logistic_sim/RobotReady.h"
+#include "logistic_sim/AddMissions.h"
 
 namespace taskplanner
 {
@@ -145,6 +146,8 @@ public:
   int my_random(int n);
 
   logistic_sim::Mission create_mission(uint type, int id);
+  // insert a window that will go straight to allocation phase - no aggregation
+  void insert_mission_window(std::vector<logistic_sim::Mission> &window);
 
   virtual std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
   virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token);
@@ -178,8 +181,10 @@ protected:
   void calculate_aggregation_paths();
   virtual void build_map_graph();
 
-  ros::ServiceServer robot_ready_service;
+  ros::ServiceServer robot_ready_service, add_missions_service;
   void advertise_robot_ready_service(ros::NodeHandle &nh);
+  void advertise_add_missions_service(ros::NodeHandle &nh);
+  bool add_missions(logistic_sim::AddMissions::Request &msg, logistic_sim::AddMissions::Response &res);
 
   std::vector<ros::Subscriber> real_pos_sub, amcl_pos_sub;
   std::vector<nav_msgs::Odometry> last_real_pos;
