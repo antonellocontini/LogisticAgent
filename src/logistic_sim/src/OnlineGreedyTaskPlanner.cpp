@@ -63,6 +63,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
       partition::iterator it(missions.size());
       int id_partition = 0;
 
+      std::vector<bool> received_new_tasks(TEAM_SIZE, false);
       std::vector<uint> waypoints;
       logistic_sim::Token temp_token;
       temp_token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
@@ -97,6 +98,12 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
                                            temp_token.HOME_TRAILS[i].PATH.end());
               }
 
+              // reset array keeping track of which robots receive new tasks
+              for (int i=0; i < TEAM_SIZE; i++)
+              {
+                received_new_tasks[i] = false;
+              }
+              
               for (int i = 0; i < TEAM_SIZE; i++)
               {
                 temp_token.MISSIONS_COMPLETED[i % TEAM_SIZE] = token.MISSIONS_COMPLETED[i % TEAM_SIZE];
@@ -143,6 +150,8 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
                     robot_paths[i % TEAM_SIZE].PATH.insert(robot_paths[i % TEAM_SIZE].PATH.end(),
                                                            temp_token.HOME_TRAILS[i % TEAM_SIZE].PATH.begin(),
                                                            temp_token.HOME_TRAILS[i % TEAM_SIZE].PATH.end());
+
+                    received_new_tasks[i % TEAM_SIZE] = true; 
                   }
                   catch (std::string &e)
                   {
@@ -153,7 +162,7 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
               }
               // std::cout << std::endl;
 
-              // check for empty path
+              // check for empty paths
               int empty_paths = 0;
               for (int i = 0; i < TEAM_SIZE; i++)
               {
@@ -169,6 +178,10 @@ std::vector<logistic_sim::Path> OnlineGreedyTaskPlanner::path_partition(logistic
                 //   stats_file << TEAM_SIZE << "\n\n";
                 for (int i = 0; i < TEAM_SIZE; i++)
                 {
+                  if (received_new_tasks[i])
+                  {
+                    token.REACHED_HOME[i] = false;
+                  }
                   token.MISSIONS_COMPLETED = temp_token.MISSIONS_COMPLETED;
                   token.TASKS_COMPLETED = temp_token.TASKS_COMPLETED;
                   token.TRAILS = temp_token.TRAILS;

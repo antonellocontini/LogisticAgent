@@ -208,6 +208,7 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
     {
       token.NEW_MISSIONS_AVAILABLE = true;
     }
+    // when all robots are synced it is possible to plan the allocation of the new tasks
     else if (!mission_windows.empty() && token.SYNCED_ROBOTS)
     {
       //   token.MISSION = mission_windows.front();
@@ -358,116 +359,6 @@ void OnlineCentralizedTaskPlanner::token_callback(const logistic_sim::TokenConst
   pub_token.publish(token);
   ros::spinOnce();
 }
-
-// std::vector<logistic_sim::Mission> OnlineCentralizedTaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
-// {
-//   auto start = std::chrono::system_clock::now();
-//   c_print("Calculating partitions", green, P);
-//   std::vector<t_coalition> good_partition;
-//   try
-//   {
-//     int num_tasks = ts.size();
-//     // c_print(num_tasks);
-//     partition::iterator it(num_tasks);
-//     static int id_partition = 0;
-
-//     t_coalition candidate;
-//     while (true)
-//     {
-//       std::vector<std::vector<logistic_sim::Mission>> partitions = *it[ts];
-//       auto n_subsets = it.subsets();
-//       logistic_sim::Mission candidate_partition;
-//       candidate_partition.ID = id_partition;
-//       // c_print(id_partition);
-//       id_partition++;
-//       int id_subset = 0;
-//       double V = 0;
-//       candidate.second = candidate_partition;
-//       std::vector<logistic_sim::Mission> m;
-//       for (int i = 0; i < n_subsets; i++)
-//       {
-//         std::vector<logistic_sim::Mission> subset = partitions[i];
-//         logistic_sim::Mission candidate_subset;
-//         candidate_subset.ID = id_subset;
-//         id_subset++;
-//         for (int j = 0; j < subset.size(); j++)
-//         {
-//           candidate_subset.TOT_DEMAND += subset[j].TOT_DEMAND;
-//           copy(subset[j].DEMANDS.begin(), subset[j].DEMANDS.end(), back_inserter(candidate_subset.DEMANDS));
-//           copy(subset[j].DSTS.begin(), subset[j].DSTS.end(), back_inserter(candidate_subset.DSTS));
-//           copy(subset[j].ITEM.begin(), subset[j].ITEM.end(), back_inserter(candidate_subset.ITEM));
-//         }
-
-//         // removing doubles from DSTS
-//         for (int j = 0; j < candidate_subset.DSTS.size() - 1; j++)
-//         {
-//           if (candidate_subset.DSTS[j] == candidate_subset.DSTS[j + 1])
-//           {
-//             candidate_subset.DSTS.erase(candidate_subset.DSTS.begin() + j + 1);
-//             j--;
-//           }
-//         }
-
-//         // calculate mission path, needed to find the V value
-//         std::vector<uint> path;
-//         int dijkstra_result[64];
-//         uint dijkstra_size;
-//         dijkstra(src_vertex, *candidate_subset.DSTS.begin(), dijkstra_result, dijkstra_size, vertex_web, dimension);
-//         path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
-//         for (auto it = candidate_subset.DSTS.begin(); it + 1 != candidate_subset.DSTS.end(); it++)
-//         {
-//           dijkstra(*it, *(it + 1), dijkstra_result, dijkstra_size, vertex_web, dimension);
-//           path.pop_back();
-//           path.insert(path.end(), dijkstra_result, dijkstra_result + dijkstra_size);
-//         }
-//         candidate_subset.PATH_DISTANCE = compute_cost_of_route(path);
-//         candidate_subset.V = (double)candidate_subset.PATH_DISTANCE / (double)candidate_subset.TOT_DEMAND;
-
-//         candidate.second.V += candidate_subset.V;
-
-//         if (candidate_subset.TOT_DEMAND > TEAM_CAPACITY)
-//         {
-//           candidate.second.GOOD++;
-//         }
-
-//         m.push_back(candidate_subset);
-//       }
-
-//       ++it;
-//       candidate.first = m;
-//       if (candidate.second.GOOD == 0)
-//       {
-//         // c_print("ok", green);
-//         // print_coalition(*it);
-//         good_partition.push_back(candidate);
-//       }
-//     }
-//   }
-//   catch (std::overflow_error &)
-//   {
-//   }
-
-//   std::sort(good_partition.begin(), good_partition.end(), less_V());
-
-//   t_coalition ele;
-//   if (!good_partition.empty())
-//   {
-//     ele = good_partition.front();
-//   }
-//   else
-//   {
-//     ele.first = ts;
-//     ele.second = logistic_sim::Mission();
-//   }
-
-//   // print_coalition(ele);
-
-//   auto end = std::chrono::system_clock::now();
-//   std::chrono::duration<double> elapsed_seconds = end - start;
-//   times_file << "aggregation:\t" << elapsed_seconds.count() << "\n";
-//   times_file.flush();
-//   return ele.first;
-// }
 
 void OnlineCentralizedTaskPlanner::build_map_graph()
 {

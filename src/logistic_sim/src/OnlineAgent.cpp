@@ -616,6 +616,10 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     // booleans in ros msgs becomes uint8_t
     token.FAILED_ALLOCATION = std::vector<uint8_t>(TEAM_SIZE, false);
 
+    // if the robot has received this task after it has reached home
+    // this prevents premature shutdown
+    token.REACHED_HOME[ID_ROBOT] = false;
+
     // if there are still missions to assign the token is sent
     // to the robot with the shortest path
     if (!token.MISSION.empty())

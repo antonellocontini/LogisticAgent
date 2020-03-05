@@ -22,6 +22,7 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
   std::vector<bool> possible_paths_found(TEAM_SIZE, false);
   std::vector<logistic_sim::Token> missions_stats(TEAM_SIZE);
   logistic_sim::Token best_token;
+  std::vector<bool> best_received_new_tasks(TEAM_SIZE, false);
 
   // find starting vertex for new paths (that is the last vertex in the already planned path)
   std::vector<uint> init_vertex;
@@ -61,6 +62,7 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
       partition::iterator it(missions.size());
       int id_partition = 0;
 
+      std::vector<bool> received_new_tasks(TEAM_SIZE, false);
       std::vector<uint> waypoints;
       logistic_sim::Token temp_token;
       temp_token.MISSIONS_COMPLETED = std::vector<uint>(TEAM_SIZE, 0);
@@ -93,6 +95,12 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
               {
                 robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), temp_token.HOME_TRAILS[i].PATH.begin(),
                                            temp_token.HOME_TRAILS[i].PATH.end());
+              }
+
+              // reset array keeping track of which robots receive new tasks
+              for (int i=0; i < TEAM_SIZE; i++)
+              {
+                received_new_tasks[i] = false;
               }
 
               for (int i = 0; i < TEAM_SIZE; i++)
@@ -141,6 +149,8 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
                     robot_paths[i % TEAM_SIZE].PATH.insert(robot_paths[i % TEAM_SIZE].PATH.end(),
                                                            temp_token.HOME_TRAILS[i % TEAM_SIZE].PATH.begin(),
                                                            temp_token.HOME_TRAILS[i % TEAM_SIZE].PATH.end());
+
+                    received_new_tasks[i % TEAM_SIZE] = true;
                   }
                   catch (std::string &e)
                   {
@@ -182,6 +192,7 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
                   possible_paths_found[n_subsets - 1] = true;
                   missions_stats[n_subsets - 1] = temp_token;
                   best_token = temp_token;
+                  best_received_new_tasks = received_new_tasks;
                 }
               }
               ++jt;
@@ -214,6 +225,11 @@ std::vector<logistic_sim::Path> OnlineGlobalTaskPlanner::path_partition(logistic
       //   stats_file << TEAM_SIZE << "\n\n";
       for (int i = 0; i < TEAM_SIZE; i++)
       {
+        if (best_received_new_tasks[i])
+        {
+          token.REACHED_HOME[i] = false;
+        }
+        // TODO: almost surely this assignments can go outside the for cycle - check
         token.MISSIONS_COMPLETED = best_token.MISSIONS_COMPLETED;
         token.TASKS_COMPLETED = best_token.TASKS_COMPLETED;
         token.TRAILS = best_token.TRAILS;
