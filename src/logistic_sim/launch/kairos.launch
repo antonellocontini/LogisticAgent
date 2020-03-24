@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<launch>
+  <!-- still no support for other maps!!! -->
+  <!-- <arg name="mapname" default="icelab_black" /> -->
+  <arg name="planner_type" default="OnlineTaskPlanner"/>
+  <arg name="agents_type" default="OnlineAgent"/>
+  <arg name="robots_capacity" default="3"/>
+  <arg name="gen_type" default="file"/>
+  <arg name="missions_file" default="1.txt"/>
+  <arg name="debug_mode" default="false"/>
+  <arg name="gdb_file" default=""/>
+  <arg name="robot_name" default="rbkairos" />
+  <arg name="agent_name" default="patrol_rbkairos" />
+
+  <!-- <include file="$(find rbkairos_sim_bringup)/launch/rbkairos_complete.launch">
+    <arg name="launch_rviz" value="false" />
+    <arg name="gazebo_world" value="$(find rbkairos_gazebo)/worlds/icelab.world" />
+    <arg name="x_init_pose_robot_a" value="3.09" />
+    <arg name="y_init_pose_robot_a" value="1.53" />
+  </include> -->
+
+  <include file="$(find logistic_sim)/launch/task_planner.launch">
+    <arg name="mapname" value="icelab_black"/>
+    <arg name="planner_type" value="$(arg planner_type)"/>
+    <arg name="agents_type" value="$(arg agents_type)"/>
+    <arg name="agents_number" value="1"/>
+    <arg name="robots_capacity" value="$(arg robots_capacity)"/>
+    <arg name="gen_type" value="$(arg gen_type)"/>
+    <arg name="missions_file" value="$(arg missions_file)"/>
+    <arg name="debug_mode" value="$(arg debug_mode)"/>
+    <arg name="gdb_file" value="$(arg gdb_file)"/>
+  </include>
+
+  <include file="$(find logistic_sim)/launch/agent.launch">
+    <arg name="mapname" value="icelab_black" />
+    <arg name="agents_type" value="$(arg agents_type)" />
+    <arg name="agents_number" value="1" />
+    <arg name="robots_capacity" value="$(arg robots_capacity)" />
+    <arg name="debug_mode" value="$(arg debug_mode)" />
+    <arg name="gdb_file" value="$(arg gdb_file)" />
+    <arg name="robot_order" value="0" />
+    <arg name="robot_name" value="$(arg robot_name)" />
+    <arg name="agent_name" value="$(arg agent_name)" />
+    <arg name="map_frame" value="rbkairos_map" />
+  </include>
+</launch>

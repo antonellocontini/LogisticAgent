@@ -88,7 +88,7 @@ protected:
   double thetaPos[NUM_MAX_ROBOTS];
   double lastXpose, lastYpose;
 
-  std::string graph_file, mapname, robotname;
+  std::string graph_file, mapname, robotname, mapframe;
   std::string initial_positions;
 
   uint dimension;      // Graph Dimension

@@ -12,6 +12,7 @@ void Agent::init(int argc, char** argv) {
             argv[4]=nome robot
             argv[5]=CAPACITY
             argv[6]=TEAMSIZE
+            argv[7]=MAP_FRAME
         */
     
     srand ( time(NULL) );
@@ -25,8 +26,10 @@ void Agent::init(int argc, char** argv) {
         printf("ID_ROBOT = %d\n",ID_ROBOT); //-1 for 1 robot without prefix (robot_0)
     }
 
+    robotname = string(argv[4]);
     CAPACITY = atoi(argv[5]);
     TEAM_SIZE = atoi(argv[6]);
+    mapframe = string(argv[7]);
 
     c_print("C and TS:", CAPACITY, TEAM_SIZE, green);
     

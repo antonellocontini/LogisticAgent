@@ -13,7 +13,8 @@ void Agent::ready()
     }
     else
     {
-        sprintf(move_base, "robot_%d/move_base", ID_ROBOT);
+        // sprintf(move_base, "robot_%d/move_base", ID_ROBOT);
+        sprintf(move_base, "%s/move_base", robotname.c_str());
     }
 
     ac = new MoveBaseClient(move_base, true);
@@ -111,7 +112,7 @@ void Agent::getRobotPose(int robotid, float &x, float &y, float &theta)
 
     std::stringstream ss;
     ss << "robot_" << robotid;
-    std::string robotname = ss.str();
+    // std::string robotname = ss.str();
     std::string sframe = "/map"; //Patch David Portugal: Remember that the global map frame is "/map"
     std::string dframe;
     if (ID_ROBOT > -1)
@@ -174,7 +175,8 @@ void Agent::sendGoal(int next_vertex)
     move_base_msgs::MoveBaseGoal goal;
     //Send the goal to the robot (Global Map)
     geometry_msgs::Quaternion angle_quat = tf::createQuaternionMsgFromYaw(0.0);
-    goal.target_pose.header.frame_id = "map";
+    // goal.target_pose.header.frame_id = "map";
+    goal.target_pose.header.frame_id = mapframe;
     goal.target_pose.header.stamp = ros::Time::now();
     goal.target_pose.pose.position.x = target_x;    // vertex_web[current_vertex].x;
     goal.target_pose.pose.position.y = target_y;    // vertex_web[current_vertex].y;

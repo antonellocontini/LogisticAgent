@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=3
+NROBOTS=1
 INITPOS=default
 ALG=OnlineCentralizedAgent
 LOC=AMCL
@@ -63,7 +63,7 @@ function launch_kairos_sim {
 	sleep 10
 }
 
-function launch_kairos_agents {
+function launch_kairos_planner_agents {
 	tmux selectw -t $SESSION:1
 	tmux selectp -t $SESSION:1.0
 	tmux send-keys "roslaunch logistic_sim kairos.launch --wait" C-m
@@ -154,14 +154,14 @@ function set_footprints {
 
 prepare_tmux
 launch_ros
-# launch_kairos_sim
-# launch_kairos_agents
+launch_kairos_sim
+launch_kairos_planner_agents
 
-launch_stage
-launch_robots
-launch_taskplanner
-launch_agents
-set_footprints
+# launch_stage
+# launch_robots
+# launch_taskplanner
+# launch_agents
+# set_footprints
 date
 tmux -2 attach-session -t $SESSION
 echo ""

@@ -9,16 +9,17 @@
   <arg name="robot_order" default="0" />
   <arg name="robot_name" default="robot" />
   <arg name="agent_name" default="patrol_robot" />
+  <arg name="map_frame" default="map" />
 
   <rosparam file="$(find logistic_sim)/maps/$(arg mapname)/vertex.yaml" command="load" />
 
   <!-- launch without gdb -->
   <node name="$(arg agent_name)" pkg="logistic_sim" type="$(arg agents_type)" output="screen"
         unless="$(arg debug_mode)"
-        args="__name:=$(arg agent_name) $(arg mapname) $(arg robot_order) $(arg robot_name) $(arg robots_capacity) $(arg agents_number)" />
+        args="__name:=$(arg agent_name) $(arg mapname) $(arg robot_order) $(arg robot_name) $(arg robots_capacity) $(arg agents_number) $(arg map_frame)" />
 
   <node name="$(arg agent_name)" pkg="logistic_sim" type="$(arg agents_type)" output="screen"
         if="$(arg debug_mode)"
         launch-prefix="gdb -ex run --args"
-        args="__name:=$(arg agent_name) $(arg mapname) $(arg robot_order) $(arg robot_name) $(arg robots_capacity) $(arg agents_number)" />
+        args="__name:=$(arg agent_name) $(arg mapname) $(arg robot_order) $(arg robot_name) $(arg robots_capacity) $(arg agents_number) $(arg map_frame)" />
 </launch>

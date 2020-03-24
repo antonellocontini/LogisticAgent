@@ -53,7 +53,8 @@ void DistrAgent::run()
   {
     std::ostringstream id_string;
     id_string << ID_ROBOT;
-    mb_string = "robot_" + id_string.str() + "/";
+    // mb_string = "robot_" + id_string.str() + "/";
+    mb_string = robotname + "/";
   }
   mb_string += "move_base/clear_costmaps";
 
