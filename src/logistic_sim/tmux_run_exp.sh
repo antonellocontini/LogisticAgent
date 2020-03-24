@@ -1,10 +1,10 @@
 #!/bin/bash
 
 SESSION=log_sim
-MAP=grid
-NROBOTS=2
+MAP=icelab_black
+NROBOTS=3
 INITPOS=default
-ALG=OnlineAgent
+ALG=OnlineCentralizedAgent
 LOC=AMCL
 # LOC=fake_localization
 NAV=ros
@@ -12,8 +12,8 @@ GWAIT=0
 COMMDELAY=0.2
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=OnlineTaskPlanner
-GEN=file
+TP_NAME=OnlineGreedyTaskPlanner
+GEN=null
 DEBUG=false
 MISSIONS_FILE=video.txt
 NRUNS=1
@@ -103,25 +103,29 @@ function launch_taskplanner {
 function launch_agents {
 	tmux selectw -t $SESSION:2
 	echo "Launching agents..."
-	if [ $DEBUG = true ] ; then
-		echo "Debug mode activated, running into gdb..."
-	fi
 	for i in $(seq 0 $n); do
-		tmux selectp -t $SESSION:2.$i
-		if [ $DEBUG = true ] ; then
-			if [ -f "commands_all.txt" ] ; then
-				tmux send-keys "rosrun --prefix 'gdb -q -x commands_all.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-			elif [ -f "commands_$i.txt" ] ; then
-				tmux send-keys "rosrun --prefix 'gdb -q -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-			else
-				tmux send-keys "rosrun --prefix 'gdb -q -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-			fi
-		else
-			tmux send-keys "rosrun logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
-		fi
-		echo "$ALG $i launched"
-		sleep 1
+		[tmux selectp -t $SESSION:2.$i
+		tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$i robot_name:=robot_$i agent_name:=patrol_robot$i --wait" C-m
 	done
+	# if [ $DEBUG = true ] ; then
+	# 	echo "Debug mode activated, running into gdb..."
+	# fi
+	# for i in $(seq 0 $n); do
+	# 	tmux selectp -t $SESSION:2.$i
+	# 	if [ $DEBUG = true ] ; then
+	# 		if [ -f "commands_all.txt" ] ; then
+	# 			tmux send-keys "rosrun --prefix 'gdb -q -x commands_all.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+	# 		elif [ -f "commands_$i.txt" ] ; then
+	# 			tmux send-keys "rosrun --prefix 'gdb -q -x commands_$i.txt --args ' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+	# 		else
+	# 			tmux send-keys "rosrun --prefix 'gdb -q -ex run --args' logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+	# 		fi
+	# 	else
+	# 		tmux send-keys "rosrun logistic_sim $ALG __name:=patrol_robot$i $MAP $i robot_$i $CAPACITY $NROBOTS" C-m
+	# 	fi
+	# 	echo "$ALG $i launched"
+	# 	sleep 1
+	# done
 	tmux select-layout tiled
 }
 
