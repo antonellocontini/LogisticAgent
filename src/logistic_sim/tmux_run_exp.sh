@@ -55,6 +55,20 @@ function launch_ros {
 	sleep 1
 }
 
+function launch_kairos_sim {
+	tmux selectw -t $SESSION:0
+	tmux selectp -t $SESSION:0.0
+	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=false gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab.world' x_init_pose_robot_a:=3.09 y_init_pose_robot_a:=1.53 --wait" C-m
+	echo "Launching Gazebo w/ Kairos..."
+	sleep 10
+}
+
+function launch_kairos_agents {
+	tmux selectw -t $SESSION:1
+	tmux selectp -t $SESSION:1.0
+	tmux send-keys "roslaunch logistic_sim kairos.launch --wait" C-m
+}
+
 function launch_stage {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
@@ -104,7 +118,7 @@ function launch_agents {
 	tmux selectw -t $SESSION:2
 	echo "Launching agents..."
 	for i in $(seq 0 $n); do
-		[tmux selectp -t $SESSION:2.$i
+		tmux selectp -t $SESSION:2.$i
 		tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$i robot_name:=robot_$i agent_name:=patrol_robot$i --wait" C-m
 	done
 	# if [ $DEBUG = true ] ; then
@@ -140,6 +154,9 @@ function set_footprints {
 
 prepare_tmux
 launch_ros
+# launch_kairos_sim
+# launch_kairos_agents
+
 launch_stage
 launch_robots
 launch_taskplanner
