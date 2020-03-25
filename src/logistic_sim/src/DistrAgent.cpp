@@ -22,8 +22,6 @@ void DistrAgent::init(int argc, char **argv)
   src_vertex = map_src[mapname];
   dsts_vertex = map_dsts[mapname];
 
-  init_tw_map();
-
   ROS_INFO_STREAM("Notyfing presence to task planner");
   // notifico la mia presenza al taskplanner
   ros::ServiceClient client = nh.serviceClient<logistic_sim::RobotReady>("robot_ready");
@@ -64,11 +62,6 @@ void DistrAgent::run()
   {
     ROS_WARN("Was not able to clear costmap (%s) before patrolling...", mb_string.c_str());
   }
-
-  // TEST: attesa di qualche secondo dalla partenza del precedente
-  init_start_time = ros::Time::now();
-  init_wait_time = 13 * ID_ROBOT;
-  // c_print("[DEBUG]\tAttendo ", init_wait_time, " secondi...", yellow);
 
   // Asynch spinner (non-blocking)
   ros::AsyncSpinner spinner(2);  // Use n threads
