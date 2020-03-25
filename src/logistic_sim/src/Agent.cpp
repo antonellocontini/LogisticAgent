@@ -53,21 +53,6 @@ void Agent::init(int argc, char** argv) {
     
     printf("Loaded graph %s with %d nodes and %d edges\n",mapname.c_str(),dimension,nedges);
 
-#if 0
-    /* Output Graph Data */   
-    for (auto i=0;i<dimension;i++){
-        printf ("ID= %u\n", vertex_web[i].id);
-        printf ("X= %f, Y= %f\n", vertex_web[i].x, vertex_web[i].y);
-        printf ("#Neigh= %u\n", vertex_web[i].num_neigh);
-        
-        for (auto j=0;j<vertex_web[i].num_neigh; j++){
-        printf("\tID = %u, DIR = %s, COST = %u\n", vertex_web[i].id_neigh[j], vertex_web[i].dir[j], vertex_web[i].cost[j]);
-        }
-        
-        printf("\n");   
-    }
-#endif
-
     /* Define Starting Vertex/Position (Launch File Parameters) */
 
     ros::init(argc, argv, "patrol_agent");  // will be replaced by __name:=XXXXXX
@@ -123,6 +108,7 @@ void Agent::init(int argc, char** argv) {
         strcpy (string2,"cmd_vel"); //string = "cmd_vel"
         // TEAM_SIZE = 1;
     }else{ 
+        // TODO: generalizzare nome topic per kairos
         sprintf(string1,"robot_%d/odom",ID_ROBOT);
         sprintf(string2,"robot_%d/cmd_vel",ID_ROBOT);
         // TEAM_SIZE = ID_ROBOT + 1;
@@ -164,27 +150,6 @@ int Agent::compute_next_vertex()
     }
     
     return vertex;
-}
-
-
-void Agent::onGoalComplete()
-{
-    if(next_vertex>-1) {
-        //Update Idleness Table:
-        // update_idleness();
-        current_vertex = next_vertex;       
-    }
-    
-    //devolver proximo vertex tendo em conta apenas as idlenesses;
-    next_vertex = compute_next_vertex();
-    //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-
-    //Send the goal to the robot (Global Map)
-    ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);  
-    sendGoal(next_vertex);  // send to move_base
-    
-    goal_complete = false;    
 }
 
 // void Agent::run() {

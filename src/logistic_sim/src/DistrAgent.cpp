@@ -84,31 +84,9 @@ void DistrAgent::run()
 
   while (ros::ok() && !end_simulation)
   {
-    //  cosa ho globale??? mi serve tempo velocita e posizione
-    // float x, y, t;
-    // getRobotPose(ID_ROBOT, x, y, t);
-    // std::cout << "x: " << xPos[ID_ROBOT] << " y: " << yPos[ID_ROBOT] << " th: " << thetaPos[ID_ROBOT] << "\n"
-    //           << "lastPos: x= " << lastXpose << " ,y= " << lastYpose << "\n";
-
-    // lastXPose
-    // lastYpose
-    // dimension
-    // initial_vertex
-    // current_vertex
-    // next_vertex
-    // last_interference
-    // std::cout <<
-    // if (goal_complete)
-    // {
-    //     c_print("before OnGoal()", magenta);
-    //     onGoalComplete();
-    //     resend_goal_count = 0;
-    // }
 
     if (t_interference)
     {
-      // do_interference_behavior();
-      // do_interference_behavior();
       // invece di eseguire il comportamento di interferenza
       // provo a dire al robot di andare al vertice da dove è arrivato
       uint temp = next_vertex;
@@ -140,10 +118,6 @@ void DistrAgent::run()
 
   }  // while ros.ok
 }  // run()
-
-void DistrAgent::onGoalComplete()
-{
-}
 
 // non chiamo check_interference perchè lo faccio nel token
 void DistrAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback)

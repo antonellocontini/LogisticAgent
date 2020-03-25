@@ -129,6 +129,7 @@ protected:
 
   ros::Subscriber odom_sub;
 
+  // used for recovery behaviors to send commands to base
   ros::Publisher cmd_vel_pub;
 
 public:
@@ -156,15 +157,11 @@ public:
   virtual void goalActiveCallback();
   virtual void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
 
-  void send_task_reached();
   virtual bool check_interference(int ID_ROBOT);
   void do_interference_behavior();
   void backup();
 
   void onGoalNotComplete(); // what to do when a goal has NOT been reached (aborted)
-
-  // Events
-  virtual void onGoalComplete(); // what to do when a goal has been reached
 
   // Must be implemented by sub-classes
   virtual int compute_next_vertex(); 

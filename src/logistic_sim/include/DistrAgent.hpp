@@ -93,8 +93,6 @@ public:
     void init(int argc, char **argv) override;
     virtual void run();
 
-    // empty implementation
-    void onGoalComplete();
     int compute_next_vertex();
 
     void onGoalComplete(logistic_sim::Token &token);
