@@ -38,18 +38,17 @@ Inside the script there are many parameters that can be configured:
 
 The `ALG` parameter sets which agents algorithm to run:
 * `OnlineAgent` implements the online allocation and planning algorithm
-* `GlobalAgent` implements is used in conjunction with two different centralized approaches (one with optimal allocation and the other with a greedy strategy)
-* `CFreeAgent` implements another distributed approach, that differs from the `OnlineAgent` one because all the tasks are assigned before the execution.
+* `OnlineCentralizedAgent` is used in conjunction with two different centralized approaches (one with optimal allocation and the other with a greedy strategy)
 
 The `TP_NAME` parameter sets the task planner:
 * `OnlineTaskPlanner` must be used together with `OnlineAgent`
-* `GlobalTaskPlanner` and `GreedyTaskPlanner` must be used with `GlobalAgent` and they implements the two approaches aforementioned.
-* `SP_TaskPlanner` must be used together with `CFreeAgent`
+* `OnlineGlobalTaskPlanner` and `OnlineGreedyTaskPlanner` must be used with `OnlineCentralizedAgent` and they implements the two approaches aforementioned.
 
 The `GEN` parameter sets how the tasks are generated:
 * `uniform` creates tasks uniformly distributed in terms of delivery locations and demand values
 * `rand` creates random tasks
 * `file` reads the tasks from the file specified in the `MISSIONS_FILE` parameter, this file must be contained in the `missions` directory
+* `null` does not create tasks, they must be provided calling the `AddMissions` service
 
 The `NROBOTS` parameter sets the number of robots to run in the simulation, currently only configurations of 2, 4 or 6 robots are defined, but different ones can be made in the `params/initial_poses.txt` file. This file contains the starting positions of the robots for each map.
 
