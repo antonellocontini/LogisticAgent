@@ -113,7 +113,8 @@ void Agent::getRobotPose(int robotid, float &x, float &y, float &theta)
     std::stringstream ss;
     ss << "robot_" << robotid;
     // std::string robotname = ss.str();
-    std::string sframe = "/map"; //Patch David Portugal: Remember that the global map frame is "/map"
+    // std::string sframe = "/map"; //Patch David Portugal: Remember that the global map frame is "/map"
+    std::string sframe = "/" + mapframe;
     std::string dframe;
     if (ID_ROBOT > -1)
     {
@@ -268,28 +269,6 @@ void Agent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr 
     interference = check_interference(value);
 }
 
-void Agent::send_goal_reached()
-{
-
-    int value = ID_ROBOT;
-    if (value == -1)
-    {
-        value = 0;
-    }
-
-    // [ID,msg_type,vertex,intention,0]
-    std_msgs::Int16MultiArray msg;
-    msg.data.clear();
-    msg.data.push_back(value);
-    msg.data.push_back(TARGET_REACHED_MSG_TYPE);
-    msg.data.push_back(current_vertex);
-    //msg.data.push_back(next_vertex);
-    //msg.data.push_back(0); //David Portugal: is this necessary?
-
-    results_pub.publish(msg);
-    ros::spinOnce();
-}
-
 bool Agent::check_interference(int robot_id)
 { //verificar se os robots estao proximos
 
@@ -368,34 +347,13 @@ void Agent::backup()
 void Agent::do_interference_behavior()
 {
     ROS_INFO("Interference detected! Executing interference behavior...\n");
-    send_interference(); // send interference to monitor for counting
-
-#if 1
+    
     // Stop the robot..
     cancelGoal();
     ROS_INFO("Robot stopped");
     ros::Duration delay(3); // seconds
     delay.sleep();
     ResendGoal = true;
-#else
-    //get own "odom" positions...
-    ros::spinOnce();
-
-    //Waiting until conflict is solved...
-    int value = ID_ROBOT;
-    if (value == -1)
-    {
-        value = 0;
-    }
-    while (interference)
-    {
-        interference = check_interference(value);
-        if (goal_complete || ResendGoal)
-        {
-            interference = false;
-        }
-    }
-#endif
 }
 
 void Agent::onGoalNotComplete()
@@ -516,125 +474,6 @@ void Agent::positionsCB(const nav_msgs::Odometry::ConstPtr &msg)
     // c_print("TEAMSIZE: ", TEAM_SIZE, red);
 
     receive_positions();
-}
-
-// simulates blocking send operation with delay in communication
-void Agent::do_send_message(std_msgs::Int16MultiArray &msg)
-{
-    if (communication_delay > 0.001)
-    {
-        //double current_time = ros::Time::now().toSec();
-        //if (current_time-last_communication_delay_time>1.0) {
-        //ROS_INFO("Communication delay %.1f",communication_delay);
-        ros::Duration delay(communication_delay); // seconds
-        delay.sleep();
-        //last_communication_delay_time = current_time;
-        //}
-    }
-    results_pub.publish(msg);
-    ros::spinOnce();
-}
-
-void Agent::send_interference()
-{
-    //interference: [ID,msg_type]
-
-    int value = ID_ROBOT;
-    if (value == -1)
-    {
-        value = 0;
-    }
-    printf("Send Interference: Robot %d\n", value);
-
-    std_msgs::Int16MultiArray msg;
-    msg.data.clear();
-    msg.data.push_back(value);
-    msg.data.push_back(INTERFERENCE_MSG_TYPE);
-
-    results_pub.publish(msg);
-    ros::spinOnce();
-}
-
- void Agent::send_resendgoal()
- {
-     // TODO
- }
-
-// DA SISTEMARE
-void Agent::resultsCB(const std_msgs::Int16MultiArray::ConstPtr &msg)
-{
-
-    std::vector<signed short>::const_iterator it = msg->data.begin();
-
-    vresults.clear();
-
-    for (size_t k = 0; k < msg->data.size(); k++)
-    {
-        vresults.push_back(*it);
-        it++;
-    }
-
-    int id_sender = vresults[0];
-    int msg_type = vresults[1];
-
-    //printf(" MESSAGE FROM %d TYPE %d ...\n",id_sender, msg_type);
-
-    // messages coming from the monitor
-    if (id_sender == -1 && msg_type == INITIALIZE_MSG_TYPE)
-    {
-        if (initialize == true && vresults[2] == 100)
-        { //"-1,msg_type,100,seq_flag" (BEGINNING)
-            ROS_INFO("Let's Patrol!\n");
-            double r = 1.0 * ((rand() % 1000) / 1000.0);
-
-            //TODO if sequential start
-            //r = DELTA_TIME_SEQUENTIAL_START * ID_ROBOT;
-
-            ros::Duration wait(r); // seconds
-
-            printf("Wait %.1f seconds (init pos:%s)\n", r, initial_positions.c_str());
-
-            wait.sleep();
-            initialize = false;
-        }
-
-#if SIMULATE_FOREVER == false
-        if (initialize == false && vresults[2] == 999)
-        { //"-1,msg_type,999" (END)
-            ROS_INFO("The simulation is over. Let's leave");
-            end_simulation = true;
-        }
-#endif
-    }
-
-    if (!initialize)
-    {
-#if 0
-        // communication delay
-        if(ID_ROBOT>-1){
-            if ((communication_delay>0.001) && (id_sender!=ID_ROBOT)) {
-                    double current_time = ros::Time::now().toSec();
-                    if (current_time-last_communication_delay_time>1.0) { 
-                            ROS_INFO("Communication delay %.1f",communication_delay);
-                            ros::Duration delay(communication_delay); // seconds
-                            delay.sleep();
-                            last_communication_delay_time = current_time;
-                }
-            }
-            bool lost_message = false;
-            if ((lost_message_rate>0.0001)&& (id_sender!=ID_ROBOT)) {
-                double r = (rand() % 1000)/1000.0;
-                lost_message = r < lost_message_rate;
-            }
-            if (lost_message) {
-                ROS_INFO("Lost message");
-            }
-        }
-#endif
-        receive_results();
-    }
-
-    ros::spinOnce();
 }
 
 bool Agent::check_neighbour_dist(int id_neighbour, double dist)

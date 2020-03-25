@@ -2,7 +2,7 @@
 
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=1
+NROBOTS=2
 INITPOS=default
 ALG=OnlineCentralizedAgent
 LOC=AMCL
@@ -13,7 +13,7 @@ COMMDELAY=0.2
 SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=OnlineGreedyTaskPlanner
-GEN=null
+GEN=file
 DEBUG=false
 MISSIONS_FILE=video.txt
 NRUNS=1
@@ -154,14 +154,14 @@ function set_footprints {
 
 prepare_tmux
 launch_ros
-launch_kairos_sim
-launch_kairos_planner_agents
+# launch_kairos_sim
+# launch_kairos_planner_agents
 
-# launch_stage
-# launch_robots
-# launch_taskplanner
-# launch_agents
-# set_footprints
+launch_stage
+launch_robots
+launch_taskplanner
+launch_agents
+set_footprints
 date
 tmux -2 attach-session -t $SESSION
 echo ""

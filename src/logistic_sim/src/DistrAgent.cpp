@@ -126,13 +126,10 @@ void DistrAgent::run()
     {
       ROS_INFO("Re-Sending goal (%d) - Vertex %d (%f,%f)", resend_goal_count, next_vertex, vertex_web[next_vertex].x,
                vertex_web[next_vertex].y);
-      send_resendgoal();
       sendGoal(next_vertex);
 
       ResendGoal = false;
     }
-
-    processEvents();
 
     if (end_simulation)
     {

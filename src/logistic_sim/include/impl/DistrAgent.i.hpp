@@ -577,10 +577,6 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
 
     c_print("   @ compute_next_vertex: ", next_vertex, green);
 
-    send_goal_reached(); // Send TARGET to monitor
-
-    send_results(); // Algorithm specific function
-
     // Send the goal to the robot (Global Map)
     ROS_INFO("Sending goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
     // sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);
