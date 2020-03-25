@@ -258,9 +258,6 @@ void Agent::goalActiveCallback()
 
 void Agent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback)
 { //publicar posições
-
-    send_positions();
-
     int value = ID_ROBOT;
     if (value == -1)
     {
@@ -347,7 +344,7 @@ void Agent::backup()
 void Agent::do_interference_behavior()
 {
     ROS_INFO("Interference detected! Executing interference behavior...\n");
-    
+
     // Stop the robot..
     cancelGoal();
     ROS_INFO("Robot stopped");
@@ -390,90 +387,6 @@ void Agent::onGoalNotComplete()
     sendGoal(next_vertex); // send to move_base
 
     goal_complete = false;
-}
-
-void Agent::send_positions()
-{
-    //Publish Position to common node:
-    nav_msgs::Odometry msg;
-
-    int idx = ID_ROBOT;
-
-    if (ID_ROBOT <= -1)
-    {
-        msg.header.frame_id = "map"; //identificador do robot q publicou
-        idx = 0;
-    }
-    else
-    {
-        char string[20];
-        sprintf(string, "robot_%d/map", ID_ROBOT);
-        msg.header.frame_id = string;
-    }
-
-    msg.pose.pose.position.x = xPos[idx]; //send odometry.x
-    msg.pose.pose.position.y = yPos[idx]; //send odometry.y
-
-    positions_pub.publish(msg);
-    ros::spinOnce();
-}
-
-void Agent::receive_positions()
-{
-}
-
-void Agent::positionsCB(const nav_msgs::Odometry::ConstPtr &msg)
-{ //construir tabelas de posições
-
-    //     printf("Construir tabela de posicoes (receber posicoes), ID_ROBOT = %d\n",ID_ROBOT);
-
-    char id[20]; //identificador do robot q enviou a msg d posição...
-    strcpy(id, msg->header.frame_id.c_str());
-    //int stamp = msg->header.seq;
-    //     printf("robot q mandou msg = %s\n", id);
-
-    // Build Positions Table
-
-    if (ID_ROBOT > -1)
-    {
-        //verify id "XX" of robot: (string: "robot_XX/map")
-
-        char str_idx[4];
-        uint i;
-
-        for (i = 6; i < 10; i++)
-        {
-            if (id[i] == '/')
-            {
-                str_idx[i - 6] = '\0';
-                break;
-            }
-            else
-            {
-                str_idx[i - 6] = id[i];
-            }
-        }
-
-        int idx = atoi(str_idx);
-        //  printf("id robot q mandou msg = %d\n",idx);
-
-        // if (idx >= TEAM_SIZE && TEAM_SIZE <= NUM_MAX_ROBOTS)
-        // {
-        //     //update teamsize:
-        //     TEAM_SIZE = idx + 1;
-        // }
-
-        if (ID_ROBOT != idx)
-        { //Ignore own positions
-            xPos[idx] = msg->pose.pose.position.x;
-            yPos[idx] = msg->pose.pose.position.y;
-        }
-        //      printf ("Position Table:\n frame.id = %s\n id_robot = %d\n xPos[%d] = %f\n yPos[%d] = %f\n\n", id, idx, idx, xPos[idx], idx, yPos[idx] );
-    }
-
-    // c_print("TEAMSIZE: ", TEAM_SIZE, red);
-
-    receive_positions();
 }
 
 bool Agent::check_neighbour_dist(int id_neighbour, double dist)

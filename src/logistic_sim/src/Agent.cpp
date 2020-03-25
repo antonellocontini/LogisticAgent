@@ -114,12 +114,6 @@ void Agent::init(int argc, char** argv) {
         }
         //ROS_INFO("last_visit[%d]=%f", i, last_visit[i]);
     }
-        
-    //Publicar dados de "odom" para nó de posições
-    positions_pub = nh.advertise<nav_msgs::Odometry>("positions", 1); //only concerned about the most recent
-        
-    //Subscrever posições de outros robots
-    positions_sub = nh.subscribe<nav_msgs::Odometry>("positions", 10, boost::bind(&Agent::positionsCB, this, _1));  
     
     char string1[40];
     char string2[40];

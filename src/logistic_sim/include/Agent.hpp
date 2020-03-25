@@ -128,10 +128,8 @@ protected:
   MoveBaseClient *ac; // action client for reaching target goals
 
   ros::Subscriber odom_sub;
-  ros::Subscriber positions_sub;
 
   ros::Publisher cmd_vel_pub;
-  ros::Publisher positions_pub;
 
 public:
   Agent()
@@ -167,11 +165,6 @@ public:
 
   // Events
   virtual void onGoalComplete(); // what to do when a goal has been reached
-
-  // Robot-Robot Communication
-  void send_positions();
-  void receive_positions();
-  void positionsCB(const nav_msgs::Odometry::ConstPtr &msg);
 
   // Must be implemented by sub-classes
   virtual int compute_next_vertex(); 
