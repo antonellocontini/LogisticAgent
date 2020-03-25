@@ -7,9 +7,6 @@ void DistrAgent::init(int argc, char **argv)
 {
   Agent::init(argc, argv);
 
-  // inizializzazione della tmp_CAPCACITY
-  tmp_CAPACITY = CAPACITY;
-
 //   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
 //   {
 //     ros::console::notifyLoggerLevelsChanged();
@@ -84,22 +81,6 @@ void DistrAgent::run()
 
   while (ros::ok() && !end_simulation)
   {
-
-    if (t_interference)
-    {
-      // invece di eseguire il comportamento di interferenza
-      // provo a dire al robot di andare al vertice da dove è arrivato
-      uint temp = next_vertex;
-      next_vertex = current_vertex;
-      current_vertex = temp;
-      // se non setto interference a false questo ramo viene eseguito un paio
-      // di volte poichè il token deve completare il giro prima che la variabile
-      // interference venga calcolata
-      t_interference = 0;
-      sendGoal(next_vertex);
-      c_print("ID_ROBOT: ", ID_ROBOT, "\tInterference detected, going to vertex ", next_vertex, red, P);
-    }
-
     if (ResendGoal)
     {
       ROS_INFO("Re-Sending goal (%d) - Vertex %d (%f,%f)", resend_goal_count, next_vertex, vertex_web[next_vertex].x,
@@ -127,26 +108,4 @@ void DistrAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackCons
     value = 0;
   }
   interference = false;
-}
-
-bool DistrAgent::go_src()
-{
-  return current_mission.PICKUP;
-}
-
-bool DistrAgent::go_dst()
-{
-  return !go_src() && !current_mission.DSTS.empty();
-}
-
-// -----------------------------------------------------------------------------
-
-int main(int argc, char *argv[])
-{
-  distragent::DistrAgent TPA;
-  TPA.init(argc, argv);
-  c_print("@ Initialization completed!", green);
-  sleep(3);
-  TPA.run();
-  return 0;
 }

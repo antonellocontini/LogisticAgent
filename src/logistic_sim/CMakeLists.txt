@@ -143,29 +143,11 @@ add_dependencies(DistrAgentLib ${PROJECT_NAME}_generate_messages_cpp  ${catkin_E
 
 # add_dependencies(Agent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
-## Declare a cpp executable 
-# add_executable(TP src/TPAgent.cpp)
-# add_dependencies(TP ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-# ## Specify libraries to link a library or executable target against
-# target_link_libraries(TP Agent ${catkin_LIBRARIES})
-
-# ## Declare a cpp executable 
-# add_executable(DistrAgent src/DistrAgent.cpp)
-# add_dependencies(DistrAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-# ## Specify libraries to link a library or executable target against
-# target_link_libraries(DistrAgent Agent algorithmsLib ${catkin_LIBRARIES})
-
 # ## Declare a cpp executable 
 # add_executable(CFreeAgent src/CFreeAgent.cpp)
 # add_dependencies(CFreeAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 # ## Specify libraries to link a library or executable target against
 # target_link_libraries(CFreeAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
-
-# ## Declare a cpp executable 
-# add_executable(GlobalAgent src/GlobalAgent.cpp)
-# add_dependencies(GlobalAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-# ## Specify libraries to link a library or executable target against
-# target_link_libraries(GlobalAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(OnlineAgent src/OnlineAgent.cpp)

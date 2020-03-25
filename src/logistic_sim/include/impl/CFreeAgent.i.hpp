@@ -59,10 +59,6 @@ void CFreeAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 	logistic_sim::Token token;
 	token = *msg;
 
-	// logistic_sim::Mission m = coalition_formation(token);
-
-	// cout << "missione finale dopo coalizione: "<< m.ID << m.TOT_DEMAND <<"\n";
-
 	token.ID_SENDER = ID_ROBOT;
 	if (msg->ID_RECEIVER == TEAM_SIZE - 1)
 	{

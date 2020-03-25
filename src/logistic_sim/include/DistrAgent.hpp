@@ -43,43 +43,23 @@ namespace distragent
 using namespace agent;
 
 /**
- * Approccio con grafo dinamico, non più mantenuto 
+ * Approccio senza turni con grafo dinamico, non più mantenuto 
  */
 class DistrAgent : public Agent
 {
 protected:
-    int t_interference = 0;
-    int id_interference = -1;
     ros::Publisher token_pub;
     ros::Subscriber token_sub;
 
-    bool need_task = true;
-    bool reached_pickup, go_home = false;
     bool reached_home = false;
-    uint tmp_CAPACITY = 0;
 
-    bool init_wait_done = false;
-
-    uint init_next_vertex;
+    uint init_next_vertex;  //TODO: togliere, usato in metodi vecchi
     std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}, {"icelab_black", 2}, {"model5", 6}};
     std::map<std::string, std::vector<uint>> map_dsts = {{"model6", {18, 23, 28}}, {"grid", {16, 17, 18}},
                                                          {"icelab", {10, 13, 16}}, {"icelab_black", {26, 33, 42}},
                                                          {"model5", {11, 16, 21}}};
     uint src_vertex;
     std::vector<uint> dsts_vertex;
-
-    uint p_11[8] = {6, 7, 9, 12, 11, 10, 8, 5};
-    uint p_16[12] = {6, 7, 9, 12, 14, 17, 16, 15, 13, 10, 8, 5};
-    uint p_21[16] = {6, 7, 9, 12, 14, 17, 19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
-
-    uint p_11_16[14] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 15, 13, 10, 8, 5};
-    uint p_11_21[18] = {6, 7, 9, 12, 11, 12, 14, 17, 19,
-                        22, 21, 20, 18, 15, 13, 10, 8, 5};
-    uint p_16_21[18] = {6, 7, 9, 12, 14, 17, 16, 17, 19, 22,
-                        21, 20, 18, 15, 13, 10, 8, 5};
-
-    uint p_11_16_21[20] = {6, 7, 9, 12, 11, 12, 14, 17, 16, 17,
-                           19, 22, 21, 20, 18, 15, 13, 10, 8, 5};
 
     logistic_sim::Mission current_mission;
     std::vector<std::vector<uint>> token_weight_map;
@@ -92,25 +72,14 @@ protected:
 public:
     void init(int argc, char **argv) override;
     virtual void run();
-    
-    void onGoalComplete(logistic_sim::Token &token);
-    int compute_next_vertex(logistic_sim::Token &token);
-    //
-    uint compute_id_path(logistic_sim::Mission &m);
-    void compute_travell(uint id_path, logistic_sim::Mission &m);
+
     int compute_cost_of_route(std::vector<uint> r);
-    virtual logistic_sim::Mission coalition_formation(logistic_sim::Token &token);
-    //
-    virtual void tp_dijkstra(uint source, uint destination, int *shortest_path, uint &elem_s_path);
+    
     void init_tw_map();
-    virtual std::pair<int, int> check_interference_token(logistic_sim::Token &token);
-    virtual void token_callback(const logistic_sim::TokenConstPtr &msg);
+    virtual void token_callback(const logistic_sim::TokenConstPtr &msg) = 0;
     void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback) override;
 
     void print_coalition(const t_coalition &coalition);
-
-    virtual bool go_src();
-    virtual bool go_dst();
 };
 } // namespace distragent
 
