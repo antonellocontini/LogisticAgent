@@ -158,7 +158,6 @@ public:
   virtual void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
 
   virtual bool check_interference(int ID_ROBOT);
-  void do_interference_behavior();
   void backup();
 
   void onGoalNotComplete(); // what to do when a goal has NOT been reached (aborted)

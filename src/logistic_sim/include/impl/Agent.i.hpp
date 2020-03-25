@@ -216,10 +216,10 @@ void Agent::goalDoneCallback(const actionlib::SimpleClientGoalState &state, cons
         {
             ROS_INFO("Goal not cancelled by the interference...");
 
-            //ROS_INFO("Backup");
+            ROS_INFO("Backup");
             backup();
 
-            ROS_INFO("Clear costmap!");
+            // ROS_INFO("Clear costmap!");
 
             char srvname[80];
 
@@ -279,8 +279,6 @@ bool Agent::check_interference(int robot_id)
     // ID_ROBOT
     for (i = 0; i < TEAM_SIZE; i++)
     { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
-        
-        //DC...
         if( i == robot_id)
             continue;
 
@@ -296,6 +294,8 @@ bool Agent::check_interference(int robot_id)
     return false;
 }
 
+
+// These are NOT the recovery behaviors of move_base
 void Agent::backup()
 {
 
@@ -339,18 +339,6 @@ void Agent::backup()
         loop_rate.sleep();
         backUpCounter++;
     }
-}
-
-void Agent::do_interference_behavior()
-{
-    ROS_INFO("Interference detected! Executing interference behavior...\n");
-
-    // Stop the robot..
-    cancelGoal();
-    ROS_INFO("Robot stopped");
-    ros::Duration delay(3); // seconds
-    delay.sleep();
-    ResendGoal = true;
 }
 
 void Agent::onGoalNotComplete()
