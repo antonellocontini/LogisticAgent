@@ -5,33 +5,7 @@ namespace onlinecentralizedagent
 {
 void OnlineCentralizedAgent::init(int argc, char **argv)
 {
-  CFreeAgent::init(argc, argv);
-  // TEST
-  // unsigned int infinity = std::numeric_limits<unsigned int>::max();
-  // std::cout << "    | ";
-  // for(int i=0; i<dimension; i++)
-  // {
-  //   std::cout << std::setw(3) << i << " ";
-  // }
-  // std::cout << "\n----+-";
-  // for(int i=0; i<dimension; i++)
-  // {
-  //   std::cout << "----";
-  // }
-  // std::cout << "\n";
-  // for(int i=0; i<dimension; i++)
-  // {
-  //   std::cout << std::setw(3) << i << " | ";
-  //   for(int j=0; j<dimension; j++)
-  //   {
-  //     if (min_hops_matrix[i][j] == infinity)
-  //       std::cout << "inf ";
-  //     else
-  //       std::cout << std::setw(3) << min_hops_matrix[i][j] << " ";
-  //   }
-  //   std::cout << "\n";      
-  // }
-  // std::cout << std::endl;
+  DistrAgent::init(argc, argv);
 }
 
 void OnlineCentralizedAgent::token_callback(const logistic_sim::TokenConstPtr &msg)

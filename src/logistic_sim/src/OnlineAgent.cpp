@@ -3,9 +3,44 @@
 
 namespace onlineagent
 {
+
+void OnlineAgent::allocate_memory()
+  {
+    std::cout << "allocating memory..." << std::endl;
+    std::cout << dimension << " " << MAX_TIME << std::endl;
+    prev_paths = new unsigned int ***[dimension];
+    path_sizes = new unsigned int **[dimension];
+    for (unsigned int i = 0; i < dimension; i++)
+    {
+      prev_paths[i] = new unsigned int **[MAX_TIME];
+      path_sizes[i] = new unsigned int *[MAX_TIME];
+      for (unsigned int j = 0; j < MAX_TIME; j++)
+      {
+        prev_paths[i][j] = new unsigned int *[MAX_WAYPOINTS];
+        path_sizes[i][j] = new unsigned int[MAX_WAYPOINTS];
+        for (unsigned int k = 0; k < MAX_WAYPOINTS; k++)
+        {
+          prev_paths[i][j][k] = new unsigned int[MAX_TIME];
+        }
+      }
+    }
+
+    visited = new unsigned int **[dimension];
+    for (unsigned int i = 0; i < dimension; i++)
+    {
+      visited[i] = new unsigned int *[MAX_TIME];
+      for (unsigned int j = 0; j < MAX_TIME; j++)
+      {
+        visited[i][j] = new unsigned int[MAX_WAYPOINTS];
+      }
+    }
+
+    queue = new st_location[MAX_TIME * MAX_TIME];
+  }
+
 void OnlineAgent::init(int argc, char **argv)
 {
-  CFreeAgent::init(argc, argv);
+  DistrAgent::init(argc, argv);
   allocate_memory();
   map_graph = std::vector<std::vector<unsigned int>>(dimension);
   for (int i = 0; i < dimension; i++)

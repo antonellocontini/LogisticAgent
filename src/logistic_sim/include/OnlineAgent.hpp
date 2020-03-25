@@ -1,8 +1,39 @@
 #pragma once
-#include "CFreeAgent.hpp"
+#include "DistrAgent.hpp"
 
 namespace onlineagent
 {
+// using namespace cfreeagent;
+struct st_location
+{
+  unsigned int vertex;
+  unsigned int time;
+  unsigned int waypoint;
+
+  st_location(unsigned int vertex = 0, unsigned int time = 0, unsigned int waypoint = 0)
+    : vertex(vertex), time(time), waypoint(waypoint)
+  {
+  }
+  st_location(const st_location &ref) : vertex(ref.vertex), time(ref.time), waypoint(ref.waypoint)
+  {
+  }
+  bool operator<(const st_location &loc) const
+  {
+    if (time < loc.time)
+    {
+      return true;
+    }
+    else if (time == loc.time)
+    {
+      if (waypoint > loc.waypoint)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+};
+
 bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_matrix,
                         const std::vector<unsigned int> &waypoints, const st_location &lhs, const st_location &rhs)
 {
@@ -28,9 +59,34 @@ bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_m
   return false;
 }
 
-class OnlineAgent : public cfreeagent::CFreeAgent
+class OnlineAgent : public distragent::DistrAgent
 {
 public:
+  ~OnlineAgent()
+  {
+    for (unsigned int i = 0; i < dimension; i++)
+    {
+      for (unsigned int j = 0; j < MAX_TIME; j++)
+      {
+        for (unsigned int k = 0; k < MAX_TIME; k++)
+        {
+          delete[] prev_paths[i][k][j];
+        }
+        delete[] prev_paths[i][j];
+        delete[] path_sizes[i][j];
+        delete[] visited[i][j];
+      }
+
+      delete[] prev_paths[i];
+      delete[] path_sizes[i];
+      delete[] visited[i];
+    }
+    delete[] prev_paths;
+    delete[] path_sizes;
+    delete[] visited;
+    delete[] queue;
+  }
+
   void init(int argc, char **argv) override;
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
 
@@ -48,6 +104,14 @@ public:
   unsigned int insertion_sort(st_location *queue, unsigned int size, st_location loc, T *cmp_function = nullptr);
 
 protected:
+  std::vector<logistic_sim::Mission> missions;
+  unsigned int ****prev_paths;
+  unsigned int ***path_sizes;
+  unsigned int ***visited;
+  st_location *queue;
+  const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 150U, MAX_WAYPOINTS = 64U;
+  void allocate_memory();
+
   // adjacency list of the graph, contains only neighbour of vertices, without edge lengths
   std::vector<std::vector<unsigned int>> map_graph, min_hops_matrix;
   bool still = true;

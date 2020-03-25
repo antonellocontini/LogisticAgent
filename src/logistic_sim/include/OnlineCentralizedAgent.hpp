@@ -1,11 +1,11 @@
 #pragma once
-#include "CFreeAgent.hpp"
+#include "DistrAgent.hpp"
 
 namespace onlinecentralizedagent
 {
 
 
-class OnlineCentralizedAgent : public cfreeagent::CFreeAgent
+class OnlineCentralizedAgent : public distragent::DistrAgent
 {
 public:
   void init(int argc, char **argv) override;
