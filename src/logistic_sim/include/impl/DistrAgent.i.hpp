@@ -572,7 +572,7 @@ void DistrAgent::onGoalComplete(logistic_sim::Token &token)
     //     need_task = false;
     // }
 
-    c_print("before compute_next_vertex()", yellow);
+    c_print("before compute_next_vertex", yellow);
     next_vertex = compute_next_vertex(token);
 
     c_print("   @ compute_next_vertex: ", next_vertex, green);
@@ -628,7 +628,7 @@ int DistrAgent::compute_next_vertex(logistic_sim::Token &token)
     }
 
     return vertex;
-} // compute_next_vertex()
+}
 
 void DistrAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {

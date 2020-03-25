@@ -96,10 +96,8 @@ protected:
   uint backUpCounter;
   int next_vertex;
   uint initial_vertex; // initial vertex
-  int current_dim_path;
 
   int aborted_count, resend_goal_count;
-  int interference_cnt;
 
   bool ResendGoal; // Send the same goal again (if goal failed...)
   bool interference;
@@ -108,21 +106,12 @@ protected:
   bool end_simulation;
   bool goal_canceled_by_user;
 
-  bool OK = false;
-  bool first = true;
-
   double last_interference;
-  double *instantaneous_idleness; // local idleness
+  // double *instantaneous_idleness; // local idleness
   double *last_visit;
-  double goal_reached_wait, communication_delay, last_communication_delay_time, lost_message_rate;
 
   vertex *vertex_web;
   std::vector<uint> path;
-  
-  uint id_vertex = 0;
-  uint id_task = 0;
-
-  std::vector<int> vresults; // results exchanged among robots
  
   tf::TransformListener *listener;
   MoveBaseClient *ac; // action client for reaching target goals
@@ -157,15 +146,7 @@ public:
   virtual void goalActiveCallback();
   virtual void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
 
-  virtual bool check_interference(int ID_ROBOT);
   void backup();
-
-  void onGoalNotComplete(); // what to do when a goal has NOT been reached (aborted)
-
-  // Must be implemented by sub-classes
-  virtual int compute_next_vertex(); 
-
-  bool check_neighbour_dist(int id_neighbour, double dist);
 };
 
 } // namespace agent

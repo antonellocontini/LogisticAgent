@@ -119,7 +119,6 @@ void DistrAgent::run()
   }  // while ros.ok
 }  // run()
 
-// non chiamo check_interference perchè lo faccio nel token
 void DistrAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback)
 {
   int value = ID_ROBOT;
@@ -128,10 +127,6 @@ void DistrAgent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackCons
     value = 0;
   }
   interference = false;
-}
-
-int DistrAgent::compute_next_vertex()
-{
 }
 
 bool DistrAgent::go_src()

@@ -26,40 +26,7 @@ void Agent::ready()
     }
     c_print("Connected with move_base action server", green, P);
 
-    // initialize_node(); // robot is alive
-
     ros::Rate loop_rate(1);
-    // routine per tornare a casa (non la usiamo pe ora)
-    // ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
-    // std_srvs::Empty srv;
-    // if (client.call(srv))
-    // {
-    //     ROS_INFO("Costmaps cleared.\n");
-    // }
-    // else
-    // {
-    //     ROS_ERROR("Failed to call service move_base/clear_costmaps");
-    // }e loop_rate(1);
-    // ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
-    // std_srvs::Empty srv;
-    // if (client.call(srv))
-    // {
-    //     ROS_INFO("Costmaps cleared.\n");
-    // }
-    // else
-    // {
-    //     ROS_ERROR("Failed to call service move_base/clear_costmaps");
-    // }
-    // wait   // ros::ServiceClient client = n.serviceClient<std_srvs::Empty>(srvname);
-    // std_srvs::Empty srv;
-    // if (client.call(srv))
-    // {
-    //     ROS_INFO("Costmaps cleared.\n");
-    // }
-    // else
-    // {
-    //     ROS_ERROR("Failed to call service move_base/clear_costmaps");
-    // }until nodes are ready
     while (initialize)
     {
         c_print("waiting for initialization", red, P);
@@ -72,27 +39,6 @@ void Agent::ready()
 
 void Agent::readParams()
 {
-    if (!ros::param::get("/goal_reached_wait", goal_reached_wait))
-    {
-        //goal_reached_wait = 0.0;
-        ROS_WARN("Cannot read parameter /goal_reached_wait. Using default value!");
-        //ros::param::set("/goal_reached_wait", goal_reached_wait);
-    }
-
-    if (!ros::param::get("/communication_delay", communication_delay))
-    {
-        //communication_delay = 0.0;
-        ROS_WARN("Cannot read parameter /communication_delay. Using default value!");
-        //ros::param::set("/communication_delay", communication_delay);
-    }
-
-    if (!ros::param::get("/lost_message_rate", lost_message_rate))
-    {
-        //lost_message_rate = 0.0;
-        ROS_WARN("Cannot read parameter /lost_message_rate. Using default value!");
-        //ros::param::set("/lost_message_rate", lost_message_rate);
-    }
-
     if (!ros::param::get("/initial_positions", initial_positions))
     {
         initial_positions = "default";
@@ -201,10 +147,7 @@ void Agent::goalDoneCallback(const actionlib::SimpleClientGoalState &state, cons
 
     if (state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED)
     {
-        ROS_INFO("Goal reached ... WAITING %.2f sec", goal_reached_wait);
-        ros::Duration delay(goal_reached_wait); // wait after goal is reached
-        delay.sleep();
-        ROS_INFO("Goal reached ... DONE");
+        ROS_INFO("Goal reached ...");
         goal_complete = true;
         goal_success = true;
     }
@@ -257,41 +200,8 @@ void Agent::goalActiveCallback()
 }
 
 void Agent::goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback)
-{ //publicar posições
-    int value = ID_ROBOT;
-    if (value == -1)
-    {
-        value = 0;
-    }
-    interference = check_interference(value);
-}
+{
 
-bool Agent::check_interference(int robot_id)
-{ //verificar se os robots estao proximos
-
-    int i;
-    double dist_quad;
-
-    if (ros::Time::now().toSec() - last_interference < 10) // seconds
-        return false;                                      // false if within 10 seconds from the last one
-
-    /* Poderei usar TEAMSIZE para afinar */
-    // ID_ROBOT
-    for (i = 0; i < TEAM_SIZE; i++)
-    { //percorrer vizinhos (assim asseguro q cada interferencia é so encontrada 1 vez)
-        if( i == robot_id)
-            continue;
-
-        dist_quad = (xPos[i] - xPos[robot_id]) * (xPos[i] - xPos[robot_id]) + (yPos[i] - yPos[robot_id]) * (yPos[i] - yPos[robot_id]);
-
-        if (dist_quad <= INTERFERENCE_DISTANCE * INTERFERENCE_DISTANCE)
-        { //robots are ... meter or less apart
-            //          ROS_INFO("Feedback: Robots are close. INTERFERENCE! Dist_Quad = %f", dist_quad);
-            last_interference = ros::Time::now().toSec();
-            return true;
-        }
-    }
-    return false;
 }
 
 
@@ -338,57 +248,6 @@ void Agent::backup()
         ros::spinOnce();
         loop_rate.sleep();
         backUpCounter++;
-    }
-}
-
-void Agent::onGoalNotComplete()
-{
-    int prev_vertex = next_vertex;
-
-    ROS_INFO("Goal not complete - From vertex %d to vertex %d\n", current_vertex, next_vertex);
-
-    //devolver proximo vertex tendo em conta apenas as idlenesses;
-    next_vertex = compute_next_vertex();
-    //printf("Move Robot to Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-
-    // Look for a random adjacent vertex different from the previous one
-    int random_cnt = 0;
-    while (next_vertex == prev_vertex && random_cnt++ < 10)
-    {
-        int num_neighs = vertex_web[current_vertex].num_neigh;
-        int i = rand() % num_neighs;
-        next_vertex = vertex_web[current_vertex].id_neigh[i];
-        ROS_INFO("Choosing another random vertex %d\n", next_vertex);
-    }
-
-    // Look for any random vertex different from the previous one
-    while (next_vertex == prev_vertex && next_vertex == current_vertex)
-    {
-        int i = rand() % dimension;
-        next_vertex = i;
-        ROS_INFO("Choosing another random vertex %d\n", next_vertex);
-    }
-
-    //Send the goal to the robot (Global Map)
-    ROS_INFO("Re-Sending NEW goal - Vertex %d (%f,%f)\n", next_vertex, vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    //sendGoal(vertex_web[next_vertex].x, vertex_web[next_vertex].y);
-    sendGoal(next_vertex); // send to move_base
-
-    goal_complete = false;
-}
-
-bool Agent::check_neighbour_dist(int id_neighbour, double dist)
-{
-    double curr_dist = (xPos[ID_ROBOT] - xPos[id_neighbour])*(xPos[ID_ROBOT] - xPos[id_neighbour])
-                    + (yPos[ID_ROBOT] - yPos[id_neighbour])*(yPos[ID_ROBOT] - yPos[id_neighbour]);
-    
-    if (curr_dist <= dist)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
     }
 }
 

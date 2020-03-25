@@ -8,8 +8,6 @@ ALG=OnlineCentralizedAgent
 LOC=AMCL
 # LOC=fake_localization
 NAV=ros
-GWAIT=0
-COMMDELAY=0.2
 SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=OnlineGreedyTaskPlanner
@@ -46,8 +44,6 @@ function launch_ros {
 	until rostopic list &> /dev/null; do sleep 1; done
 	echo "Setting ROS parameters..."
 	tmux send-keys "rosparam set /use_sim_time True" C-m
-	tmux send-keys "rosparam set /goal_reached_wait $GWAIT" C-m
-	tmux send-keys "rosparam set /communication_delay $COMMDELAY" C-m
 	tmux send-keys "rosparam set /navigation_module $NAV" C-m
 	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
 	IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")

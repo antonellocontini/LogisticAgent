@@ -92,9 +92,7 @@ protected:
 public:
     void init(int argc, char **argv) override;
     virtual void run();
-
-    int compute_next_vertex();
-
+    
     void onGoalComplete(logistic_sim::Token &token);
     int compute_next_vertex(logistic_sim::Token &token);
     //

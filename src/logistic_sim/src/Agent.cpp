@@ -123,37 +123,11 @@ void Agent::init(int argc, char** argv) {
     //Subscrever para obter dados de "odom" do robot corrente
     odom_sub = nh.subscribe<nav_msgs::Odometry>(string1, 1, boost::bind(&Agent::odomCB, this, _1)); //size of the buffer = 1 (?)
     
-    ros::spinOnce(); 
-    
-    // last time comm delay has been applied
-    last_communication_delay_time = ros::Time::now().toSec();   
+    ros::spinOnce();  
 
     readParams();
 
     c_print("End of initialization, reading parameters", green,P);
 }
-
-int Agent::compute_next_vertex()
-{
-    int vertex = 0;
-
-    if (path.size() -1 == id_vertex)
-    {
-        vertex = path[id_vertex];
-        id_vertex = 0;
-        // need_token_mission = true;
-    }
-    else
-    {
-        vertex = path[id_vertex];
-        id_vertex++;
-    }
-    
-    return vertex;
-}
-
-// void Agent::run() {
-  
-// }
 
 } // namespace agent

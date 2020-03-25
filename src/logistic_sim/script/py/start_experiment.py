@@ -142,9 +142,6 @@ def run_experiment(MAP, NROBOTS, INITPOS, ALG_SHORT, LOC_MODE, NAV_MODULE, GWAIT
     os.system(roscore_cmd)
     os.system('sleep 3')
     os.system('rosparam set /use_sim_time true')
-    os.system("rosparam set /goal_reached_wait "+GWAIT)
-    os.system("rosparam set /communication_delay "+str(COMMDELAY))
-    # os.system("rosparam set /lost_message_rate "+LOSTMSGRATE)
     os.system("rosparam set /navigation_module "+NAV_MODULE)
     os.system("rosparam set /initial_positions "+INITPOS)
 

@@ -141,9 +141,6 @@ def run_experiment(MAP, NROBOTS, ALG_SHORT, LOC_MODE, GWAIT, COMMDELAY, TERM, TI
       os.system('rosparam set /use_sim_time true')
     else:
       os.system('rosparam set /use_sim_time false')
-    os.system("rosparam set /goal_reached_wait "+GWAIT)
-    os.system("rosparam set /communication_delay "+str(COMMDELAY))
-#    os.system("rosparam set /lost_message_rate "+LOSTMSGRATE)
 
     cmd = './setinitposes.py '+MAP+' "'+iposes+'"'
     print cmd
