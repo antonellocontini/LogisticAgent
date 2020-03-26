@@ -180,5 +180,3 @@ public:
 };
 
 } // namespace agent
-
-#include "impl/Agent.i.hpp"
