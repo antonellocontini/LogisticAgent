@@ -157,16 +157,22 @@ void OnlineCentralizedAgent::token_coordination(const logistic_sim::TokenConstPt
 
   if (equal_status && still)
   {
-    // se ci sono nuove missioni disponibili bisogna allocarle
-    // IMPORTANTE: è essenziale che i robot siano sincronizzati
-    // sul goal altrimenti la pianificazione si baserà
-    // su dei percorsi sfasati
+    // if new missions are avaiable, they must be added
+    // when all the robots have reached their current goal
+    //
+    // TODO: review this part, make simpler
     bool first_to_see_equal = false;
     status = msg->GOAL_STATUS[0];
     for (int i = 1; i < TEAM_SIZE; i++)
     {
       if (msg->GOAL_STATUS[i] != status)
         first_to_see_equal = true;
+    }
+
+    // special case, single robot team
+    if (TEAM_SIZE == 1)
+    {
+      first_to_see_equal = true;
     }
 
     if (msg->NEW_MISSIONS_AVAILABLE && first_to_see_equal)
