@@ -1,5 +1,5 @@
 #pragma once
-#include "DistrAgent.hpp"
+#include "Agent.hpp"
 
 namespace onlineagent
 {
@@ -59,7 +59,7 @@ bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_m
   return false;
 }
 
-class OnlineAgent : public distragent::DistrAgent
+class OnlineAgent : public agent::Agent
 {
 public:
   ~OnlineAgent()

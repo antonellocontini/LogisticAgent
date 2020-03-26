@@ -59,11 +59,24 @@
 #include "message_types.hpp"
 
 #include "logistic_sim/Mission.h"
+#include "logistic_sim/Token.h"
+#include "logistic_sim/RobotReady.h"
 
-// #include <geometry_msgs/PoseWithCovarianceStamped.h>
+using t_coalition = std::pair<std::vector<logistic_sim::Mission>, logistic_sim::Mission>;
+namespace logistic_sim
+{
 
-// definizione principale di Agent, LogicAgent con TaskPlanner e TPAgent con Token e TaskPlanner
-// Token_Agent Token
+inline bool operator==(const logistic_sim::Mission &A, const logistic_sim::Mission &B)
+{
+    return A.ID == B.ID ? true : false;
+}
+
+inline bool operator<(const logistic_sim::Mission &A, const logistic_sim::Mission &B)
+{
+    return A.V < B.V ? 1 : 0;
+}
+
+} // namespace logistic_sim
 
 namespace agent
 {
@@ -107,7 +120,6 @@ protected:
   bool goal_canceled_by_user;
 
   double last_interference;
-  // double *instantaneous_idleness; // local idleness
   double *last_visit;
 
   vertex *vertex_web;
@@ -121,6 +133,21 @@ protected:
   // used for recovery behaviors to send commands to base
   ros::Publisher cmd_vel_pub;
 
+  ros::Publisher token_pub;
+    ros::Subscriber token_sub;
+
+    bool reached_home = false;
+
+    // TODO: read from parameter file (see task planners)
+    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}, {"icelab_black", 2}, {"model5", 6}};
+    std::map<std::string, std::vector<uint>> map_dsts = {{"model6", {18, 23, 28}}, {"grid", {16, 17, 18}},
+                                                         {"icelab", {10, 13, 16}}, {"icelab_black", {26, 33, 42}},
+                                                         {"model5", {11, 16, 21}}};
+    
+    // here are kept pickup and delivery vertices
+    uint src_vertex;
+    std::vector<uint> dsts_vertex;
+
 public:
   Agent()
   {
@@ -133,6 +160,7 @@ public:
 
   virtual void init(int argc, char **argv);
   void ready();
+  virtual void run();
   void readParams(); // read ROS parameters
  
   void getRobotPose(int robotid, float &x, float &y, float &theta);
@@ -145,6 +173,8 @@ public:
                         const move_base_msgs::MoveBaseResultConstPtr &result);
   virtual void goalActiveCallback();
   virtual void goalFeedbackCallback(const move_base_msgs::MoveBaseFeedbackConstPtr &feedback);
+
+  virtual void token_callback(const logistic_sim::TokenConstPtr &msg) = 0;
 
   void backup();
 };

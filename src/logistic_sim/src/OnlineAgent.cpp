@@ -40,7 +40,7 @@ void OnlineAgent::allocate_memory()
 
 void OnlineAgent::init(int argc, char **argv)
 {
-  DistrAgent::init(argc, argv);
+  Agent::init(argc, argv);
   allocate_memory();
   map_graph = std::vector<std::vector<unsigned int>>(dimension);
   for (int i = 0; i < dimension; i++)

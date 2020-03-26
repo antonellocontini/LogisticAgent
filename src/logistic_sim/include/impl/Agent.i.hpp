@@ -1,5 +1,5 @@
 #pragma once
-// virtual method specialization on cpp
+
 namespace agent
 {
 

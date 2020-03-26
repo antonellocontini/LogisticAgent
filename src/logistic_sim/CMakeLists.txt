@@ -125,11 +125,6 @@ add_library(Agent
 
 add_dependencies(Agent ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 
-# Declare a cpp library
-add_library(DistrAgentLib
-  src/DistrAgent.cpp
-)
-
 add_library(algorithmsLib
   src/algorithms.cpp
 )
@@ -138,22 +133,19 @@ add_library(partitionLib
   src/partition.cpp
 )
 
-add_dependencies(DistrAgentLib ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 ########################################################################################################################
-
-# add_dependencies(Agent SSIPatrolAgent LogicAgent CycleAgent CycleOptAgent CFAgent  ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 ## Declare a cpp executable 
 add_executable(OnlineAgent src/OnlineAgent.cpp)
 add_dependencies(OnlineAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
+target_link_libraries(OnlineAgent Agent algorithmsLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(OnlineCentralizedAgent src/OnlineCentralizedAgent.cpp)
 add_dependencies(OnlineCentralizedAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineCentralizedAgent Agent DistrAgentLib algorithmsLib ${catkin_LIBRARIES})
+target_link_libraries(OnlineCentralizedAgent Agent algorithmsLib ${catkin_LIBRARIES})
 
 ##################
 ## TaskPlanners ##

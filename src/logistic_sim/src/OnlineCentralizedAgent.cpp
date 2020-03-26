@@ -5,7 +5,7 @@ namespace onlinecentralizedagent
 {
 void OnlineCentralizedAgent::init(int argc, char **argv)
 {
-  DistrAgent::init(argc, argv);
+  Agent::init(argc, argv);
 }
 
 void OnlineCentralizedAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
