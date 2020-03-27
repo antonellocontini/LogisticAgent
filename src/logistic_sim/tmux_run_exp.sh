@@ -1,5 +1,6 @@
 #!/bin/bash
 
+USE_KAIROS=true
 SESSION=log_sim
 MAP=icelab_black
 NROBOTS=2
@@ -15,6 +16,10 @@ GEN=file
 DEBUG=false
 MISSIONS_FILE=video.txt
 NRUNS=1
+
+if [ "$USE_KAIROS" = "true" ]; then
+	NROBOTS=1	# only one kairos supported
+fi
 
 function prepare_tmux {
 	n=$(( NROBOTS - 1 ))
@@ -54,7 +59,7 @@ function launch_ros {
 function launch_kairos_sim {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=false gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab.world' x_init_pose_robot_a:=5.44 y_init_pose_robot_a:=3.22 --wait" C-m
+	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab.world' x_init_pose_robot_a:=5.44 y_init_pose_robot_a:=3.22 --wait" C-m
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
 }
@@ -62,7 +67,7 @@ function launch_kairos_sim {
 function launch_kairos_planner_agents {
 	tmux selectw -t $SESSION:1
 	tmux selectp -t $SESSION:1.0
-	tmux send-keys "roslaunch logistic_sim kairos.launch --wait" C-m
+	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG --wait" C-m
 }
 
 function launch_stage {
@@ -150,14 +155,17 @@ function set_footprints {
 
 prepare_tmux
 launch_ros
-# launch_kairos_sim
-# launch_kairos_planner_agents
 
-launch_stage
-launch_robots
-launch_taskplanner
-launch_agents
-set_footprints
+if [ "$USE_KAIROS" = "true" ]; then
+	launch_kairos_sim
+	launch_kairos_planner_agents
+else
+	launch_stage
+	launch_robots
+	launch_taskplanner
+	launch_agents
+	set_footprints
+fi
 date
 tmux -2 attach-session -t $SESSION
 echo ""
