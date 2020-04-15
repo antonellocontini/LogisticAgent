@@ -159,6 +159,7 @@ public:
   }
 
   virtual void init(int argc, char **argv);
+  void set_map_endpoints(ros::NodeHandle &nh);
   void ready();
   virtual void run();
   void readParams(); // read ROS parameters

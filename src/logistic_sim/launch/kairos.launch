@@ -12,6 +12,7 @@
   <arg name="robot_name" default="rbkairos" />
   <arg name="agent_name" default="patrol_rbkairos" />
 
+  <!-- for now included in tmux script -->
   <!-- <include file="$(find rbkairos_sim_bringup)/launch/rbkairos_complete.launch">
     <arg name="launch_rviz" value="false" />
     <arg name="gazebo_world" value="$(find rbkairos_gazebo)/worlds/icelab.world" />
