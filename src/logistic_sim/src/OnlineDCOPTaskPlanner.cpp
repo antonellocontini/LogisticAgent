@@ -1,5 +1,6 @@
 #include "OnlineDCOPTaskPlanner.hpp"
 #include "boost/filesystem.hpp"
+#include "get_graph.hpp"
 
 namespace onlinedcoptaskplanner
 {
@@ -258,8 +259,38 @@ void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
 
 bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res)
 {
-  ROS_INFO_STREAM("TODO CHANGE EDGE CALLBACK");
-  return true;
+  bool result;
+
+  if (msg.remove)
+  {
+    ROS_INFO_STREAM("Requested remotion of edge (" << msg.u << "," << msg.v << ")");
+    result = RemoveEdge(vertex_web, dimension, msg.u, msg.v);
+    ROS_ERROR_STREAM_COND(!result, "Failed remotion!");
+
+    if (result)
+    {
+      ROS_INFO_STREAM("TODO EDGE REMOVAL NOTIFICATION");
+    }
+  }
+  else if (msg.add)
+  {
+    ROS_INFO_STREAM("Requested addition of edge (" << msg.u << "," << msg.v << ")");
+    result = AddEdge(vertex_web, dimension, msg.u, msg.v, msg.cost);
+    ROS_ERROR_STREAM_COND(!result, "Failed addition!");
+
+    if (result)
+    {
+      ROS_INFO_STREAM("TODO EDGE ADDITION NOTIFICATION");
+    }
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Malformed request for ChangeEdge");
+    result = false;
+  }
+
+  res.result = result;
+  return result;
 }
 
 
