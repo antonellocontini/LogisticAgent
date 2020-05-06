@@ -136,7 +136,13 @@ add_library(partitionLib
 ########################################################################################################################
 
 ## Declare a cpp executable 
-add_executable(OnlineAgent src/OnlineAgent.cpp)
+add_executable(OnlineDCOPAgent src/OnlineDCOPAgent.cpp src/OnlineAgent.cpp)
+add_dependencies(OnlineDCOPAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(OnlineDCOPAgent Agent algorithmsLib ${catkin_LIBRARIES})
+
+## Declare a cpp executable 
+add_executable(OnlineAgent src/OnlineAgentMain.cpp src/OnlineAgent.cpp)
 add_dependencies(OnlineAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(OnlineAgent Agent algorithmsLib ${catkin_LIBRARIES})

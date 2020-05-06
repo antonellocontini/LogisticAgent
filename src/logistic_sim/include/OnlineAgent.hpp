@@ -35,29 +35,7 @@ struct st_location
 };
 
 bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_matrix,
-                        const std::vector<unsigned int> &waypoints, const st_location &lhs, const st_location &rhs)
-{
-  // uso la min_hops_matrix come euristica sulla lunghezza del percorso rimanente
-  unsigned int lhs_h = min_hops_matrix[lhs.vertex][waypoints[lhs.waypoint]];
-  unsigned int rhs_h = min_hops_matrix[rhs.vertex][waypoints[rhs.waypoint]];
-  // TEST
-  // std::cout << "[DEBUG]\tVertex: " << rhs.vertex << "\tTime: " << rhs.time
-  //           << "\tWaypoint: " << waypoints[rhs.waypoint]
-  //           << "\tf-value: " << rhs.time + rhs_h << std::endl;
-  if (lhs.time + lhs_h < rhs.time + rhs_h)
-  {
-    return true;
-  }
-  // else if (lhs.time + lhs_h == rhs.time + rhs_h)
-  // {
-  //   if (lhs.waypoint > rhs.waypoint)
-  //   {
-  //     return true;
-  //   }
-  // }
-
-  return false;
-}
+                        const std::vector<unsigned int> &waypoints, const st_location &lhs, const st_location &rhs);
 
 class OnlineAgent : public agent::Agent
 {
