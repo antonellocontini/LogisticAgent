@@ -25,7 +25,7 @@ uint IdentifyVertex (vertex *vertex_web, uint size, double x, double y);
 
 uint GetNumberEdges (vertex *vertex_web, uint dimension);
 
-bool RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v);
+int RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v);
 
 bool AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost);
   

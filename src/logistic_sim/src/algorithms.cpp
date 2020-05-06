@@ -93,6 +93,9 @@ void GetGraphInfo(vertex *vertex_web, uint dimension, const char *graph_file)
   FILE *file;
   file = fopen(graph_file, "r");
 
+  // FILE *debug;
+  // debug = fopen("test-map.graph", "w");
+
   if (file == NULL)
   {
     ROS_INFO("Can not open filename %s", graph_file);
@@ -110,36 +113,48 @@ void GetGraphInfo(vertex *vertex_web, uint dimension, const char *graph_file)
     for (i = 0; i < FIRST_VID - 1; i++)
     {
       r = fscanf(file, "%f", &temp);
+      // fprintf(debug, "%f\n", temp);
     }
+    // fprintf(debug, "\n");
 
     for (i = 0; i < dimension; i++)
     {
 
       r = fscanf(file, "%u", &vertex_web[i].id);
+      // fprintf(debug, "%u\n", vertex_web[i].id);
 
       r = fscanf(file, "%f", &vertex_web[i].x);
+      // fprintf(debug, "%f\n", vertex_web[i].x);
       vertex_web[i].x *= RESOLUTION; //convert to m
       vertex_web[i].x += OFFSET_X;
 
       r = fscanf(file, "%f", &vertex_web[i].y);
+      // fprintf(debug, "%f\n", vertex_web[i].y);
       vertex_web[i].y *= RESOLUTION; //convert to m
       vertex_web[i].y += OFFSET_Y;
 
       r = fscanf(file, "%u", &vertex_web[i].num_neigh);
+      // fprintf(debug, "%u\n", vertex_web[i].num_neigh);
 
       printf("cpoint( pose [%f %f 0 0] name \"point%u\" color \"black\") \n", vertex_web[i].x, vertex_web[i].y, vertex_web[i].id);
 
       for (j = 0; j < vertex_web[i].num_neigh; j++)
       {
         r = fscanf(file, "%u", &vertex_web[i].id_neigh[j]);
+        // fprintf(debug, "%u\n", vertex_web[i].id_neigh[j]);
         r = fscanf(file, "%s", vertex_web[i].dir[j]);
+        // fprintf(debug, "%s\n", vertex_web[i].dir[j]);
         r = fscanf(file, "%u", &vertex_web[i].cost[j]); //can eventually be converted to meters also...
+        // fprintf(debug, "%u\n", vertex_web[i].cost[j]);
       }
+
+      // fprintf(debug, "\n");
     }
   }
 
   // printf("[v=10], x = %f (meters)\n", vertex_web[10].x);
 
+  // fclose(debug);
   fclose(file);
 }
 
@@ -184,15 +199,17 @@ uint GetNumberEdges(vertex *vertex_web, uint dimension)
 }
 
 
-bool RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
+int RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
 {
   // search vertex u
   bool good = false;
   uint u_index;
-  for (uint u_index=0; u_index<dimension && !good; u_index++)
+  for (u_index=0; u_index<dimension && !good; u_index++)
   {
+    // ROS_DEBUG_STREAM("Vertex: " << vertex_web[u_index].id);
     if (vertex_web[u_index].id == u)
     {
+      // ROS_DEBUG_STREAM("Vertex found");
       good = true;
       break;
     }
@@ -201,14 +218,17 @@ bool RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
   if (!good)
   {
     // missing vertex with id u
-    return false;
+    ROS_ERROR_STREAM("Vertex " << u << " does not exists!");
+    return 1;
   }
 
   // search edge (u,v) among vertex u neighbours
   uint i;
   good = false;
+  // ROS_DEBUG_STREAM("# of edges: " << vertex_web[u_index].num_neigh);
   for (i=0; i<vertex_web[u_index].num_neigh && !good; i++)
   {
+    // ROS_DEBUG_STREAM("Edge (" << vertex_web[u_index].id << "," << vertex_web[u_index].id_neigh[i] << ")");
     if (vertex_web[u_index].id_neigh[i] == v)
     {
       good = true;
@@ -220,7 +240,8 @@ bool RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
   // edge is missing
   if (!good)
   {
-    return false;
+    ROS_ERROR_STREAM("Edge (" << u << "," << v << ") does not exists!");
+    return 2;
   }
 
   for (; i<vertex_web[u_index].num_neigh; i++)
@@ -234,11 +255,11 @@ bool RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
     vertex_web[u_index].dir[i][2] = vertex_web[u_index].dir[i+1][2];
   }
 
-  return true;
+  return 0;
 }
 
 
-bool RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
+int RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
 {
   // if (dimension <= u || dimension <= v)
   // {
@@ -246,11 +267,16 @@ bool RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
   //   return false;
   // }
 
-  if (!RemoveEdge_impl(vertex_web, dimension, u, v))
+  ROS_DEBUG_STREAM("Removing forward edge");
+	int result = RemoveEdge_impl(vertex_web, dimension, u, v);
+  if (result != 0)
   {
-    return false;
+    return result;
   }
-  return RemoveEdge_impl(vertex_web, dimension, v, u);
+
+  ROS_DEBUG_STREAM("Removing backward edge");
+  result = RemoveEdge_impl(vertex_web, dimension, v, u);
+  return result;
 }
 
 

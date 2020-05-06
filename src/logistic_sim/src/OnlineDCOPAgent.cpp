@@ -49,11 +49,34 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     next_vertex = current_vertex = initial_vertex;
     goal_success = true;
   }
+  else if (!msg->REMOVED_EDGES.empty())
+  {
+    ROS_INFO_STREAM("TODO HANDLE EDGE REMOVAL");
+    for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
+    {
+      bool result = RemoveEdge(vertex_web, dimension, e.u, e.v);
+      ROS_ERROR_STREAM_COND(!result, "Can't remove edge (" << e.u << "," << e.v << ")");
+      ROS_INFO_STREAM_COND(result, "Edge (" << e.u << "," << e.v << ") removed");
+    }
+
+    if (msg->ID_RECEIVER == TEAM_SIZE - 1)
+    {
+      token.REMOVED_EDGES.clear();
+    }
+  }
+  else if (msg->ALLOCATE)
+  {
+    token_priority_alloc_plan(msg, token);
+  }
   else
   {
-    ROS_INFO_STREAM("TODO DCOP TOKEN");
+    // avanzamento dei robot
+    token_priority_coordination(msg, token);
+    // token_simple_coordination(msg, token);
+    // ROS_INFO_STREAM("TODO DCOP TOKEN");
   }
 
+  ros::Duration(0.03).sleep();
   token_pub.publish(token);
   ros::spinOnce();
 

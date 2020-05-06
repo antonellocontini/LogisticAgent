@@ -1,39 +1,38 @@
 Header      HEADER
 uint32      ID_SENDER
 uint32      ID_RECEIVER
-# flag di stato
-# TODO: unire in un solo campo uint32
+# status flags
 bool        INIT
 bool        ALLOCATE
-bool        CHECK   # controllo validità percorsi
+bool        CHECK   # check path validity
 bool        CALCULATE_PATHS
-bool        NEW_MISSIONS_AVAILABLE  # indica agli agenti che sono disponibili nuove missioni nel token
-bool        GOOD_PATHS  # percorsi contenuti nel token validi
-bool        SHUTDOWN    # termina simulazione (per ora usato solo da Online)
-bool        ALL_MISSIONS_INSERTED   # attivato dal taskplanner quando tutte le missioni sono nel token
-bool        SYNCED_ROBOTS # robot sincronizzati sul goal
+bool        NEW_MISSIONS_AVAILABLE  # to tell agents that new missions are available inside the token
+bool        GOOD_PATHS  # the token paths are good
+bool        SHUTDOWN    # to tell agents to stop simulation
+bool        ALL_MISSIONS_INSERTED   # set by task planner to notify that all missions have been inserted
+bool        SYNCED_ROBOTS # used to check agents synchronization on goal
 
 Mission[]   MISSION
-int32[]     TAKEN_MISSION   # usato da CFree per tenere traccia dell'assegnamento missioni
+int32[]     TAKEN_MISSION   # used by CFree to track assigned missions
 
-# posizioni dei robot nella mappa
+# robots' positions on the map
 float64[]   X_POS
 float64[]   Y_POS
 
-# vertici attuali e successivi dei robot
+# current and next vertices of agents
 uint32[]    CURR_VERTEX
 uint32[]    NEXT_VERTEX
 
-# destinazione corrente di ogni robot
+# current destination of each agent
 uint32[]    CURR_DST
 
-# capacità di carico di ogni robot
+# load capacity of each robot
 uint32[]    CAPACITY
 
-# vertici iniziali dei robot
+# initial vertex of each agent
 uint32[]    INIT_POS
 
-# statistiche varie
+# statistics
 time[]      MISSION_START_TIME
 float32[]   MISSION_CURRENT_DISTANCE
 int32[]     INTERFERENCE_STATUS
@@ -42,16 +41,18 @@ uint32[]    MISSIONS_COMPLETED
 uint32[]    TASKS_COMPLETED
 float32[]   TOTAL_DISTANCE
 
-# campi per GlobalAgent e versioni successive
+
 uint32[]    GOAL_STATUS
 Path[]      TRAILS
 Path[]      NEW_TRAILS
-Path[]      HOME_TRAILS # per separare ritorno a casa dal percorso dei task
+Path[]      HOME_TRAILS # last part of paths, dedicated to home return
 uint32      INIT_POS_INDEX
 bool[]      REACHED_HOME
 int32       ACTIVE_ROBOTS
-bool[]      FAILED_ALLOCATION # per segnalare quali robot hanno fallito l'allocazione del task corrente (solo OnlineAgent)
+bool[]      FAILED_ALLOCATION # keep track of agents that have failed task allocation
 
-# flag per terminazione simulazione
+# end simulation flag
 bool        END_SIMULATION
 
+# vector of edge removed from the last token cycle
+Edge[]      REMOVED_EDGES

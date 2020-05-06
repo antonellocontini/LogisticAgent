@@ -24,8 +24,11 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   token = *msg;
   token.ID_SENDER = TASK_PLANNER_ID;
   token.ID_RECEIVER = 0;
+
+  edges_mutex.lock();
   if (msg->INIT)
   {
+    edges_mutex.unlock();
     token.HEADER.seq = 1;
     CAPACITY = msg->CAPACITY;
     token.INIT = false;
@@ -40,9 +43,20 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
     last_mission_size = 0;
   }
+  else if(removed_edges.size())
+  {
+    // insert removed edges inside token to notify the agents
+    for (const logistic_sim::Edge &e : removed_edges)
+    {
+      token.REMOVED_EDGES.push_back(e);
+    }
+    removed_edges.clear();
+    edges_mutex.unlock();
+  }
   else
   {
-    ROS_INFO_STREAM("TODO DCOP TOKEN");
+    edges_mutex.unlock();
+    // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
 
     // prints remaining tasks
@@ -244,7 +258,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
 
 void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
 {
-  ROS_DEBUG_STREAM("Subscribing to change_edge service");
+  ROS_DEBUG_STREAM("Advertising change_edge service");
   change_edge_service = nh.advertiseService("change_edge", &OnlineDCOPTaskPlanner::change_edge, this);
   if (!change_edge_service)
   {
@@ -257,19 +271,50 @@ void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
 }
 
 
+void OnlineDCOPTaskPlanner::print_graph()
+{
+  std::ofstream test("test-map.graph");
+  for (int i=0; i<dimension; i++)
+  {
+    test << vertex_web[i].id << std::endl;
+    for (int j=0; j<vertex_web[i].num_neigh; j++)
+    {
+      test << "\t(" << vertex_web[i].id << "," << vertex_web[i].id_neigh[j] << ")" << std::endl;
+    }
+  }
+  test.close();
+}
+
 bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res)
 {
-  bool result;
+  int result;
 
   if (msg.remove)
   {
     ROS_INFO_STREAM("Requested remotion of edge (" << msg.u << "," << msg.v << ")");
+    print_graph();
     result = RemoveEdge(vertex_web, dimension, msg.u, msg.v);
-    ROS_ERROR_STREAM_COND(!result, "Failed remotion!");
-
-    if (result)
+    ROS_ERROR_STREAM_COND(result > 0, "Failed remotion!");
+    // ROS_ERROR_STREAM_COND(result == 1, "Can't find vertex " << msg.u);
+    // ROS_ERROR_STREAM_COND(result == 4, "Can't find vertex " << msg.v);
+    // ROS_ERROR_STREAM_COND(result == 2, "Can't find edge (" << msg.u << "," << msg.v << ")");
+    // ROS_ERROR_STREAM_COND(result == 3, "Can't find edge (" << msg.v << "," << msg.u << ")");
+    if (result == 0)
     {
-      ROS_INFO_STREAM("TODO EDGE REMOVAL NOTIFICATION");
+      edges_mutex.lock();
+
+      logistic_sim::Edge e;
+      e.u = msg.u;
+      e.v = msg.v;
+      removed_edges.push_back(e);
+
+      edges_mutex.unlock();
+
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
   else if (msg.add)

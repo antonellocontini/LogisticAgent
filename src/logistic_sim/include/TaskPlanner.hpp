@@ -152,7 +152,7 @@ public:
   virtual std::vector<logistic_sim::Mission> set_partition(const std::vector<logistic_sim::Mission> &ts);
   virtual std::vector<logistic_sim::Path> path_partition(logistic_sim::Token &token);
 
-  void init(int argc, char **argv);
+  virtual void init(int argc, char **argv);
   void run();
 
   virtual void token_callback(const logistic_sim::TokenConstPtr &msg) = 0;
@@ -184,6 +184,7 @@ protected:
   ros::ServiceServer robot_ready_service, add_missions_service;
   void advertise_robot_ready_service(ros::NodeHandle &nh);
   void advertise_add_missions_service(ros::NodeHandle &nh);
+  virtual void advertise_change_edge_service(ros::NodeHandle &nh);  // empty implementation, used by DCOPTaskPlanner
   bool add_missions(logistic_sim::AddMissions::Request &msg, logistic_sim::AddMissions::Response &res);
 
   std::vector<ros::Subscriber> real_pos_sub, amcl_pos_sub;

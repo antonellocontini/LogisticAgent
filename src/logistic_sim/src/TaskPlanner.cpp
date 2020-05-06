@@ -472,6 +472,7 @@ void TaskPlanner::init(int argc, char **argv)
   build_map_graph();  // ONLY CENTRALIZED
   advertise_robot_ready_service(nh);
   advertise_add_missions_service(nh);
+  advertise_change_edge_service(nh);
   initialize_amcl_callbacks(nh);
   generate_missions();
   initialize_stats_structure();
@@ -1010,6 +1011,12 @@ void TaskPlanner::advertise_add_missions_service(ros::NodeHandle &nh)
   ros::spinOnce();
 }
 
+
+void TaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
+{
+
+}
+
 bool TaskPlanner::add_missions(logistic_sim::AddMissions::Request &msg, logistic_sim::AddMissions::Response &res)
 {
   insert_mission_window(msg.MISSION);
@@ -1030,7 +1037,7 @@ void TaskPlanner::amcl_pos_callback(const geometry_msgs::PoseWithCovarianceStamp
                              (msg->pose.pose.position.x - real_pos->pose.pose.position.x) +
                          (msg->pose.pose.position.y - real_pos->pose.pose.position.y) *
                              (msg->pose.pose.position.y - real_pos->pose.pose.position.y));
-  ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
+  // ROS_DEBUG_STREAM("Robot " << id_robot << " position error: " << distance);
   robot_pos_errors[id_robot].push_back(distance);
 }
 
