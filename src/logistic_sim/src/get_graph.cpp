@@ -136,6 +136,137 @@ uint GetNumberEdges(vertex *vertex_web, uint dimension)
   return result;
 }
 
+
+bool RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
+{
+  // search vertex u
+  bool good = false;
+  uint u_index;
+  for (uint u_index=0; u_index<dimension && !good; u_index++)
+  {
+    if (vertex_web[u_index].id == u)
+    {
+      good = true;
+      break;
+    }
+  }
+
+  if (!good)
+  {
+    // missing vertex with id u
+    return false;
+  }
+
+  // search edge (u,v) among vertex u neighbours
+  uint i;
+  good = false;
+  for (i=0; i<vertex_web[u_index].num_neigh && !good; i++)
+  {
+    if (vertex_web[u_index].id_neigh[i] == v)
+    {
+      good = true;
+      vertex_web[u_index].num_neigh--;
+      break;
+    }
+  }
+
+  // edge is missing
+  if (!good)
+  {
+    return false;
+  }
+
+  for (; i<vertex_web[u_index].num_neigh; i++)
+  {
+    vertex_web[u_index].id_neigh[i] = vertex_web[u_index].id_neigh[i+1];
+    vertex_web[u_index].cost[i] = vertex_web[u_index].cost[i+1];
+    vertex_web[u_index].cost_m[i] = vertex_web[u_index].cost_m[i+1];
+    vertex_web[u_index].visited[i] = vertex_web[u_index].visited[i+1];
+    vertex_web[u_index].dir[i][0] = vertex_web[u_index].dir[i+1][0];
+    vertex_web[u_index].dir[i][1] = vertex_web[u_index].dir[i+1][1];
+    vertex_web[u_index].dir[i][2] = vertex_web[u_index].dir[i+1][2];
+  }
+
+  return true;
+}
+
+
+bool RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
+{
+  // if (dimension <= u || dimension <= v)
+  // {
+  //   // invalid vertices ids
+  //   return false;
+  // }
+
+  if (!RemoveEdge_impl(vertex_web, dimension, u, v))
+  {
+    return false;
+  }
+  return RemoveEdge_impl(vertex_web, dimension, v, u);
+}
+
+
+bool AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
+{
+  // search vertex u
+  bool good = false;
+  uint u_index;
+  for (uint u_index=0; u_index<dimension && !good; u_index++)
+  {
+    if (vertex_web[u_index].id == u)
+    {
+      good = true;
+      break;
+    }
+  }
+
+  if (!good)
+  {
+    // missing vertex with id u
+    return false;
+  }
+
+  // search edge (u,v) among vertex u neighbours
+  uint i;
+  for (i=0; i<vertex_web[u_index].num_neigh && good; i++)
+  {
+    if (vertex_web[u_index].id_neigh[i] == v)
+    {
+      good = false;
+      break;
+    }
+  }
+
+  // edge is already present
+  if (!good)
+  {
+    return false;
+  }
+
+  // add edge
+  uint num_neigh = vertex_web[u_index].num_neigh;
+  if (num_neigh > 7)
+  {
+    return false;
+  }
+  vertex_web[u_index].id_neigh[num_neigh] = v;
+  vertex_web[u_index].cost[num_neigh] = cost;
+  vertex_web[u_index].visited[num_neigh] = false;
+  vertex_web[u_index].num_neigh++;
+  return true;
+}
+
+bool AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
+{
+  if (!AddEdge_impl(vertex_web, dimension, u, v, cost))
+  {
+    return false;
+  }
+  return AddEdge_impl(vertex_web, dimension, v, u, cost);
+}
+
+
 //integer to array (itoa for linux c)
 char *itoa(int value, char *str, int radix)
 {

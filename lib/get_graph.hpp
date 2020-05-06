@@ -24,6 +24,10 @@ void GetGraphInfo (vertex *vertex_web, uint dimension, const char* graph_file);
 uint IdentifyVertex (vertex *vertex_web, uint size, double x, double y);
 
 uint GetNumberEdges (vertex *vertex_web, uint dimension);
+
+bool RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v);
+
+bool AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost);
   
 //integer to array (itoa for linux c)
 char* itoa(int value, char* str, int radix);

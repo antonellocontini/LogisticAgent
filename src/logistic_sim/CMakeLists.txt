@@ -66,6 +66,7 @@ add_service_files(
    FILES
    RobotReady.srv
    AddMissions.srv
+   ChangeEdge.srv
 )
 
 ## Generate actions in the 'action' folder
