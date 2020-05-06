@@ -142,8 +142,9 @@ void Agent::init(int argc, char **argv)
     token_sub = nh.subscribe<logistic_sim::Token>("token", 20, boost::bind(&Agent::token_callback, this, _1));
 
     std::cout << "mapname: " << mapname << std::endl;
-    src_vertex = map_src[mapname];
-    dsts_vertex = map_dsts[mapname];
+    // src_vertex = map_src[mapname];
+    // dsts_vertex = map_dsts[mapname];
+    set_map_endpoints(nh);
 
     ROS_INFO_STREAM("Notyfing presence to task planner");
     // notifico la mia presenza al taskplanner
@@ -156,6 +157,45 @@ void Agent::init(int argc, char **argv)
     }
 
     c_print("End of initialization, reading parameters", green, P);
+}
+
+void Agent::set_map_endpoints(ros::NodeHandle &nh)
+{
+  XmlRpc::XmlRpcValue src, dst;
+  if (nh.getParam("/src_vertex", src))
+  {
+    // TODO: single source supported - move to multiple sources!
+    ROS_ASSERT(src.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    XmlRpc::XmlRpcValue v = src[0];
+    ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
+    src_vertex = (int)v;
+    ROS_INFO_STREAM("src_vertex: " << src_vertex);
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Can't read param /src_vertex!!!");
+    ROS_ERROR_STREAM("Currently this parameter is set by task planner launch file");
+    ros::shutdown();
+  }
+
+  if (nh.getParam("/dst_vertex", dst))
+  {
+    ROS_ASSERT(dst.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    dsts_vertex.clear();
+    for (int i = 0; i < dst.size(); i++)
+    {
+      XmlRpc::XmlRpcValue v = dst[i];
+      ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
+      dsts_vertex.push_back((int)v);
+      ROS_INFO_STREAM("dst_vertex: " << (int)v);
+    }
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Can't read param /dst_vertex!!!");
+    ROS_ERROR_STREAM("Currently this parameter is set by task planner launch file");
+    ros::shutdown();
+  }
 }
 
 void Agent::run()

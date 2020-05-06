@@ -1,9 +1,9 @@
 #!/bin/bash
 
-USE_KAIROS=true
+USE_KAIROS=false
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=2
+NROBOTS=1
 INITPOS=default
 ALG=OnlineCentralizedAgent
 LOC=AMCL
@@ -59,7 +59,7 @@ function launch_ros {
 function launch_kairos_sim {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab.world' x_init_pose_robot_a:=5.44 y_init_pose_robot_a:=3.22 --wait" C-m
+	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_black/icelab_black.yaml' gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab.world' x_init_pose_robot_a:=5.44 y_init_pose_robot_a:=3.22 --wait" C-m
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
 }
