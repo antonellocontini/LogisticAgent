@@ -40,30 +40,7 @@ bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_m
 class OnlineAgent : public agent::Agent
 {
 public:
-  ~OnlineAgent()
-  {
-    for (unsigned int i = 0; i < dimension; i++)
-    {
-      for (unsigned int j = 0; j < MAX_TIME; j++)
-      {
-        for (unsigned int k = 0; k < MAX_TIME; k++)
-        {
-          delete[] prev_paths[i][k][j];
-        }
-        delete[] prev_paths[i][j];
-        delete[] path_sizes[i][j];
-        delete[] visited[i][j];
-      }
-
-      delete[] prev_paths[i];
-      delete[] path_sizes[i];
-      delete[] visited[i];
-    }
-    delete[] prev_paths;
-    delete[] path_sizes;
-    delete[] visited;
-    delete[] queue;
-  }
+  ~OnlineAgent();
 
   void init(int argc, char **argv) override;
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;

@@ -3,7 +3,6 @@
 
 namespace onlineagent
 {
-
 bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_matrix,
                         const std::vector<unsigned int> &waypoints, const st_location &lhs, const st_location &rhs)
 {
@@ -29,39 +28,64 @@ bool astar_cmp_function(const std::vector<std::vector<unsigned int>> &min_hops_m
   return false;
 }
 
-void OnlineAgent::allocate_memory()
+OnlineAgent::~OnlineAgent()
+{
+  for (unsigned int i = 0; i < dimension; i++)
   {
-    std::cout << "allocating memory..." << std::endl;
-    std::cout << dimension << " " << MAX_TIME << std::endl;
-    prev_paths = new unsigned int ***[dimension];
-    path_sizes = new unsigned int **[dimension];
-    for (unsigned int i = 0; i < dimension; i++)
+    for (unsigned int j = 0; j < MAX_TIME; j++)
     {
-      prev_paths[i] = new unsigned int **[MAX_TIME];
-      path_sizes[i] = new unsigned int *[MAX_TIME];
-      for (unsigned int j = 0; j < MAX_TIME; j++)
+      for (unsigned int k = 0; k < MAX_TIME; k++)
       {
-        prev_paths[i][j] = new unsigned int *[MAX_WAYPOINTS];
-        path_sizes[i][j] = new unsigned int[MAX_WAYPOINTS];
-        for (unsigned int k = 0; k < MAX_WAYPOINTS; k++)
-        {
-          prev_paths[i][j][k] = new unsigned int[MAX_TIME];
-        }
+        delete[] prev_paths[i][k][j];
       }
+      delete[] prev_paths[i][j];
+      delete[] path_sizes[i][j];
+      delete[] visited[i][j];
     }
 
-    visited = new unsigned int **[dimension];
-    for (unsigned int i = 0; i < dimension; i++)
-    {
-      visited[i] = new unsigned int *[MAX_TIME];
-      for (unsigned int j = 0; j < MAX_TIME; j++)
-      {
-        visited[i][j] = new unsigned int[MAX_WAYPOINTS];
-      }
-    }
-
-    queue = new st_location[MAX_TIME * MAX_TIME];
+    delete[] prev_paths[i];
+    delete[] path_sizes[i];
+    delete[] visited[i];
   }
+  delete[] prev_paths;
+  delete[] path_sizes;
+  delete[] visited;
+  delete[] queue;
+}
+
+void OnlineAgent::allocate_memory()
+{
+  std::cout << "allocating memory..." << std::endl;
+  std::cout << dimension << " " << MAX_TIME << std::endl;
+  prev_paths = new unsigned int ***[dimension];
+  path_sizes = new unsigned int **[dimension];
+  for (unsigned int i = 0; i < dimension; i++)
+  {
+    prev_paths[i] = new unsigned int **[MAX_TIME];
+    path_sizes[i] = new unsigned int *[MAX_TIME];
+    for (unsigned int j = 0; j < MAX_TIME; j++)
+    {
+      prev_paths[i][j] = new unsigned int *[MAX_WAYPOINTS];
+      path_sizes[i][j] = new unsigned int[MAX_WAYPOINTS];
+      for (unsigned int k = 0; k < MAX_WAYPOINTS; k++)
+      {
+        prev_paths[i][j][k] = new unsigned int[MAX_TIME];
+      }
+    }
+  }
+
+  visited = new unsigned int **[dimension];
+  for (unsigned int i = 0; i < dimension; i++)
+  {
+    visited[i] = new unsigned int *[MAX_TIME];
+    for (unsigned int j = 0; j < MAX_TIME; j++)
+    {
+      visited[i][j] = new unsigned int[MAX_WAYPOINTS];
+    }
+  }
+
+  queue = new st_location[MAX_TIME * MAX_TIME];
+}
 
 void OnlineAgent::init(int argc, char **argv)
 {
@@ -100,7 +124,7 @@ void OnlineAgent::init(int argc, char **argv)
   //     else
   //       std::cout << std::setw(3) << min_hops_matrix[i][j] << " ";
   //   }
-  //   std::cout << "\n";      
+  //   std::cout << "\n";
   // }
   // std::cout << std::endl;
 }
@@ -644,8 +668,8 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     }
     waypoints.push_back(initial_vertex);
     auto f = boost::bind(astar_cmp_function, min_hops_matrix, waypoints, _1, _2);
-    std::vector<unsigned int> astar_result = spacetime_dijkstra(robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1,
-                                                                &last_leg, &first_leg, &f);
+    std::vector<unsigned int> astar_result = spacetime_dijkstra(
+        robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg, &f);
     std::cout << "first_leg: ";
     for (unsigned int v : first_leg)
     {
@@ -738,7 +762,7 @@ std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
   std::vector<std::vector<unsigned int>> result(dimension,
                                                 // std::vector<unsigned int>(dimension, 0));
                                                 std::vector<unsigned int>(dimension, infinity));
-  for (unsigned int u=0; u < dimension; u++)
+  for (unsigned int u = 0; u < dimension; u++)
   {
     // self loop is 1 because the robot must wait for the others to do their moves
     result[u][u] = 1;
@@ -748,14 +772,13 @@ std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
     }
   }
 
-  for (unsigned int k=0; k<dimension; k++)
+  for (unsigned int k = 0; k < dimension; k++)
   {
-    for (unsigned int i=0; i<dimension; i++)
+    for (unsigned int i = 0; i < dimension; i++)
     {
-      for (unsigned int j=0; j<dimension; j++)
+      for (unsigned int j = 0; j < dimension; j++)
       {
-        if (result[i][k] != infinity && result[k][j] != infinity &&
-            result[i][j] > result[i][k] + result[k][j])
+        if (result[i][k] != infinity && result[k][j] != infinity && result[i][j] > result[i][k] + result[k][j])
         {
           result[i][j] = result[i][k] + result[k][j];
         }
@@ -765,7 +788,5 @@ std::vector<std::vector<unsigned int>> OnlineAgent::calculate_min_hops_matrix()
 
   return result;
 }
-
-
 
 }  // namespace onlineagent
