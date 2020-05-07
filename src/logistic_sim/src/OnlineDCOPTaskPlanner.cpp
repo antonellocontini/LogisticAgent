@@ -310,10 +310,12 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
 
       edges_mutex.unlock();
 
+      res.result = true;
       return true;
     }
     else
     {
+      res.result = false;
       return false;
     }
   }

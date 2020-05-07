@@ -91,16 +91,8 @@ void OnlineAgent::init(int argc, char **argv)
 {
   Agent::init(argc, argv);
   allocate_memory();
-  map_graph = std::vector<std::vector<unsigned int>>(dimension);
-  for (int i = 0; i < dimension; i++)
-  {
-    for (int j = 0; j < vertex_web[i].num_neigh; j++)
-    {
-      map_graph[i].push_back(vertex_web[i].id_neigh[j]);
-    }
-  }
-
-  min_hops_matrix = calculate_min_hops_matrix();
+  map_graph = build_graph();
+    min_hops_matrix = calculate_min_hops_matrix();
   // TEST
   // unsigned int infinity = std::numeric_limits<unsigned int>::max();
   // std::cout << "    | ";
@@ -752,6 +744,30 @@ void OnlineAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &m
     token.ID_RECEIVER = id_next_robot;
   }
 }
+
+
+void OnlineAgent::update_graph()
+{
+  // for now just rebuild the graph from scratch
+  map_graph = build_graph();
+  min_hops_matrix = calculate_min_hops_matrix();
+}
+
+
+std::vector<std::vector<unsigned int> > OnlineAgent::build_graph()
+{
+  std::vector<std::vector<unsigned int> > result = std::vector<std::vector<unsigned int>>(dimension);
+  for (int i = 0; i < dimension; i++)
+  {
+    for (int j = 0; j < vertex_web[i].num_neigh; j++)
+    {
+      result[i].push_back(vertex_web[i].id_neigh[j]);
+    }
+  }
+
+  return result;
+}
+
 
 /*
  * Floyd-Warshall to find the least number of hops between each pair of vertices
