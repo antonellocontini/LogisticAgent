@@ -313,7 +313,9 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
 
       res.result = true;
 
-      check_conflict_free_property();
+      bool property_validity = check_conflict_free_property();
+      ROS_ERROR_STREAM_COND(!property_validity, "Conflict-free property does not hold anymore!");
+      ROS_INFO_STREAM_COND(property_validity, "Conflict-free property still holds true");
       return true;
     }
     else
@@ -423,25 +425,35 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
   return result;
 }
 
+
 bool OnlineDCOPTaskPlanner::check_conflict_free_property()
 {
-  for (uint v : dst_vertex)
+  std::vector<bool> property_validity(TEAM_SIZE, true);
+  std::vector<uint> task_endpoints = dst_vertex;
+  task_endpoints.push_back(src_vertex);
+  for (uint v : task_endpoints)
   {
     auto result = _check_conflict_free_impl(v);
     ROS_DEBUG_STREAM("Vertex " << v << ":\t");
-    for (bool r : result)
+    for (int i=0; i<TEAM_SIZE; i++)
     {
+      bool r = result[i];
       ROS_DEBUG_STREAM_COND(r, " Y");
       ROS_DEBUG_STREAM_COND(!r, " N");
+      if (!r)
+      {
+        property_validity[i] = false;
+      }
     }
   }
-  auto result = _check_conflict_free_impl(src_vertex);
-  ROS_DEBUG_STREAM("Vertex " << src_vertex << ":\t");
-  for (bool r : result)
+
+
+  for (bool r : property_validity)
   {
-    ROS_DEBUG_STREAM_COND(r, " Y");
-    ROS_DEBUG_STREAM_COND(!r, " N");
+    if (r)
+      return true;
   }
+  return false;
 }
 
 
