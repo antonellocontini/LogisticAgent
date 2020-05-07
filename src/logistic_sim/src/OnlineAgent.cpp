@@ -92,7 +92,7 @@ void OnlineAgent::init(int argc, char **argv)
   Agent::init(argc, argv);
   allocate_memory();
   map_graph = build_graph();
-    min_hops_matrix = calculate_min_hops_matrix();
+  min_hops_matrix = calculate_min_hops_matrix();
   // TEST
   // unsigned int infinity = std::numeric_limits<unsigned int>::max();
   // std::cout << "    | ";

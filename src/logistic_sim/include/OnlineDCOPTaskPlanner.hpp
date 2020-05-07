@@ -21,5 +21,8 @@ protected:
   // edges that must be removed in the next token cycle
   std::vector<logistic_sim::Edge> removed_edges;
   boost::mutex edges_mutex; // used to avoid conflicts with the token thread and the main thread
+
+  std::vector<bool> _check_conflict_free_impl(uint task_endpoint);
+  bool check_conflict_free_property();
 };
 }

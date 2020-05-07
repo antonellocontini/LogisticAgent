@@ -67,11 +67,15 @@ protected:
   const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 150U, MAX_WAYPOINTS = 64U;
   void allocate_memory();
 
+  // update graph and min hop matrix from the basic representation
+  void update_graph();
+
   // adjacency list of the graph, contains only neighbour of vertices, without edge lengths
   std::vector<std::vector<unsigned int>> map_graph, min_hops_matrix;
   bool still = true;
 
-  std::vector<std::vector<unsigned int>> calculate_min_hops_matrix();
+  std::vector<std::vector<unsigned int> > build_graph();
+  std::vector<std::vector<unsigned int> > calculate_min_hops_matrix();
 
   void token_simple_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
   void token_simple_allocation(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);

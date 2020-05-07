@@ -1,6 +1,7 @@
 #include "OnlineDCOPTaskPlanner.hpp"
 #include "boost/filesystem.hpp"
 #include "get_graph.hpp"
+#include <unordered_map>
 
 namespace onlinedcoptaskplanner
 {
@@ -311,6 +312,8 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
       edges_mutex.unlock();
 
       res.result = true;
+
+      check_conflict_free_property();
       return true;
     }
     else
@@ -338,6 +341,107 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
 
   res.result = result;
   return result;
+}
+
+
+struct conflict_free_state
+{
+  uint g, f;
+  int prev;
+
+  conflict_free_state() : g(0), f(0), prev(-1)
+  {
+  }
+
+  bool operator<(const conflict_free_state &other)
+  {
+    if (f < other.f)
+      return true;
+    else if (g > other.g)
+      return true;
+    return false;
+  }
+
+};
+
+// implements tree search but tells which robots can reach a particular vertex from home
+// for now no heuristic
+std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_endpoint)
+{
+  int found_count = 0;
+  std::vector<bool> result(TEAM_SIZE);
+  std::map<uint, conflict_free_state> visited;
+  std::map<uint, conflict_free_state> open;
+
+  conflict_free_state initial_state;
+  initial_state.g = 0;
+  initial_state.f = 0;
+
+  open[task_endpoint] = initial_state;
+
+  while(!open.empty())
+  {
+    auto u_it = open.begin();
+    uint u_id = u_it->first;
+    conflict_free_state u_state = u_it->second;
+    open.erase(u_id);
+    // ROS_DEBUG_STREAM(u_id);
+
+    visited[u_id].f = u_state.f;
+    visited[u_id].g = u_state.g;
+    visited[u_id].prev = u_state.prev;
+
+    // reached home vertex
+    auto it = std::find(home_vertex.begin(), home_vertex.end(), u_id);
+    if (it != home_vertex.end())
+    {
+      int pos = it - home_vertex.begin();
+      // ROS_DEBUG_STREAM(pos);
+      result[pos] = true;
+      found_count++;
+      if (found_count == TEAM_SIZE)
+        return result;
+    }
+    else
+    {
+      // check neighbour states
+      for (int i=0; i<vertex_web[u_id].num_neigh; i++)
+      {
+        uint v_id = vertex_web[u_id].id_neigh[i];
+        if (!visited.count(v_id) && !open.count(v_id))
+        {
+          conflict_free_state v_state;
+          v_state.g = u_state.g + 1;
+          v_state.f = v_state.g;
+          v_state.prev = u_id;
+          open[v_id] = v_state;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+bool OnlineDCOPTaskPlanner::check_conflict_free_property()
+{
+  for (uint v : dst_vertex)
+  {
+    auto result = _check_conflict_free_impl(v);
+    ROS_DEBUG_STREAM("Vertex " << v << ":\t");
+    for (bool r : result)
+    {
+      ROS_DEBUG_STREAM_COND(r, " Y");
+      ROS_DEBUG_STREAM_COND(!r, " N");
+    }
+  }
+  auto result = _check_conflict_free_impl(src_vertex);
+  ROS_DEBUG_STREAM("Vertex " << src_vertex << ":\t");
+  for (bool r : result)
+  {
+    ROS_DEBUG_STREAM_COND(r, " Y");
+    ROS_DEBUG_STREAM_COND(!r, " N");
+  }
 }
 
 

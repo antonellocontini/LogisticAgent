@@ -93,7 +93,9 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
 }
 
+
 }  // namespace onlinedcopagent
+
 
 int main(int argc, char *argv[])
 {

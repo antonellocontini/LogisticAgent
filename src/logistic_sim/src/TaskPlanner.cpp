@@ -962,6 +962,25 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
     ROS_ERROR_STREAM("Can't read param /dst_vertex!!!");
     ros::shutdown();
   }
+
+  // find home endpoints from initial_pos parameter
+  std::vector<double> list;
+  nh.getParam("initial_pos", list);
+
+  if (list.empty())
+  {
+    ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+    ros::shutdown();
+  }
+  // read each agent home coordinates to find their home vertex
+  for (int value = 0; value < TEAM_SIZE; value++)
+  {
+    double home_x = list[2 * value];
+    double home_y = list[2 * value + 1];
+    uint v = IdentifyVertex(vertex_web, dimension, home_x, home_y);
+    home_vertex.push_back(v);
+    // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
+  }
 }
 
 void TaskPlanner::calculate_aggregation_paths()
