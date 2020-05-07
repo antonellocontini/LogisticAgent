@@ -51,58 +51,118 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
   else if (msg->REPAIR)
   {
-    if (msg->HAS_REPAIRED_PATH[ID_ROBOT])
+    if (!msg->REMOVED_EDGES.empty())
     {
-      if (!msg->REMOVED_EDGES.empty())
+      for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
       {
+        int result = RemoveEdge(vertex_web, dimension, e.u, e.v);
+        ROS_ERROR_STREAM_COND(result > 0, "Can't remove edge (" << e.u << "," << e.v << ")");
+        ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") removed");
+        update_graph();
+      }
+
+      // last robot removes the edges from the token
+      if (msg->ID_RECEIVER == TEAM_SIZE - 1)
+      {
+        token.REMOVED_EDGES.clear();
+        token.REPAIR = false;
+        token.SINGLE_PLAN_REPAIR = true;
+      }
+
+      // check if current path is good, if it is, no need to replan
+      bool good_path = true;
+      const auto &trail = msg->TRAILS[ID_ROBOT].PATH;
+      for (int i = 1; i < trail.size() && good_path; i++)
+      {
+        uint u = trail[i - 1], v = trail[i];
         for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
         {
-          int result = RemoveEdge(vertex_web, dimension, e.u, e.v);
-          ROS_ERROR_STREAM_COND(result > 0, "Can't remove edge (" << e.u << "," << e.v << ")");
-          ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") removed");
-          update_graph();
-        }
-
-        // last robot removes the edges from the token
-        if (msg->ID_RECEIVER == TEAM_SIZE - 1)
-        {
-          token.REMOVED_EDGES.clear();
-          token.REPAIR = true;
-        }
-
-        // check if current path is good, if it is, no need to replan
-        bool good_path = true;
-        const auto &trail = msg->TRAILS[ID_ROBOT].PATH;
-        for (int i=1; i<trail.size() && good_path; i++)
-        {
-          uint u = trail[i-1], v = trail[i];
-          for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
+          if (u == e.u && v == e.v)
           {
-            if (u == e.u && v == e.v)
-            {
-              good_path = false;
-            }
-          }
-        }
-
-        if (good_path)
-        {
-          token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
-        }
-        else
-        {
-          // path is not good, try repair
-          try
-          {
-
-          }
-          catch (std::string &e)
-          {
-            ROS_INFO_STREAM("Can't find a valid path for repair");
+            good_path = false;
           }
         }
       }
+
+      if (good_path)
+      {
+        token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+      }
+      else
+      {
+        // delete path from token and return to current vertex
+        token.TRAILS[ID_ROBOT].PATH = { current_vertex };
+        token.HOME_TRAILS[ID_ROBOT].PATH.clear();
+        sendGoal(current_vertex);
+      }
     }
+  }
+  else if (msg->SINGLE_PLAN_REPAIR)
+  {
+    // path is not good, try repair
+    if (!msg->HAS_REPAIRED_PATH[ID_ROBOT])
+    {
+      // merge task path with return to home path
+      std::vector<logistic_sim::Path> robot_paths = token.TRAILS;
+      for (int i = 0; i < TEAM_SIZE; i++)
+      {
+        robot_paths[i].PATH.insert(robot_paths[i].PATH.end(), token.HOME_TRAILS[i].PATH.begin(),
+                                   token.HOME_TRAILS[i].PATH.end());
+      }
+
+      try
+      {
+        std::vector<unsigned int> last_leg, first_leg;  // this will contain the path, splitted in two sections
+        std::vector<uint> waypoints;
+        waypoints.push_back(current_vertex);
+        for (uint v : active_waypoints)
+        {
+          waypoints.push_back(v);
+        }
+
+        // calculate path
+        plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
+        // code after previous call execute only if plan is successful
+        token.SINGLE_PLAN_REPAIR_PROGRESS = true;
+        token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+      }
+      catch (std::string &e)
+      {
+        ROS_INFO_STREAM("Can't find a valid path for repair");
+      }
+    }
+
+    // last robot checks if there has been progress
+    if (ID_ROBOT == TEAM_SIZE - 1)
+    {
+      if (token.SINGLE_PLAN_REPAIR_PROGRESS)
+      {
+        bool good = true;
+        for (bool g : token.HAS_REPAIRED_PATH)
+        {
+          if (!g)
+          {
+            good = false;
+            break;
+          }
+        }
+
+        // all have planned, proceed with execution
+        if (good)
+        {
+          token.SINGLE_PLAN_REPAIR = false;
+        }
+      }
+      else
+      {
+        token.SINGLE_PLAN_REPAIR = false;
+        token.MULTI_PLAN_REPAIR = true;
+      }
+    }
+  }
+  else if (msg->MULTI_PLAN_REPAIR)
+  {
+    ROS_INFO_STREAM("TODO MULTI-ROBOT REPAIR PHASE");
   }
   else if (msg->ALLOCATE)
   {
@@ -112,8 +172,6 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   {
     // avanzamento dei robot
     token_priority_coordination(msg, token);
-    // token_simple_coordination(msg, token);
-    // ROS_INFO_STREAM("TODO DCOP TOKEN");
   }
 
   ros::Duration(0.03).sleep();
@@ -126,7 +184,6 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     ros::shutdown();
   }
 }
-
 
 void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
@@ -148,7 +205,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
   if (goal_success)
   {
     // check if a waypoint has been reached, for waypoint book-keeping
-    if (next_vertex == active_waypoints.front())
+    if (!active_waypoints.empty() && next_vertex == active_waypoints.front())
     {
       active_waypoints.pop_front();
     }
@@ -269,6 +326,45 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
   token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
 }
 
+void OnlineDCOPAgent::plan_and_update_token(const std::vector<uint> &waypoints,
+                                            std::vector<logistic_sim::Path> &robot_paths, logistic_sim::Token &token,
+                                            std::vector<unsigned int> &first_leg, std::vector<unsigned int> &last_leg)
+{
+  auto f = boost::bind(onlineagent::astar_cmp_function, min_hops_matrix, waypoints, _1, _2);
+  std::vector<unsigned int> astar_result = spacetime_dijkstra(
+      robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg, &f);
+
+  // update active waypoints
+  if (!active_waypoints.empty())
+  {
+    // the last waypoint is the home, but new tasks have been inserted
+    active_waypoints.pop_back();
+  }
+  for (int i = 1; i < waypoints.size(); i++)
+  {
+    active_waypoints.push_back(waypoints[i]);
+  }
+
+  std::cout << "first_leg: ";
+  for (unsigned int v : first_leg)
+  {
+    std::cout << v << " ";
+  }
+  std::cout << "\nlast_leg: ";
+  for (unsigned int v : last_leg)
+  {
+    std::cout << v << " ";
+  }
+  std::cout << std::endl;
+  token.TRAILS[ID_ROBOT].PATH.pop_back();
+  token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), first_leg.begin(), first_leg.end());
+  token.HOME_TRAILS[ID_ROBOT].PATH = last_leg;
+
+  // update task + home path (to find who has the shortest one between all robots)
+  robot_paths[ID_ROBOT].PATH = token.TRAILS[ID_ROBOT].PATH;
+  robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(),
+                                    token.HOME_TRAILS[ID_ROBOT].PATH.end());
+}
 
 void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
@@ -306,40 +402,7 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
       waypoints.push_back(dst);
     }
     waypoints.push_back(initial_vertex);
-    auto f = boost::bind(onlineagent::astar_cmp_function, min_hops_matrix, waypoints, _1, _2);
-    std::vector<unsigned int> astar_result = spacetime_dijkstra(
-        robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg, &f);
-
-    // update active waypoints
-    if (!active_waypoints.empty())
-    {
-      // the last waypoint is the home, but new tasks have been inserted
-      active_waypoints.pop_back();
-    }
-    for (int i=1; i<waypoints.size(); i++)
-    {
-      active_waypoints.push_back(waypoints[i]);
-    }
-
-    std::cout << "first_leg: ";
-    for (unsigned int v : first_leg)
-    {
-      std::cout << v << " ";
-    }
-    std::cout << "\nlast_leg: ";
-    for (unsigned int v : last_leg)
-    {
-      std::cout << v << " ";
-    }
-    std::cout << std::endl;
-    token.TRAILS[ID_ROBOT].PATH.pop_back();
-    token.TRAILS[ID_ROBOT].PATH.insert(token.TRAILS[ID_ROBOT].PATH.end(), first_leg.begin(), first_leg.end());
-    token.HOME_TRAILS[ID_ROBOT].PATH = last_leg;
-
-    // update task + home path (to find who has the shortest one between all robots)
-    robot_paths[ID_ROBOT].PATH = token.TRAILS[ID_ROBOT].PATH;
-    robot_paths[ID_ROBOT].PATH.insert(robot_paths[ID_ROBOT].PATH.end(), token.HOME_TRAILS[ID_ROBOT].PATH.begin(),
-                                      token.HOME_TRAILS[ID_ROBOT].PATH.end());
+    plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
 
     // update token statistics
     token.MISSIONS_COMPLETED[ID_ROBOT]++;
@@ -405,9 +468,7 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
   }
 }
 
-
 }  // namespace onlinedcopagent
-
 
 int main(int argc, char *argv[])
 {

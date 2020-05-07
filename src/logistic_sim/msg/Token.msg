@@ -11,7 +11,10 @@ bool        GOOD_PATHS  # the token paths are good
 bool        SHUTDOWN    # to tell agents to stop simulation
 bool        ALL_MISSIONS_INSERTED   # set by task planner to notify that all missions have been inserted
 bool        SYNCED_ROBOTS # used to check agents synchronization on goal
-bool        REPAIR
+bool        REPAIR  # start of the repair phase
+bool        SINGLE_PLAN_REPAIR  # single robot repair phase
+bool        SINGLE_PLAN_REPAIR_PROGRESS # tells if at least a robot managed to plan in this token cycle
+bool        MULTI_PLAN_REPAIR   # multi-robot plan repair phase
 
 Mission[]   MISSION
 int32[]     TAKEN_MISSION   # used by CFree to track assigned missions
