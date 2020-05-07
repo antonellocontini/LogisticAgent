@@ -57,3 +57,5 @@ bool        END_SIMULATION
 
 # vector of edge removed from the last token cycle
 Edge[]      REMOVED_EDGES
+# vector that tells whether robots have repaired their paths
+bool[]      HAS_REPAIRED_PATH

@@ -53,6 +53,17 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     }
     removed_edges.clear();
     edges_mutex.unlock();
+
+    bool property_validity = check_conflict_free_property();
+    ROS_ERROR_STREAM_COND(!property_validity, "Conflict-free property does not hold anymore!");
+    ROS_INFO_STREAM_COND(property_validity, "Conflict-free property still holds true");
+
+    token.REPAIR = true;
+    token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, false);
+  }
+  else if (msg->REPAIR)
+  {
+    ROS_DEBUG_STREAM("Waiting for agents to repair their paths...");
   }
   else
   {
@@ -312,10 +323,6 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
       edges_mutex.unlock();
 
       res.result = true;
-
-      bool property_validity = check_conflict_free_property();
-      ROS_ERROR_STREAM_COND(!property_validity, "Conflict-free property does not hold anymore!");
-      ROS_INFO_STREAM_COND(property_validity, "Conflict-free property still holds true");
       return true;
     }
     else

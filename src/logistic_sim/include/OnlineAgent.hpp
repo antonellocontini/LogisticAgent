@@ -81,8 +81,8 @@ protected:
   void token_simple_allocation(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
   void token_simple_planning(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
 
-  void token_priority_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
-  void token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+  virtual void token_priority_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+  virtual void token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
 };
 
 }  // namespace onlineagent
