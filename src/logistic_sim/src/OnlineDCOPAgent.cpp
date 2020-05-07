@@ -54,11 +54,12 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     ROS_INFO_STREAM("TODO HANDLE EDGE REMOVAL");
     for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
     {
-      bool result = RemoveEdge(vertex_web, dimension, e.u, e.v);
-      ROS_ERROR_STREAM_COND(!result, "Can't remove edge (" << e.u << "," << e.v << ")");
-      ROS_INFO_STREAM_COND(result, "Edge (" << e.u << "," << e.v << ") removed");
+      int result = RemoveEdge(vertex_web, dimension, e.u, e.v);
+      ROS_ERROR_STREAM_COND(result > 0, "Can't remove edge (" << e.u << "," << e.v << ")");
+      ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") removed");
     }
 
+    // last robot removes the edges from the token
     if (msg->ID_RECEIVER == TEAM_SIZE - 1)
     {
       token.REMOVED_EDGES.clear();
