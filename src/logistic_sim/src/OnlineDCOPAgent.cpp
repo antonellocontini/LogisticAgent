@@ -1,5 +1,18 @@
 #include "OnlineDCOPAgent.hpp"
 
+template<class T>
+bool check_vector_equal(const std::vector<T> &v, const T &val)
+{
+  for (const T &x : v)
+  {
+    if (x != val)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 namespace onlinedcopagent
 {
 void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -67,11 +80,14 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.REMOVED_EDGES.clear();
         token.REPAIR = false;
         token.SINGLE_PLAN_REPAIR = true;
+        // reset GOAL_STATUS vector
+        token.GOAL_STATUS = std::vector<uint>(TEAM_SIZE, msg->GOAL_STATUS[0]);
       }
 
       // check if current path is good, if it is, no need to replan
       bool good_path = true;
-      const auto &trail = msg->TRAILS[ID_ROBOT].PATH;
+      std::vector<uint> trail = msg->TRAILS[ID_ROBOT].PATH;
+      trail.insert(trail.end(), msg->HOME_TRAILS[ID_ROBOT].PATH.begin(), msg->HOME_TRAILS[ID_ROBOT].PATH.end());
       for (int i = 1; i < trail.size() && good_path; i++)
       {
         uint u = trail[i - 1], v = trail[i];
@@ -87,9 +103,11 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       if (good_path)
       {
         token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+        ROS_INFO_STREAM("My path is still good, I'm keeping it!");
       }
       else
       {
+        ROS_WARN_STREAM("Path unviable, need to replan");
         // delete path from token and return to current vertex
         token.TRAILS[ID_ROBOT].PATH = { current_vertex };
         token.HOME_TRAILS[ID_ROBOT].PATH.clear();
@@ -125,6 +143,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // code after previous call execute only if plan is successful
         token.SINGLE_PLAN_REPAIR_PROGRESS = true;
         token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+        ROS_INFO_STREAM("Plan repaired successfully!");
       }
       catch (std::string &e)
       {
@@ -135,28 +154,19 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     // last robot checks if there has been progress
     if (ID_ROBOT == TEAM_SIZE - 1)
     {
-      if (token.SINGLE_PLAN_REPAIR_PROGRESS)
+      bool good = check_vector_equal<uint8_t>(token.HAS_REPAIRED_PATH, true);
+      if (good)
       {
-        bool good = true;
-        for (bool g : token.HAS_REPAIRED_PATH)
-        {
-          if (!g)
-          {
-            good = false;
-            break;
-          }
-        }
-
-        // all have planned, proceed with execution
-        if (good)
-        {
-          token.SINGLE_PLAN_REPAIR = false;
-        }
+        token.SINGLE_PLAN_REPAIR = false;
       }
       else
       {
-        token.SINGLE_PLAN_REPAIR = false;
-        token.MULTI_PLAN_REPAIR = true;
+        if (!token.SINGLE_PLAN_REPAIR_PROGRESS)
+        {
+          token.SINGLE_PLAN_REPAIR = false;
+          token.MULTI_PLAN_REPAIR = true;
+          ROS_WARN_STREAM("Some robots are in deadlock, going to multi-robot repair phase");
+        }
       }
     }
   }
