@@ -15,6 +15,7 @@ bool        REPAIR  # start of the repair phase
 bool        SINGLE_PLAN_REPAIR  # single robot repair phase
 bool        SINGLE_PLAN_REPAIR_PROGRESS # tells if at least a robot managed to plan in this token cycle
 bool        MULTI_PLAN_REPAIR   # multi-robot plan repair phase
+bool        DCOP_PHASE          # dcop execution
 
 Mission[]   MISSION
 int32[]     TAKEN_MISSION   # used by CFree to track assigned missions

@@ -68,6 +68,8 @@ add_service_files(
    RobotReady.srv
    AddMissions.srv
    ChangeEdge.srv
+   UtilDPOP.srv
+   ValueDPOP.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -135,13 +137,17 @@ add_library(partitionLib
   src/partition.cpp
 )
 
+add_library(mapdLib
+  src/mapd.cpp
+)
+
 ########################################################################################################################
 
 ## Declare a cpp executable 
 add_executable(OnlineDCOPAgent src/OnlineDCOPAgent.cpp src/OnlineAgent.cpp)
 add_dependencies(OnlineDCOPAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
-target_link_libraries(OnlineDCOPAgent Agent algorithmsLib ${catkin_LIBRARIES})
+target_link_libraries(OnlineDCOPAgent Agent algorithmsLib mapdLib ${catkin_LIBRARIES})
 
 ## Declare a cpp executable 
 add_executable(OnlineAgent src/OnlineAgentMain.cpp src/OnlineAgent.cpp)

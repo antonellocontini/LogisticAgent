@@ -1,6 +1,6 @@
 #include "OnlineDCOPAgent.hpp"
 
-template<class T>
+template <class T>
 bool check_vector_equal(const std::vector<T> &v, const T &val)
 {
   for (const T &x : v)
@@ -15,6 +15,17 @@ bool check_vector_equal(const std::vector<T> &v, const T &val)
 
 namespace onlinedcopagent
 {
+
+
+void OnlineDCOPAgent::init(int argc, char **argv)
+{
+  onlineagent::OnlineAgent::init(argc, argv);
+  std::string s = "patrol_robot" + std::to_string(ID_ROBOT);
+  ros::NodeHandle nh(s);
+  dpop_util_msg_service = nh.advertiseService("dpop_util", &OnlineDCOPAgent::dpop_util_message_handler, this);
+  dpop_value_msg_service = nh.advertiseService("dpop_value", &OnlineDCOPAgent::dpop_value_message_handler, this);
+}
+
 void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
   if (msg->ID_RECEIVER != ID_ROBOT)
@@ -173,6 +184,58 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   else if (msg->MULTI_PLAN_REPAIR)
   {
     ROS_INFO_STREAM("TODO MULTI-ROBOT REPAIR PHASE");
+
+    // find parents and children
+    // because the constraint graph is a clique and each robot has a fixed id
+    // we can use a specific tree and each robot can know its parent and children
+    // without actually executing the distributed DFS
+    bool first_child = true;
+    for (uint i = ID_ROBOT + 1; i < msg->HAS_REPAIRED_PATH.size(); i++)
+    {
+      if (!msg->HAS_REPAIRED_PATH[i])
+      {
+        if (first_child)
+        {
+          tree_data.children.push_back(i);
+          first_child = false;
+        }
+        else
+        {
+          tree_data.pseudo_children.push_back(i);
+        }
+      }
+    }
+
+    bool first_parent = true;
+    for (uint i = ID_ROBOT - 1; i >= 0; i--)
+    {
+      if (!msg->HAS_REPAIRED_PATH[i])
+      {
+        if (first_parent)
+        {
+          tree_data.parent = i;
+          first_parent = false;
+        }
+        else
+        {
+          tree_data.pseudo_parents.push_back(i);
+        }
+      }
+    }
+
+    if (ID_ROBOT == TEAM_SIZE - 1)
+    {
+      token.MULTI_PLAN_REPAIR = false;
+      token.DCOP_PHASE = true;
+    }
+  }
+  else if (msg->DCOP_PHASE)
+  {
+    // first agent keeps the tree and insert the resulting paths inside the token
+    if (ID_ROBOT == 0)
+    {
+
+    }
   }
   else if (msg->ALLOCATE)
   {
@@ -476,6 +539,18 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
 
     token.ID_RECEIVER = id_next_robot;
   }
+}
+
+
+bool OnlineDCOPAgent::dpop_util_message_handler(logistic_sim::UtilDPOP::Request &msg, logistic_sim::UtilDPOP::Response &res)
+{
+
+}
+
+
+bool OnlineDCOPAgent::dpop_value_message_handler(logistic_sim::ValueDPOP::Request &msg, logistic_sim::ValueDPOP::Response &res)
+{
+
 }
 
 }  // namespace onlinedcopagent
