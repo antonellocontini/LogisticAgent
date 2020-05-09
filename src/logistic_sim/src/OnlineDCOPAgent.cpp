@@ -68,6 +68,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token.REACHED_HOME.push_back(false);
     token.FAILED_ALLOCATION.push_back(false);
     token.ACTIVE_ROBOTS = TEAM_SIZE;
+    token.ROBOT_WAYPOINTS.push_back(logistic_sim::Waypoints());
 
     initialize = false;
     next_vertex = current_vertex = initial_vertex;
@@ -139,10 +140,10 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
                                    token.HOME_TRAILS[i].PATH.end());
       }
 
+      std::vector<uint> waypoints;
       try
       {
         std::vector<unsigned int> last_leg, first_leg;  // this will contain the path, splitted in two sections
-        std::vector<uint> waypoints;
         waypoints.push_back(current_vertex);
         for (uint v : active_waypoints)
         {
@@ -159,6 +160,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       catch (std::string &e)
       {
         ROS_INFO_STREAM("Can't find a valid path for repair");
+        token.ROBOT_WAYPOINTS[ID_ROBOT].VERTICES = waypoints;
       }
     }
 
@@ -227,6 +229,26 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     {
       token.MULTI_PLAN_REPAIR = false;
       token.DCOP_PHASE = true;
+    }
+
+    // only first robot keeps mapd tree
+    // TODO: sbagliato, devo trovare il primo tra quelli che hanno bisogno di mapd (cercare in vettore HAS_REPAIRED_PATH...)
+    if (ID_ROBOT == 0)
+    {
+      search_tree = std::move(std::unique_ptr<mapd::mapd_search_tree>(new mapd::mapd_search_tree(map_graph)));
+      std::vector<uint> configuration, waypoints_indices, waypoints_number;
+      for (int i=0; i<TEAM_SIZE; i++)
+      {
+        if (!msg->HAS_REPAIRED_PATH[i])
+        {
+          configuration.push_back(msg->TRAILS[i].PATH[0]);
+          waypoints_indices.push_back(0);
+          waypoints_number.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES.size());
+        }
+      }
+      mapd::mapd_state initial_state(configuration, waypoints_indices);
+      uint h_value = 0; // TODO: inserire euristica
+      search_tree->add_to_open(initial_state.get_index_notation(map_graph.size(), waypoints_number), 0, h_value);
     }
   }
   else if (msg->DCOP_PHASE)

@@ -59,6 +59,8 @@ bool[]      FAILED_ALLOCATION # keep track of agents that have failed task alloc
 # end simulation flag
 bool        END_SIMULATION
 
+# used for MAPD search
+Waypoints[] ROBOT_WAYPOINTS
 # vector of edge removed from the last token cycle
 Edge[]      REMOVED_EDGES
 # vector that tells whether robots have repaired their paths

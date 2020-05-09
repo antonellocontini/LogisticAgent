@@ -48,6 +48,7 @@ class mapd_search_tree
 public:
   mapd_search_tree(const std::vector<std::vector<unsigned int> > &graph);
   void add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value, uint64_t prev_state);
+  void add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value);
   uint64_t get_next_state() const;
   void pop_next_state();
   void set_state_to_visited(uint64_t state);

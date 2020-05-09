@@ -15,9 +15,15 @@ mapd_search_tree::mapd_search_tree(const std::vector<std::vector<unsigned int> >
 
 void mapd_search_tree::add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value, uint64_t prev_state)
 {
+  prev[state] = prev_state;
+  add_to_open(state, g_value, f_value);
+}
+
+
+void mapd_search_tree::add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value)
+{
   g[state] = g_value;
   f[state] = f_value;
-  prev[state] = prev_state;
   open[state] = f_value;
 }
 

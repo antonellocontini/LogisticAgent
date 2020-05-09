@@ -2,6 +2,8 @@
 #include "OnlineAgent.hpp"
 #include "logistic_sim/UtilDPOP.h"
 #include "logistic_sim/ValueDPOP.h"
+#include "mapd.hpp"
+#include <memory>
 
 namespace onlinedcopagent
 {
@@ -32,5 +34,6 @@ protected:
   };
 
   pseudotree_node tree_data;
+  std::unique_ptr<mapd::mapd_search_tree> search_tree;
 };
 }

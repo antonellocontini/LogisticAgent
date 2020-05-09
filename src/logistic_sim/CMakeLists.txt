@@ -60,6 +60,7 @@ add_message_files(
   Token.msg
   Mission.msg
   Path.msg
+  Waypoints.msg
 )
 
 ## Generate services in the 'srv' folder
