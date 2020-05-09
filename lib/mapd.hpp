@@ -20,7 +20,17 @@ struct mapd_state
 
   // produce an unique integer id, given the number of vertices in the graph and the number of waypoints per robot
   // this is useful to uniquely identify a state inside map and unordered_map data structures
-  uint64_t get_index_notation(unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number);
+  uint64_t get_index_notation(unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number) const;
+
+  // use the graph in form of adjacency list and the waypoints to enumerate all the neighbours of the current state
+  // does not check for conflicting states!!!
+  std::vector<mapd_state> get_neigh(const std::vector<std::vector<unsigned int> > &gr, const std::vector<std::vector<unsigned int> > &waypoints) const;
+  std::vector<uint64_t> get_neigh_index_notation(const std::vector<std::vector<unsigned int> > &gr, const std::vector<std::vector<unsigned int> > &waypoints) const;
+  void _get_neigh_impl(const std::vector<std::vector<unsigned int> > &gr,
+                        const std::vector<std::vector<unsigned int> > &waypoints,
+                        std::vector<mapd_state> &result,
+                        mapd_state &temp_state,
+                        unsigned int robot_i) const;
 };
 
 }

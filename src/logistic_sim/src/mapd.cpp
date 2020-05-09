@@ -44,7 +44,7 @@ mapd_state::mapd_state(unsigned int index, unsigned int vertices_number, const s
 }
 
 
-uint64_t mapd_state::get_index_notation(unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number)
+uint64_t mapd_state::get_index_notation(unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number) const
 {
   uint64_t index = 0;
   int robots_number = configuration.size();
@@ -62,6 +62,67 @@ uint64_t mapd_state::get_index_notation(unsigned int vertices_number, const std:
   }
 
   return index;
+}
+
+void mapd_state::_get_neigh_impl(const std::vector<std::vector<unsigned int> > &gr,
+                                  const std::vector<std::vector<unsigned int> > &waypoints,
+                                  std::vector<mapd_state> &result,
+                                  mapd_state &temp_state,
+                                  unsigned int robot_i) const
+{
+  int robots_number = configuration.size();
+  std::vector<unsigned int> near_vertices = {configuration[robot_i]};
+  near_vertices.insert(near_vertices.end(), gr[robot_i].begin(), gr[robot_i].end());
+  for (unsigned int v : near_vertices)
+  {
+    temp_state.configuration[robot_i] = v;
+    unsigned int next_waypoint = waypoints[robot_i][waypoint_indices[robot_i]];
+    if (v == next_waypoint && waypoint_indices[robot_i] < waypoints[robot_i].size() - 1)
+    {
+      temp_state.waypoint_indices[robot_i] = waypoint_indices[robot_i] + 1;
+    }
+    else
+    {
+      temp_state.waypoint_indices[robot_i] = waypoint_indices[robot_i];
+    }
+    
+    if (robot_i == robots_number - 1)
+    {
+      result.push_back(temp_state);
+    }
+    else
+    {
+      _get_neigh_impl(gr, waypoints, result, temp_state, robot_i+1);
+    }
+    
+  }
+}
+
+
+std::vector<mapd_state> mapd_state::get_neigh(const std::vector<std::vector<unsigned int> > &gr, const std::vector<std::vector<unsigned int> > &waypoints) const
+{
+  int robots_number = configuration.size();
+  std::vector<mapd_state> result;
+  mapd_state temp_state(*this);
+  _get_neigh_impl(gr, waypoints, result, temp_state, 0);
+  return result;
+}
+
+
+std::vector<uint64_t> mapd_state::get_neigh_index_notation(const std::vector<std::vector<unsigned int> > &gr, const std::vector<std::vector<unsigned int> > &waypoints) const
+{
+  std::vector<uint64_t> result;
+  std::vector<unsigned int> waypoints_number;
+  for (const auto &x : waypoints)
+  {
+    waypoints_number.push_back(x.size());
+  }
+  for (const mapd_state &x : get_neigh(gr, waypoints))
+  {
+    result.push_back(x.get_index_notation(gr.size(), waypoints_number));
+  }
+
+  return result;
 }
 
 }
