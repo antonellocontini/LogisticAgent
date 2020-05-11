@@ -15,7 +15,8 @@ bool        REPAIR  # start of the repair phase
 bool        SINGLE_PLAN_REPAIR  # single robot repair phase
 bool        SINGLE_PLAN_REPAIR_PROGRESS # tells if at least a robot managed to plan in this token cycle
 bool        MULTI_PLAN_REPAIR   # multi-robot plan repair phase
-bool        DCOP_PHASE          # dcop execution
+bool        DCOP_UTIL_PHASE          # dcop util phase execution
+bool        DCOP_VALUE_PHASE
 
 Mission[]   MISSION
 int32[]     TAKEN_MISSION   # used by CFree to track assigned missions
@@ -60,6 +61,7 @@ bool[]      FAILED_ALLOCATION # keep track of agents that have failed task alloc
 bool        END_SIMULATION
 
 # used for MAPD search
+MAPDState   CURRENT_MAPD_STATE
 Waypoints[] ROBOT_WAYPOINTS
 # vector of edge removed from the last token cycle
 Edge[]      REMOVED_EDGES

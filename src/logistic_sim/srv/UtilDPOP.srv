@@ -1,3 +1,4 @@
-bool test
+uint32[]            VARIABLE_ORDER
+UtilAssignment[]    UTILITY_FUNCTION
 ---
-bool result
+bool RESULT

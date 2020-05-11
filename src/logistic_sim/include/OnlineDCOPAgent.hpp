@@ -47,5 +47,8 @@ protected:
 
   bool is_dcop_root();
   int search_dcop_root_agent_id(const logistic_sim::Token &token);
+
+  bool is_dcop_leaf();
+  bool done_util_phase = false;
 };
 }

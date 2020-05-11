@@ -228,7 +228,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
             std::string sn = "/patrol_robot" + std::to_string(i);
             ros::NodeHandle nh(sn);
             dpop_util_parent = nh.serviceClient<logistic_sim::UtilDPOP>(sn);
-            
+
             tree_data->parent = i;
             first_parent = false;
           }
@@ -247,11 +247,10 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (ID_ROBOT == TEAM_SIZE - 1)
     {
       token.MULTI_PLAN_REPAIR = false;
-      token.DCOP_PHASE = true;
+      token.DCOP_UTIL_PHASE = true;
     }
 
     // only first robot keeps mapd tree
-    // TODO: sbagliato, devo trovare il primo tra quelli che hanno bisogno di mapd (radice dello pseudotree)
     if (is_dcop_root())
     {
       search_tree = std::move(std::unique_ptr<mapd::mapd_search_tree>(new mapd::mapd_search_tree(map_graph)));
@@ -268,9 +267,26 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       mapd::mapd_state initial_state(configuration, waypoints_indices);
       uint h_value = 0; // TODO: inserire euristica
       search_tree->add_to_open(initial_state.get_index_notation(map_graph.size(), waypoints_number), 0, h_value);
+      token.CURRENT_MAPD_STATE.CONFIGURATION = initial_state.configuration;
+      token.CURRENT_MAPD_STATE.WAYPOINTS_INDICES = initial_state.waypoint_indices;
     }
   }
-  else if (msg->DCOP_PHASE)
+  else if (msg->DCOP_UTIL_PHASE)
+  {
+    if (is_dcop_leaf() && !done_util_phase)  // leafs start util phase
+    {
+      // build utility function considering parent and pseudo-parents
+
+      done_util_phase = true;
+    }
+
+    if (is_dcop_root() && done_util_phase)
+    {
+      token.DCOP_UTIL_PHASE = false;
+      token.DCOP_VALUE_PHASE = true;
+    }
+  }
+  else if (msg->DCOP_VALUE_PHASE)
   {
     // dpop root keeps the tree and insert the resulting paths inside the token
     if (is_dcop_root())
@@ -609,13 +625,24 @@ int OnlineDCOPAgent::search_dcop_root_agent_id(const logistic_sim::Token &token)
 {
   for (int i=0; i<TEAM_SIZE; i++)
   {
-    if (token.DCOP_PHASE && token.HAS_REPAIRED_PATH[i] == false)
+    if ((token.MULTI_PLAN_REPAIR || token.DCOP_UTIL_PHASE) && token.HAS_REPAIRED_PATH[i] == false)
     {
       return i;
     }
   }
   return -1;
 }
+
+
+bool OnlineDCOPAgent::is_dcop_leaf()
+{
+  if (tree_data && tree_data->children.empty() && tree_data->pseudo_children.empty())
+  {
+    return true;
+  }
+  return false;
+}
+
 
 }  // namespace onlinedcopagent
 

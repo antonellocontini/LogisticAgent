@@ -61,6 +61,8 @@ add_message_files(
   Mission.msg
   Path.msg
   Waypoints.msg
+  UtilAssignment.msg
+  MAPDState.msg
 )
 
 ## Generate services in the 'srv' folder
