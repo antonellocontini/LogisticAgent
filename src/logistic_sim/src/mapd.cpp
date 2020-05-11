@@ -5,21 +5,21 @@ namespace mapd
 
 
 mapd_state::mapd_state()
-  : configuration(), waypoint_indices()
+  : configuration(), waypoint_indices(), robot_ids()
 {
 
 }
 
 
-mapd_state::mapd_state(const std::vector<unsigned int> &configuration, const std::vector<unsigned int> &waypoint_indices)
-  : configuration(configuration), waypoint_indices(waypoint_indices)
+mapd_state::mapd_state(const std::vector<unsigned int> &configuration, const std::vector<unsigned int> &waypoint_indices, const std::vector<unsigned int> &robot_ids)
+  : configuration(configuration), waypoint_indices(waypoint_indices), robot_ids(robot_ids)
 {
 
 }
 
 
 mapd_state::mapd_state(const mapd_state &s)
-  : configuration(s.configuration), waypoint_indices(s.waypoint_indices)
+  : configuration(s.configuration), waypoint_indices(s.waypoint_indices), robot_ids(s.robot_ids)
 {
 
 }

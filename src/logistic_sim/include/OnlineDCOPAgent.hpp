@@ -50,5 +50,7 @@ protected:
 
   bool is_dcop_leaf();
   bool done_util_phase = false;
+
+  logistic_sim::UtilDPOP generate_utility_function(const mapd::mapd_state &s, const std::vector<std::vector<uint> > &waypoints);
 };
 }

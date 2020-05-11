@@ -254,7 +254,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (is_dcop_root())
     {
       search_tree = std::move(std::unique_ptr<mapd::mapd_search_tree>(new mapd::mapd_search_tree(map_graph)));
-      std::vector<uint> configuration, waypoints_indices, waypoints_number;
+      std::vector<uint> configuration, waypoints_indices, waypoints_number, robot_ids;
       for (int i=0; i<TEAM_SIZE; i++)
       {
         if (!msg->HAS_REPAIRED_PATH[i])
@@ -262,13 +262,15 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
           configuration.push_back(msg->TRAILS[i].PATH[0]);
           waypoints_indices.push_back(0);
           waypoints_number.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES.size());
+          robot_ids.push_back(i);
         }
       }
-      mapd::mapd_state initial_state(configuration, waypoints_indices);
+      mapd::mapd_state initial_state(configuration, waypoints_indices, robot_ids);
       uint h_value = 0; // TODO: inserire euristica
       search_tree->add_to_open(initial_state.get_index_notation(map_graph.size(), waypoints_number), 0, h_value);
       token.CURRENT_MAPD_STATE.CONFIGURATION = initial_state.configuration;
       token.CURRENT_MAPD_STATE.WAYPOINTS_INDICES = initial_state.waypoint_indices;
+      token.CURRENT_MAPD_STATE.ROBOT_IDS = initial_state.robot_ids;
     }
   }
   else if (msg->DCOP_UTIL_PHASE)
@@ -276,7 +278,20 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     if (is_dcop_leaf() && !done_util_phase)  // leafs start util phase
     {
       // build utility function considering parent and pseudo-parents
+      logistic_sim::MAPDState state_ros_form = msg->CURRENT_MAPD_STATE;
+      mapd::mapd_state state(state_ros_form.CONFIGURATION, state_ros_form.WAYPOINTS_INDICES, state_ros_form.ROBOT_IDS);
+      std::vector<std::vector<uint> > waypoints;
+      for (int i=0; i<TEAM_SIZE; i++)
+      {
+        if (!msg->HAS_REPAIRED_PATH[i])
+        {
+          waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
+        }
+      }
 
+      // here we must build the utility function to send to the parent node
+      // it will be useful to create a dedicated function, as this will be used also by the parent nodes
+      logistic_sim::UtilDPOP util_msg = generate_utility_function(state, waypoints);
       done_util_phase = true;
     }
 
@@ -641,6 +656,12 @@ bool OnlineDCOPAgent::is_dcop_leaf()
     return true;
   }
   return false;
+}
+
+
+logistic_sim::UtilDPOP OnlineDCOPAgent::generate_utility_function(const mapd::mapd_state &s, const std::vector<std::vector<uint> > &waypoints)
+{
+
 }
 
 
