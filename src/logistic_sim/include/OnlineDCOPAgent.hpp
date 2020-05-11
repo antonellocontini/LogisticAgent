@@ -27,13 +27,25 @@ protected:
   bool dpop_util_message_handler(logistic_sim::UtilDPOP::Request &msg, logistic_sim::UtilDPOP::Response &res);
   bool dpop_value_message_handler(logistic_sim::ValueDPOP::Request &msg, logistic_sim::ValueDPOP::Response &res);
 
+  std::map<uint, ros::ServiceClient> dpop_value_children;
+  ros::ServiceClient dpop_util_parent;
+
   struct pseudotree_node
   {
-    uint parent;
+    int parent;
     std::vector<uint> children, pseudo_children, pseudo_parents;
+
+    pseudotree_node()
+      : parent(-1), children(), pseudo_children(), pseudo_parents()
+    {
+
+    }
   };
 
-  pseudotree_node tree_data;
+  std::unique_ptr<pseudotree_node> tree_data;
   std::unique_ptr<mapd::mapd_search_tree> search_tree;
+
+  bool is_dcop_root();
+  int search_dcop_root_agent_id(const logistic_sim::Token &token);
 };
 }

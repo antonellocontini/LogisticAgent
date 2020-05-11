@@ -191,38 +191,57 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     // because the constraint graph is a clique and each robot has a fixed id
     // we can use a specific tree and each robot can know its parent and children
     // without actually executing the distributed DFS
-    bool first_child = true;
-    for (uint i = ID_ROBOT + 1; i < msg->HAS_REPAIRED_PATH.size(); i++)
+    if (!msg->HAS_REPAIRED_PATH[ID_ROBOT])
     {
-      if (!msg->HAS_REPAIRED_PATH[i])
+      tree_data = std::move(std::unique_ptr<pseudotree_node>(new pseudotree_node));
+      bool first_child = true;
+      for (uint i = ID_ROBOT + 1; i < msg->HAS_REPAIRED_PATH.size(); i++)
       {
-        if (first_child)
+        if (!msg->HAS_REPAIRED_PATH[i])
         {
-          tree_data.children.push_back(i);
-          first_child = false;
+          if (first_child)
+          {
+            // subscribe to children value service
+            std::string sn = "/patrol_robot" + std::to_string(i);
+            ros::NodeHandle nh(sn);
+            ros::ServiceClient sc = nh.serviceClient<logistic_sim::ValueDPOP>(sn);
+            dpop_value_children[i] = sc;
+
+            tree_data->children.push_back(i);
+            first_child = false;
+          }
+          else
+          {
+            tree_data->pseudo_children.push_back(i);
+          }
         }
-        else
+      }
+
+      bool first_parent = true;
+      for (uint i = ID_ROBOT - 1; i >= 0; i--)
+      {
+        if (!msg->HAS_REPAIRED_PATH[i])
         {
-          tree_data.pseudo_children.push_back(i);
+          if (first_parent)
+          {
+            // subscribe to parent util service
+            std::string sn = "/patrol_robot" + std::to_string(i);
+            ros::NodeHandle nh(sn);
+            dpop_util_parent = nh.serviceClient<logistic_sim::UtilDPOP>(sn);
+            
+            tree_data->parent = i;
+            first_parent = false;
+          }
+          else
+          {
+            tree_data->pseudo_parents.push_back(i);
+          }
         }
       }
     }
-
-    bool first_parent = true;
-    for (uint i = ID_ROBOT - 1; i >= 0; i--)
+    else
     {
-      if (!msg->HAS_REPAIRED_PATH[i])
-      {
-        if (first_parent)
-        {
-          tree_data.parent = i;
-          first_parent = false;
-        }
-        else
-        {
-          tree_data.pseudo_parents.push_back(i);
-        }
-      }
+      tree_data = nullptr;
     }
 
     if (ID_ROBOT == TEAM_SIZE - 1)
@@ -232,8 +251,8 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     }
 
     // only first robot keeps mapd tree
-    // TODO: sbagliato, devo trovare il primo tra quelli che hanno bisogno di mapd (cercare in vettore HAS_REPAIRED_PATH...)
-    if (ID_ROBOT == 0)
+    // TODO: sbagliato, devo trovare il primo tra quelli che hanno bisogno di mapd (radice dello pseudotree)
+    if (is_dcop_root())
     {
       search_tree = std::move(std::unique_ptr<mapd::mapd_search_tree>(new mapd::mapd_search_tree(map_graph)));
       std::vector<uint> configuration, waypoints_indices, waypoints_number;
@@ -253,8 +272,8 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
   else if (msg->DCOP_PHASE)
   {
-    // first agent keeps the tree and insert the resulting paths inside the token
-    if (ID_ROBOT == 0)
+    // dpop root keeps the tree and insert the resulting paths inside the token
+    if (is_dcop_root())
     {
 
     }
@@ -573,6 +592,29 @@ bool OnlineDCOPAgent::dpop_util_message_handler(logistic_sim::UtilDPOP::Request 
 bool OnlineDCOPAgent::dpop_value_message_handler(logistic_sim::ValueDPOP::Request &msg, logistic_sim::ValueDPOP::Response &res)
 {
 
+}
+
+
+bool OnlineDCOPAgent::is_dcop_root()
+{
+  if (tree_data && tree_data->parent == -1 && tree_data->pseudo_parents.empty())
+  {
+    return true;
+  }
+  return false;
+}
+
+
+int OnlineDCOPAgent::search_dcop_root_agent_id(const logistic_sim::Token &token)
+{
+  for (int i=0; i<TEAM_SIZE; i++)
+  {
+    if (token.DCOP_PHASE && token.HAS_REPAIRED_PATH[i] == false)
+    {
+      return i;
+    }
+  }
+  return -1;
 }
 
 }  // namespace onlinedcopagent
