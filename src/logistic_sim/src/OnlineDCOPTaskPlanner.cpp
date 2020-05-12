@@ -39,7 +39,7 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
 }
 
 
-void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const mapd::mapd_search_tree &t, const std::vector<uint> &robot_ids)
+void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const mapd::mapd_search_tree &t, const std::vector<uint> &robot_ids, uint (*h_func)(uint64_t))
 {
   int robot_number = robot_ids.size();
   std::vector<uint> waypoints_number;
@@ -49,14 +49,16 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
   }
   mapd::mapd_search_tree tree(t);
   const std::vector<std::vector<uint> > &graph = tree.get_graph();
+  int vertices_number = graph.size();
+  uint64_t is_index = is.get_index_notation(vertices_number, waypoints_number);
   // TODO: heuristic
-  int h_value = 0;
-  tree.add_to_open(is.get_index_notation(graph.size(), waypoints_number), 0, h_value);
+  uint h_value = h_func(is_index);
+  tree.add_to_open(is.get_index_notation(vertices_number, waypoints_number), 0, h_value);
 
   while(!tree.is_open_empty())
   {
     uint64_t s_index = tree.get_next_state();
-    mapd::mapd_state s(s_index, graph.size(), waypoints_number, robot_ids);
+    mapd::mapd_state s(s_index, vertices_number, waypoints_number, robot_ids);
     tree.pop_next_state();
 
     bool is_final = true;
@@ -76,9 +78,38 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
     }
 
     // search best state between neighbours and add to queue
-    for (const mapd::mapd_state& x : s.get_neigh())
+    bool new_state_found = false;
+    uint64_t best_state_index;
+    uint best_state_f_value = std::numeric_limits<uint>::max();
+    uint best_state_g_value;
+    uint s_value = tree.visited_state_g(s_index);
+    for (const mapd::mapd_state& x : s.get_neigh(graph, waypoints))
     {
-      // TODO
+      uint64_t x_index = x.get_index_notation(vertices_number, waypoints_number);
+      if (is_transition_valid(s, x))
+      {
+        // check that new state is not closed or visited
+        if (!tree.is_state_closed(x.get_index_notation(vertices_number, waypoints_number)))
+        {
+          if (!tree.is_state_visited(x.get_index_notation(vertices_number, waypoints_number)))
+          {
+            uint x_value = s_value + 1 + h_func(x_index);
+            if (x_value < best_state_f_value)
+            {
+              best_state_f_value = x_value;
+              best_state_g_value = s_value + 1;
+              best_state_index = x_index;
+              new_state_found = true;
+            }
+          }
+        }
+      }
+    }
+
+    // best state is first inside map
+    if (new_state_found)
+    {
+      tree.add_to_open(best_state_index, best_state_g_value, best_state_f_value, s_index);
     }
   }
 }
