@@ -13,6 +13,31 @@ OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::st
 
 }
 
+bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to)
+{
+  int robots_number = to.configuration.size();
+  for (auto x : to.configuration)
+  {
+    if (std::count(to.configuration.begin(), to.configuration.end(), x) > 1)
+    {
+      return false;
+    }
+  }
+
+  for (int i=0; i<robots_number; i++)
+  {
+    for (int j=0; j<robots_number; j++)
+    {
+      if (to.configuration[i] == from.configuration[j] && to.configuration[j] == from.configuration[i])
+      {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 
 void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const mapd::mapd_search_tree &t, const std::vector<uint> &robot_ids)
 {
@@ -51,6 +76,10 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
     }
 
     // search best state between neighbours and add to queue
+    for (const mapd::mapd_state& x : s.get_neigh())
+    {
+      // TODO
+    }
   }
 }
 
