@@ -65,6 +65,10 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   {
     ROS_DEBUG_STREAM("Waiting for agents to repair their paths...");
   }
+  else if (msg->MULTI_PLAN_REPAIR)
+  {
+    ROS_WARN_STREAM("For now we use centralized implementation of multi-robot repair!");
+  }
   else
   {
     edges_mutex.unlock();

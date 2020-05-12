@@ -61,8 +61,6 @@ add_message_files(
   Mission.msg
   Path.msg
   Waypoints.msg
-  UtilAssignment.msg
-  MAPDState.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -71,8 +69,6 @@ add_service_files(
    RobotReady.srv
    AddMissions.srv
    ChangeEdge.srv
-   UtilDPOP.srv
-   ValueDPOP.srv
 )
 
 ## Generate actions in the 'action' folder

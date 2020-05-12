@@ -21,9 +21,6 @@ void OnlineDCOPAgent::init(int argc, char **argv)
 {
   onlineagent::OnlineAgent::init(argc, argv);
   std::string s = "patrol_robot" + std::to_string(ID_ROBOT);
-  ros::NodeHandle nh(s);
-  dpop_util_msg_service = nh.advertiseService("dpop_util", &OnlineDCOPAgent::dpop_util_message_handler, this);
-  dpop_value_msg_service = nh.advertiseService("dpop_value", &OnlineDCOPAgent::dpop_value_message_handler, this);
 }
 
 void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -186,128 +183,6 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   else if (msg->MULTI_PLAN_REPAIR)
   {
     ROS_INFO_STREAM("TODO MULTI-ROBOT REPAIR PHASE");
-
-    // find parents and children
-    // because the constraint graph is a clique and each robot has a fixed id
-    // we can use a specific tree and each robot can know its parent and children
-    // without actually executing the distributed DFS
-    if (!msg->HAS_REPAIRED_PATH[ID_ROBOT])
-    {
-      tree_data = std::move(std::unique_ptr<pseudotree_node>(new pseudotree_node));
-      bool first_child = true;
-      for (uint i = ID_ROBOT + 1; i < msg->HAS_REPAIRED_PATH.size(); i++)
-      {
-        if (!msg->HAS_REPAIRED_PATH[i])
-        {
-          if (first_child)
-          {
-            // subscribe to children value service
-            std::string sn = "/patrol_robot" + std::to_string(i);
-            ros::NodeHandle nh(sn);
-            ros::ServiceClient sc = nh.serviceClient<logistic_sim::ValueDPOP>(sn);
-            dpop_value_children[i] = sc;
-
-            tree_data->children.push_back(i);
-            first_child = false;
-          }
-          else
-          {
-            tree_data->pseudo_children.push_back(i);
-          }
-        }
-      }
-
-      bool first_parent = true;
-      for (uint i = ID_ROBOT - 1; i >= 0; i--)
-      {
-        if (!msg->HAS_REPAIRED_PATH[i])
-        {
-          if (first_parent)
-          {
-            // subscribe to parent util service
-            std::string sn = "/patrol_robot" + std::to_string(i);
-            ros::NodeHandle nh(sn);
-            dpop_util_parent = nh.serviceClient<logistic_sim::UtilDPOP>(sn);
-
-            tree_data->parent = i;
-            first_parent = false;
-          }
-          else
-          {
-            tree_data->pseudo_parents.push_back(i);
-          }
-        }
-      }
-    }
-    else
-    {
-      tree_data = nullptr;
-    }
-
-    if (ID_ROBOT == TEAM_SIZE - 1)
-    {
-      token.MULTI_PLAN_REPAIR = false;
-      token.DCOP_UTIL_PHASE = true;
-    }
-
-    // only first robot keeps mapd tree
-    if (is_dcop_root())
-    {
-      search_tree = std::move(std::unique_ptr<mapd::mapd_search_tree>(new mapd::mapd_search_tree(map_graph)));
-      std::vector<uint> configuration, waypoints_indices, waypoints_number, robot_ids;
-      for (int i=0; i<TEAM_SIZE; i++)
-      {
-        if (!msg->HAS_REPAIRED_PATH[i])
-        {
-          configuration.push_back(msg->TRAILS[i].PATH[0]);
-          waypoints_indices.push_back(0);
-          waypoints_number.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES.size());
-          robot_ids.push_back(i);
-        }
-      }
-      mapd::mapd_state initial_state(configuration, waypoints_indices, robot_ids);
-      uint h_value = 0; // TODO: inserire euristica
-      search_tree->add_to_open(initial_state.get_index_notation(map_graph.size(), waypoints_number), 0, h_value);
-      token.CURRENT_MAPD_STATE.CONFIGURATION = initial_state.configuration;
-      token.CURRENT_MAPD_STATE.WAYPOINTS_INDICES = initial_state.waypoint_indices;
-      token.CURRENT_MAPD_STATE.ROBOT_IDS = initial_state.robot_ids;
-    }
-  }
-  else if (msg->DCOP_UTIL_PHASE)
-  {
-    if (is_dcop_leaf() && !done_util_phase)  // leafs start util phase
-    {
-      // build utility function considering parent and pseudo-parents
-      logistic_sim::MAPDState state_ros_form = msg->CURRENT_MAPD_STATE;
-      mapd::mapd_state state(state_ros_form.CONFIGURATION, state_ros_form.WAYPOINTS_INDICES, state_ros_form.ROBOT_IDS);
-      std::vector<std::vector<uint> > waypoints;
-      for (int i=0; i<TEAM_SIZE; i++)
-      {
-        if (!msg->HAS_REPAIRED_PATH[i])
-        {
-          waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
-        }
-      }
-
-      // here we must build the utility function to send to the parent node
-      // it will be useful to create a dedicated function, as this will be used also by the parent nodes
-      logistic_sim::UtilDPOP util_msg = generate_utility_function(state, waypoints);
-      done_util_phase = true;
-    }
-
-    if (is_dcop_root() && done_util_phase)
-    {
-      token.DCOP_UTIL_PHASE = false;
-      token.DCOP_VALUE_PHASE = true;
-    }
-  }
-  else if (msg->DCOP_VALUE_PHASE)
-  {
-    // dpop root keeps the tree and insert the resulting paths inside the token
-    if (is_dcop_root())
-    {
-
-    }
   }
   else if (msg->ALLOCATE)
   {
@@ -611,57 +486,6 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
 
     token.ID_RECEIVER = id_next_robot;
   }
-}
-
-
-bool OnlineDCOPAgent::dpop_util_message_handler(logistic_sim::UtilDPOP::Request &msg, logistic_sim::UtilDPOP::Response &res)
-{
-
-}
-
-
-bool OnlineDCOPAgent::dpop_value_message_handler(logistic_sim::ValueDPOP::Request &msg, logistic_sim::ValueDPOP::Response &res)
-{
-
-}
-
-
-bool OnlineDCOPAgent::is_dcop_root()
-{
-  if (tree_data && tree_data->parent == -1 && tree_data->pseudo_parents.empty())
-  {
-    return true;
-  }
-  return false;
-}
-
-
-int OnlineDCOPAgent::search_dcop_root_agent_id(const logistic_sim::Token &token)
-{
-  for (int i=0; i<TEAM_SIZE; i++)
-  {
-    if ((token.MULTI_PLAN_REPAIR || token.DCOP_UTIL_PHASE) && token.HAS_REPAIRED_PATH[i] == false)
-    {
-      return i;
-    }
-  }
-  return -1;
-}
-
-
-bool OnlineDCOPAgent::is_dcop_leaf()
-{
-  if (tree_data && tree_data->children.empty() && tree_data->pseudo_children.empty())
-  {
-    return true;
-  }
-  return false;
-}
-
-
-logistic_sim::UtilDPOP OnlineDCOPAgent::generate_utility_function(const mapd::mapd_state &s, const std::vector<std::vector<uint> > &waypoints)
-{
-
 }
 
 
