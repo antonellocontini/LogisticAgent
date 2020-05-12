@@ -2,6 +2,7 @@
 #include "boost/filesystem.hpp"
 #include "get_graph.hpp"
 #include <unordered_map>
+#include "mapd.hpp"
 
 namespace onlinedcoptaskplanner
 {
@@ -12,6 +13,46 @@ OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::st
 
 }
 
+
+void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const mapd::mapd_search_tree &t, const std::vector<uint> &robot_ids)
+{
+  int robot_number = robot_ids.size();
+  std::vector<uint> waypoints_number;
+  for (const auto &x : waypoints)
+  {
+    waypoints_number.push_back(x.size());
+  }
+  mapd::mapd_search_tree tree(t);
+  const std::vector<std::vector<uint> > &graph = tree.get_graph();
+  // TODO: heuristic
+  int h_value = 0;
+  tree.add_to_open(is.get_index_notation(graph.size(), waypoints_number), 0, h_value);
+
+  while(!tree.is_open_empty())
+  {
+    uint64_t s_index = tree.get_next_state();
+    mapd::mapd_state s(s_index, graph.size(), waypoints_number, robot_ids);
+    tree.pop_next_state();
+
+    bool is_final = true;
+    for(int i=0; i<robot_number; i++)
+    {
+      if (s.waypoint_indices[i] != waypoints_number[i]-1 || s.configuration[i] != waypoints[i].back())
+      {
+        is_final = false;
+        break;
+      }
+    }
+
+    if (is_final)
+    {
+      // reconstruct path
+      return;
+    }
+
+    // search best state between neighbours and add to queue
+  }
+}
 
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -68,6 +109,10 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   else if (msg->MULTI_PLAN_REPAIR)
   {
     ROS_WARN_STREAM("For now we use centralized implementation of multi-robot repair!");
+    // at this point, we have the robots' waypoints and their current position inside the token
+    // run MAPD algorithm to find a solution and insert such solution inside the token
+
+
   }
   else
   {

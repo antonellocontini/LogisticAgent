@@ -50,6 +50,7 @@ public:
   mapd_search_tree(const std::vector<std::vector<unsigned int> > &graph);
   void add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value, uint64_t prev_state);
   void add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value);
+  bool is_open_empty() const;
   uint64_t get_next_state() const;
   void pop_next_state();
   void set_state_to_visited(uint64_t state);
@@ -60,6 +61,7 @@ public:
   int visited_state_g(uint64_t state) const;
   // void set_prev_state(uint64_t state, uint64_t prev);
   uint64_t get_prev_state(uint64_t state) const;
+  const std::vector<std::vector<unsigned int> >& get_graph();
 protected:
   bool cmp_function(uint64_t lhs, uint64_t rhs) const;
   const std::vector<std::vector<unsigned int> > &graph;

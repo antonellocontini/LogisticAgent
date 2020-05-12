@@ -28,6 +28,12 @@ void mapd_search_tree::add_to_open(uint64_t state, unsigned int g_value, unsigne
 }
 
 
+bool mapd_search_tree::is_open_empty() const
+{
+  return open.empty();
+}
+
+
 uint64_t mapd_search_tree::get_next_state() const
 {
   return open.begin()->first;
@@ -127,6 +133,12 @@ bool mapd_search_tree::cmp_function(uint64_t lhs, uint64_t rhs) const
     return true;
   }
   return false;
+}
+
+
+const std::vector<std::vector<unsigned int> >& mapd_search_tree::get_graph()
+{
+  return graph;
 }
 
 
