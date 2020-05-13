@@ -102,13 +102,17 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
   ROS_DEBUG_STREAM("instantiate tree");
   mapd::mapd_search_tree tree(graph);
   int vertices_number = graph.size();
-  ROS_DEBUG_STREAM("find index notation");
   uint64_t is_index = is.get_index_notation(vertices_number, waypoints_number);
-  ROS_DEBUG_STREAM("find h value");
+  ROS_DEBUG_STREAM("initial state index notation: " << is_index);
+  // ROS_DEBUG_STREAM("heuristic function: " << *h_func);
+  // std::ofstream test("test_heuristic.txt");
+  // test << *h_func;
+  // test.close();
   uint h_value = (*h_func)(is_index);
+  ROS_DEBUG_STREAM("initial state h-value: " << h_value);
   ROS_DEBUG_STREAM("add initial state to tree");
-  tree.add_to_open(is.get_index_notation(vertices_number, waypoints_number), 0, h_value);
-
+  tree.add_to_open(is_index, 0, h_value);
+  ROS_DEBUG_STREAM("initial state: " << std::endl << is);
   ROS_DEBUG_STREAM("Starting state exploration...");
   while (!tree.is_open_empty())
   {

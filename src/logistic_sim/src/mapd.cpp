@@ -4,6 +4,41 @@ namespace mapd
 {
 
 
+std::ostream& operator<<(std::ostream &out, const std::vector<uint> &v)
+{
+  for (const uint &x : v)
+  {
+    out << " " << x;
+  }
+  out << std::endl;
+  return out;
+}
+
+
+std::ostream& operator<<(std::ostream& out, const mapd_state &s)
+{
+  out << "configuration:" << std::endl;
+  for (const auto &x : s.configuration)
+  {
+    out << " " << x;
+  }
+  out << std::endl;
+  out << "waypoint_indices:" << std::endl;
+  for (const auto &x : s.waypoint_indices)
+  {
+    out << " " << x;
+  }
+  out << std::endl;
+  out << "robot_ids:" << std::endl;
+  for (const auto &x : s.robot_ids)
+  {
+    out << " " << x;
+  }
+  out << std::endl;
+  return out;
+}
+
+
 mapd_state::mapd_state()
   : configuration(), waypoint_indices(), robot_ids()
 {

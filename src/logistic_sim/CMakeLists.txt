@@ -137,7 +137,7 @@ add_library(partitionLib
 )
 
 add_library(mapdLib
-  src/mapd.cpp src/mapd_tree.cpp
+  src/mapd.cpp src/mapd_tree.cpp src/mapd_heuristic.cpp
 )
 
 ########################################################################################################################
