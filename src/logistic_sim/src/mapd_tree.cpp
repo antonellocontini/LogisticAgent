@@ -46,6 +46,12 @@ void mapd_search_tree::pop_next_state()
 }
 
 
+uint64_t mapd_search_tree::open_size() const
+{
+  return open.size();
+}
+
+
 void mapd_search_tree::set_state_to_visited(uint64_t state)
 {
   visited[state] = GRAY;
@@ -77,6 +83,15 @@ bool mapd_search_tree::is_state_closed(uint64_t state) const
     return true;
   }
   return false;
+}
+
+
+// can't search directly inside open because the cmp_function search
+// inside f and g, which do not have the state if it's not present in open
+// so, just check if is present in g
+bool mapd_search_tree::is_state_in_queue(uint64_t state) const
+{
+  return g.count(state) != 0;
 }
 
 
@@ -136,7 +151,7 @@ bool mapd_search_tree::cmp_function(uint64_t lhs, uint64_t rhs) const
 }
 
 
-const std::vector<std::vector<unsigned int> >& mapd_search_tree::get_graph()
+const std::vector<std::vector<unsigned int> >& mapd_search_tree::get_graph() const
 {
   return graph;
 }

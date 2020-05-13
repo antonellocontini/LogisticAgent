@@ -16,6 +16,7 @@ OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::st
 
 bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to, const std::vector<std::vector<uint> > &other_paths, uint timestep)
 {
+  raise(SIGSEGV);
   int robots_number = to.configuration.size();
   for (auto x : to.configuration)
   {
@@ -124,6 +125,7 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
     if (elapsed.count() >= 10.0)
     {
       ROS_DEBUG_STREAM("Visited states: " << count);
+      ROS_DEBUG_STREAM("Open queue size: " << tree.open_size());
       start = std::chrono::system_clock::now();
     }
     count++;
@@ -144,12 +146,14 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
 
     if (is_final)
     {
+      ROS_DEBUG_STREAM("found solution!");
       // reconstruct path
       std::vector<std::vector<uint> > result(robot_number);
       try
       {
         while (true)
         {
+          ROS_DEBUG_STREAM(s.configuration);
           for (int i = 0; i < robot_number; i++)
           {
             result[i].emplace(result[i].begin(), s.configuration[i]);
@@ -170,23 +174,33 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
     uint best_state_f_value = std::numeric_limits<uint>::max();
     uint best_state_g_value;
     uint s_value = tree.visited_state_g(s_index);
-    for (const mapd::mapd_state &x : s.get_neigh(graph, waypoints))
+    auto neigh_list = s.get_neigh(graph, waypoints);
+    if (neigh_list.empty())
+    {
+      ROS_DEBUG_STREAM("Warning! Neighbour list is empty");
+    }
+    for (const mapd::mapd_state &x : neigh_list)
     {
       uint64_t x_index = x.get_index_notation(vertices_number, waypoints_number);
       if (is_transition_valid(s, x, other_paths, tree.visited_state_g(s_index)))
       {
-        // check that new state is not closed or visited
-        if (!tree.is_state_closed(x.get_index_notation(vertices_number, waypoints_number)))
+        // check that new state is not closed
+        if (!tree.is_state_closed(x_index))
         {
-          if (!tree.is_state_visited(x.get_index_notation(vertices_number, waypoints_number)))
+          // check that new state is not visited
+          if (!tree.is_state_visited(x_index))
           {
-            uint x_value = s_value + 1 + (*h_func)(x_index);
-            if (x_value < best_state_f_value)
+            // check that new state is not already in queue (unless found with a better path)
+            if (!tree.is_state_in_queue(x_index) || tree.visited_state_g(x_index) > s_value + 1)
             {
-              best_state_f_value = x_value;
-              best_state_g_value = s_value + 1;
-              best_state_index = x_index;
-              new_state_found = true;
+              uint x_value = s_value + 1 + (*h_func)(x_index);
+              if (x_value < best_state_f_value)
+              {
+                best_state_f_value = x_value;
+                best_state_g_value = s_value + 1;
+                best_state_index = x_index;
+                new_state_found = true;
+              }
             }
           }
         }

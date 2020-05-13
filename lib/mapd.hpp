@@ -57,17 +57,19 @@ public:
   bool is_open_empty() const;
   uint64_t get_next_state() const;
   void pop_next_state();
+  uint64_t open_size() const;
   void set_state_to_visited(uint64_t state);
   void set_state_to_closed(uint64_t state);
   bool is_state_visited(uint64_t state) const;
   bool is_state_closed(uint64_t state) const;
+  bool is_state_in_queue(uint64_t state) const;
   int visited_state_f(uint64_t state) const;
   int visited_state_g(uint64_t state) const;
   // void set_prev_state(uint64_t state, uint64_t prev);
 
   // this method throws an exception if prev does not exists
   uint64_t get_prev_state(uint64_t state) const;
-  const std::vector<std::vector<unsigned int> >& get_graph();
+  const std::vector<std::vector<unsigned int> >& get_graph() const;
 protected:
   bool cmp_function(uint64_t lhs, uint64_t rhs) const;
   const std::vector<std::vector<unsigned int> > &graph;
