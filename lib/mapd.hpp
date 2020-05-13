@@ -120,6 +120,7 @@ for (int k=0; k<vertices; k++)
 
 }
 
+
 uint operator()(uint64_t state_index)
 {
   uint vertices = graph.size();

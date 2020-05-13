@@ -24,5 +24,12 @@ protected:
 
   std::vector<bool> _check_conflict_free_impl(uint task_endpoint);
   bool check_conflict_free_property();
+
+  void init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+  void multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
+
+  std::vector<std::vector<unsigned int>> map_graph;
+
+  std::vector<std::vector<unsigned int> > build_graph();
 };
 }

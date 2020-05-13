@@ -1,19 +1,17 @@
+#include <unordered_map>
 #include "OnlineDCOPTaskPlanner.hpp"
 #include "boost/filesystem.hpp"
 #include "get_graph.hpp"
-#include <unordered_map>
 #include "mapd.hpp"
 
 namespace onlinedcoptaskplanner
 {
-
 OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::string &name)
   : OnlineTaskPlanner(nh_, name)
 {
-
 }
 
-bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to)
+bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to, const std::vector<std::vector<uint> > &other_paths, uint timestep)
 {
   int robots_number = to.configuration.size();
   for (auto x : to.configuration)
@@ -22,13 +20,31 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
     {
       return false;
     }
+
+    // check vertex does not cause conflict with other paths
+    for (const auto &p : other_paths)
+    {
+      if (p.size() > timestep+1 && p[timestep+1] == x)
+      {
+        return false;
+      }
+    }
   }
 
-  for (int i=0; i<robots_number; i++)
+  for (int i = 0; i < robots_number; i++)
   {
-    for (int j=0; j<robots_number; j++)
+    for (int j = i; j < robots_number; j++)
     {
       if (to.configuration[i] == from.configuration[j] && to.configuration[j] == from.configuration[i])
+      {
+        return false;
+      }
+    }
+
+    // check swap conflicts with other paths
+    for (const auto &p : other_paths)
+    {
+      if (p.size() > timestep+1 && to.configuration[i] == p[timestep] && from.configuration[i] == p[timestep+1])
       {
         return false;
       }
@@ -38,8 +54,12 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
   return true;
 }
 
-template<class T = uint(uint64_t) >
-std::vector<std::vector<uint> > search_function(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const std::vector<std::vector<uint> > &graph, const std::vector<uint> &robot_ids, T *h_func)
+template <class T = uint(uint64_t)>
+std::vector<std::vector<uint> > search_function(const std::vector<std::vector<uint> > &waypoints,
+                                                const mapd::mapd_state &is,
+                                                const std::vector<std::vector<uint> > &graph,
+                                                const std::vector<uint> &robot_ids, T *h_func,
+                                                const std::vector<std::vector<uint> > &other_paths)
 {
   int robot_number = robot_ids.size();
   std::vector<uint> waypoints_number;
@@ -53,7 +73,7 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
   uint h_value = (*h_func)(is_index);
   tree.add_to_open(is.get_index_notation(vertices_number, waypoints_number), 0, h_value);
 
-  while(!tree.is_open_empty())
+  while (!tree.is_open_empty())
   {
     uint64_t s_index = tree.get_next_state();
     mapd::mapd_state s(s_index, vertices_number, waypoints_number, robot_ids);
@@ -61,9 +81,9 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
 
     // check if this is a final state
     bool is_final = true;
-    for(int i=0; i<robot_number; i++)
+    for (int i = 0; i < robot_number; i++)
     {
-      if (s.waypoint_indices[i] != waypoints_number[i]-1 || s.configuration[i] != waypoints[i].back())
+      if (s.waypoint_indices[i] != waypoints_number[i] - 1 || s.configuration[i] != waypoints[i].back())
       {
         is_final = false;
         break;
@@ -76,16 +96,16 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
       std::vector<std::vector<uint> > result(robot_number);
       try
       {
-        while(true)
+        while (true)
         {
-          for (int i=0; i<robot_number; i++)
+          for (int i = 0; i < robot_number; i++)
           {
             result[i].emplace(result[i].begin(), s.configuration[i]);
           }
           s = mapd::mapd_state(tree.get_prev_state(s_index), vertices_number, waypoints_number, robot_ids);
         }
       }
-      catch(const std::string& e)
+      catch (const std::string &e)
       {
         // reached initial state
         return result;
@@ -98,10 +118,10 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
     uint best_state_f_value = std::numeric_limits<uint>::max();
     uint best_state_g_value;
     uint s_value = tree.visited_state_g(s_index);
-    for (const mapd::mapd_state& x : s.get_neigh(graph, waypoints))
+    for (const mapd::mapd_state &x : s.get_neigh(graph, waypoints))
     {
       uint64_t x_index = x.get_index_notation(vertices_number, waypoints_number);
-      if (is_transition_valid(s, x))
+      if (is_transition_valid(s, x, other_paths, tree.visited_state_g(s_index)))
       {
         // check that new state is not closed or visited
         if (!tree.is_state_closed(x.get_index_notation(vertices_number, waypoints_number)))
@@ -132,17 +152,13 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
       tree.pop_next_state();
       tree.set_state_to_closed(s_index);
     }
-    
   }
 }
 
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
-
-  static int last_mission_size = 0;
   if (msg->ID_RECEIVER != TASK_PLANNER_ID)
     return;
-
 
   logistic_sim::Token token;
   token = *msg;
@@ -153,21 +169,9 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   if (msg->INIT)
   {
     edges_mutex.unlock();
-    token.HEADER.seq = 1;
-    CAPACITY = msg->CAPACITY;
-    token.INIT = false;
-    token.END_SIMULATION = false;
-    token.ALL_MISSIONS_INSERTED = false;
-    if (!offline_mode)
-    {
-      ROS_DEBUG("online mode -- start time setted inside token init phase");
-      start_time = ros::Time::now();
-    }
-    last_goal_time = ros::Time::now();
-    last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
-    last_mission_size = 0;
+    init_token(msg, token);
   }
-  else if(removed_edges.size())
+  else if (removed_edges.size())
   {
     // insert removed edges inside token to notify the agents
     for (const logistic_sim::Edge &e : removed_edges)
@@ -194,20 +198,13 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     // at this point, we have the robots' waypoints and their current position inside the token
     // run MAPD algorithm to find a solution and insert such solution inside the token
 
-    
+    multi_agent_repair(msg, token);
   }
   else
   {
     edges_mutex.unlock();
     // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
-
-    // prints remaining tasks
-    // if (token.MISSION.size() != last_mission_size)
-    // {
-    //     last_mission_size = token.MISSION.size();
-    //     c_print("Remaining tasks: ", last_mission_size, green);
-    // }
 
     // the mutex is necessary because the window is updated in another thread
     window_mutex.lock();
@@ -398,6 +395,63 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   ros::spinOnce();
 }
 
+void OnlineDCOPTaskPlanner::init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
+{
+  token.HEADER.seq = 1;
+  CAPACITY = msg->CAPACITY;
+  token.INIT = false;
+  token.END_SIMULATION = false;
+  token.ALL_MISSIONS_INSERTED = false;
+  if (!offline_mode)
+  {
+    ROS_DEBUG("online mode -- start time setted inside token init phase");
+    start_time = ros::Time::now();
+  }
+  last_goal_time = ros::Time::now();
+  last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
+}
+
+void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
+{
+  // get valid paths
+  std::vector<std::vector<uint> > other_paths;
+  for (int i=0; i<TEAM_SIZE; i++)
+  {
+    if (msg->HAS_REPAIRED_PATH[i])
+    {
+      other_paths.push_back(msg->TRAILS[i].PATH);
+    }
+  }
+
+  // build map graph
+  map_graph = build_graph();
+  std::vector<std::vector<uint> > waypoints;
+  std::vector<uint> robot_ids;
+  mapd::mapd_state initial_state;
+  for (int i=0; i<waypoints.size(); i++)
+  {
+    if (!msg->HAS_REPAIRED_PATH[i])
+    {
+      waypoints.push_back( msg->ROBOT_WAYPOINTS[i].VERTICES);
+      robot_ids.push_back(i);
+      initial_state.configuration.push_back(msg->TRAILS[i].PATH.front());
+    }
+  }
+  initial_state.waypoint_indices = std::vector<uint>(0, robot_ids.size());
+  initial_state.robot_ids = robot_ids;
+  mapd::max_cost_heuristic h_func(map_graph, waypoints, robot_ids);
+  // start search
+  std::vector<std::vector<uint> > paths = search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths);
+
+  // insert paths inside token
+  for (int i=0; i<paths.size(); i++)
+  {
+    uint robot_id = robot_ids[i];
+    token.TRAILS[robot_id].PATH = paths[i];
+  }
+
+  token.MULTI_PLAN_REPAIR = false;
+}
 
 void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
 {
@@ -417,15 +471,30 @@ void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
 void OnlineDCOPTaskPlanner::print_graph()
 {
   std::ofstream test("test-map.graph");
-  for (int i=0; i<dimension; i++)
+  for (int i = 0; i < dimension; i++)
   {
     test << vertex_web[i].id << std::endl;
-    for (int j=0; j<vertex_web[i].num_neigh; j++)
+    for (int j = 0; j < vertex_web[i].num_neigh; j++)
     {
       test << "\t(" << vertex_web[i].id << "," << vertex_web[i].id_neigh[j] << ")" << std::endl;
     }
   }
   test.close();
+}
+
+
+std::vector<std::vector<unsigned int> > OnlineDCOPTaskPlanner::build_graph()
+{
+  std::vector<std::vector<unsigned int> > result = std::vector<std::vector<unsigned int>>(dimension);
+  for (int i = 0; i < dimension; i++)
+  {
+    for (int j = 0; j < vertex_web[i].num_neigh; j++)
+    {
+      result[i].push_back(vertex_web[i].id_neigh[j]);
+    }
+  }
+
+  return result;
 }
 
 bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res)
@@ -483,7 +552,6 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
   return result;
 }
 
-
 struct conflict_free_state
 {
   uint g, f;
@@ -501,7 +569,6 @@ struct conflict_free_state
       return true;
     return false;
   }
-
 };
 
 // implements tree search but tells which robots can reach a particular vertex from home
@@ -519,7 +586,7 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
 
   open[task_endpoint] = initial_state;
 
-  while(!open.empty())
+  while (!open.empty())
   {
     auto u_it = open.begin();
     uint u_id = u_it->first;
@@ -545,7 +612,7 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
     else
     {
       // check neighbour states
-      for (int i=0; i<vertex_web[u_id].num_neigh; i++)
+      for (int i = 0; i < vertex_web[u_id].num_neigh; i++)
       {
         uint v_id = vertex_web[u_id].id_neigh[i];
         if (!visited.count(v_id) && !open.count(v_id))
@@ -563,7 +630,6 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
   return result;
 }
 
-
 bool OnlineDCOPTaskPlanner::check_conflict_free_property()
 {
   std::vector<bool> property_validity(TEAM_SIZE, true);
@@ -573,7 +639,7 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
   {
     auto result = _check_conflict_free_impl(v);
     ROS_DEBUG_STREAM("Vertex " << v << ":\t");
-    for (int i=0; i<TEAM_SIZE; i++)
+    for (int i = 0; i < TEAM_SIZE; i++)
     {
       bool r = result[i];
       ROS_DEBUG_STREAM_COND(r, " Y");
@@ -585,7 +651,6 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
     }
   }
 
-
   for (bool r : property_validity)
   {
     if (r)
@@ -594,8 +659,7 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
   return false;
 }
 
-
-} // namespace onlinedcoptaskplanner
+}  // namespace onlinedcoptaskplanner
 
 int main(int argc, char *argv[])
 {
