@@ -38,8 +38,8 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
   return true;
 }
 
-
-void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const mapd::mapd_search_tree &t, const std::vector<uint> &robot_ids, uint (*h_func)(uint64_t))
+template<class T = uint(uint64_t) >
+std::vector<std::vector<uint> > search_function(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state &is, const std::vector<std::vector<uint> > &graph, const std::vector<uint> &robot_ids, T *h_func)
 {
   int robot_number = robot_ids.size();
   std::vector<uint> waypoints_number;
@@ -47,20 +47,19 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
   {
     waypoints_number.push_back(x.size());
   }
-  mapd::mapd_search_tree tree(t);
-  const std::vector<std::vector<uint> > &graph = tree.get_graph();
+  mapd::mapd_search_tree tree(graph);
   int vertices_number = graph.size();
   uint64_t is_index = is.get_index_notation(vertices_number, waypoints_number);
-  // TODO: heuristic
-  uint h_value = h_func(is_index);
+  uint h_value = (*h_func)(is_index);
   tree.add_to_open(is.get_index_notation(vertices_number, waypoints_number), 0, h_value);
 
   while(!tree.is_open_empty())
   {
     uint64_t s_index = tree.get_next_state();
     mapd::mapd_state s(s_index, vertices_number, waypoints_number, robot_ids);
-    tree.pop_next_state();
+    tree.set_state_to_visited(s_index);
 
+    // check if this is a final state
     bool is_final = true;
     for(int i=0; i<robot_number; i++)
     {
@@ -74,7 +73,23 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
     if (is_final)
     {
       // reconstruct path
-      return;
+      std::vector<std::vector<uint> > result(robot_number);
+      try
+      {
+        while(true)
+        {
+          for (int i=0; i<robot_number; i++)
+          {
+            result[i].emplace(result[i].begin(), s.configuration[i]);
+          }
+          s = mapd::mapd_state(tree.get_prev_state(s_index), vertices_number, waypoints_number, robot_ids);
+        }
+      }
+      catch(const std::string& e)
+      {
+        // reached initial state
+        return result;
+      }
     }
 
     // search best state between neighbours and add to queue
@@ -93,7 +108,7 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
         {
           if (!tree.is_state_visited(x.get_index_notation(vertices_number, waypoints_number)))
           {
-            uint x_value = s_value + 1 + h_func(x_index);
+            uint x_value = s_value + 1 + (*h_func)(x_index);
             if (x_value < best_state_f_value)
             {
               best_state_f_value = x_value;
@@ -111,6 +126,13 @@ void f(const std::vector<std::vector<uint> > &waypoints, const mapd::mapd_state 
     {
       tree.add_to_open(best_state_index, best_state_g_value, best_state_f_value, s_index);
     }
+    else
+    {
+      // if a new state could not been found, it means that the current one is closed and can be removed from open queue
+      tree.pop_next_state();
+      tree.set_state_to_closed(s_index);
+    }
+    
   }
 }
 
@@ -172,7 +194,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     // at this point, we have the robots' waypoints and their current position inside the token
     // run MAPD algorithm to find a solution and insert such solution inside the token
 
-
+    
   }
   else
   {

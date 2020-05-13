@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <map>
 #include <functional>
+#include <limits>
 
 // library to handle mapd states for search problems
 // assumes that graph vertices are identified with numbers starting with 0, no gaps
@@ -60,6 +61,8 @@ public:
   int visited_state_f(uint64_t state) const;
   int visited_state_g(uint64_t state) const;
   // void set_prev_state(uint64_t state, uint64_t prev);
+
+  // this method throws an exception if prev does not exists
   uint64_t get_prev_state(uint64_t state) const;
   const std::vector<std::vector<unsigned int> >& get_graph();
 protected:
@@ -68,6 +71,78 @@ protected:
   std::map<uint64_t, unsigned int, std::function<bool (uint64_t, uint64_t)> > open;  // map ordered by compare function
   std::unordered_map<uint64_t, unsigned int> visited, g, f; // keeps already visited states, tells if they are gray or black
   std::unordered_map<uint64_t, uint64_t> prev;  // keeps ancestors
+};
+
+struct max_cost_heuristic
+{
+
+std::vector<std::vector<unsigned int> > graph;
+std::vector<std::vector<unsigned int> > fw;
+std::vector<std::vector<unsigned int> > waypoints;
+std::vector<unsigned int> waypoints_number;
+std::vector<unsigned int> robot_ids;
+
+max_cost_heuristic(const std::vector<std::vector<unsigned int> > &graph, const std::vector<std::vector<unsigned int> > &waypoints, const std::vector<unsigned int> &robot_ids)
+  : graph(graph), fw(graph.size(), std::vector<unsigned int>(graph.size(), std::numeric_limits<unsigned int>::max())), waypoints(waypoints), waypoints_number(waypoints.size()), robot_ids(robot_ids)
+{
+
+// build waypoints_number
+for (int i=0; i<waypoints.size(); i++)
+{
+  waypoints_number[i] = waypoints[i].size();
+}
+
+// build floyd-warshall matrix
+unsigned int max = std::numeric_limits<unsigned int>::max();
+unsigned int vertices = graph.size();
+for (int i=0; i<vertices; i++)
+{
+  fw[i][i] = 0;
+  for (int j=0; j<graph[i].size(); j++)
+  {
+    fw[i][j] = 1;
+  }
+}
+
+for (int k=0; k<vertices; k++)
+{
+  for (int i=0; i<vertices; i++)
+  {
+    for (int j=0; j<vertices; j++)
+    {
+      if (fw[i][k] != max && fw[k][j] != max && fw[i][k] + fw[k][j] < fw[i][j])
+      {
+        fw[i][j] = fw[i][k] + fw[k][j];
+      }
+    }
+  }
+}
+
+}
+
+uint operator()(uint64_t state_index)
+{
+  uint vertices = graph.size();
+  mapd_state s(state_index, vertices, waypoints_number, robot_ids);
+  uint result = 0;
+  uint agents = robot_ids.size();
+  for (int i=0; i<agents; i++)
+  {
+    uint agent_cost = 0;
+    uint curr_pos = s.configuration[i];
+    uint next_pos;
+    for (int j=s.waypoint_indices[i]; j<waypoints_number[i]; j++)
+    {
+      next_pos = waypoints[i][s.waypoint_indices[i]];
+      agent_cost += fw[curr_pos][next_pos];
+      curr_pos = next_pos;
+    }
+
+    result = std::max(result, agent_cost);
+  }
+
+  return result;
+}
 };
 
 }
