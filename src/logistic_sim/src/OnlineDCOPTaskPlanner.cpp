@@ -3,6 +3,8 @@
 #include "boost/filesystem.hpp"
 #include "get_graph.hpp"
 #include "mapd.hpp"
+#include <execinfo.h>
+#include <signal.h>
 
 namespace onlinedcoptaskplanner
 {
@@ -54,25 +56,60 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
   return true;
 }
 
+template<class T>
+std::ostream& operator<<(std::ostream &out, const std::vector<std::vector<T> > &v)
+{
+  for (const auto &w : v)
+  {
+    for (const T &x : w)
+    {
+      out << " " << x;
+    }
+    out << std::endl;
+  }
+  return out;
+}
+
+
+template<class T>
+std::ostream& operator<<(std::ostream &out, const std::vector<T> &v)
+{
+  for (const T &x : v)
+  {
+    out << " " << x;
+  }
+  out << std::endl;
+  return out;
+}
+
 template <class T = uint(uint64_t)>
 std::vector<std::vector<uint> > search_function(const std::vector<std::vector<uint> > &waypoints,
                                                 const mapd::mapd_state &is,
                                                 const std::vector<std::vector<uint> > &graph,
-                                                const std::vector<uint> &robot_ids, T *h_func,
+                                                const std::vector<uint> &robot_ids,
+                                                T *h_func,
                                                 const std::vector<std::vector<uint> > &other_paths)
 {
+  ROS_DEBUG_STREAM("waypoints: " << std::endl << waypoints);
+  ROS_DEBUG_STREAM("robot_ids: " << std::endl << robot_ids);
+  ROS_DEBUG_STREAM("other_paths: " << std::endl << other_paths);
   int robot_number = robot_ids.size();
   std::vector<uint> waypoints_number;
   for (const auto &x : waypoints)
   {
     waypoints_number.push_back(x.size());
   }
+  ROS_DEBUG_STREAM("instantiate tree");
   mapd::mapd_search_tree tree(graph);
   int vertices_number = graph.size();
+  ROS_DEBUG_STREAM("find index notation");
   uint64_t is_index = is.get_index_notation(vertices_number, waypoints_number);
+  ROS_DEBUG_STREAM("find h value");
   uint h_value = (*h_func)(is_index);
+  ROS_DEBUG_STREAM("add initial state to tree");
   tree.add_to_open(is.get_index_notation(vertices_number, waypoints_number), 0, h_value);
 
+  ROS_DEBUG_STREAM("Starting state exploration...");
   while (!tree.is_open_empty())
   {
     uint64_t s_index = tree.get_next_state();
@@ -428,16 +465,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   std::vector<std::vector<uint> > waypoints;
   std::vector<uint> robot_ids;
   mapd::mapd_state initial_state;
-  for (int i=0; i<waypoints.size(); i++)
+  for (int i=0; i<TEAM_SIZE; i++)
   {
     if (!msg->HAS_REPAIRED_PATH[i])
     {
-      waypoints.push_back( msg->ROBOT_WAYPOINTS[i].VERTICES);
+      waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
       robot_ids.push_back(i);
       initial_state.configuration.push_back(msg->TRAILS[i].PATH.front());
     }
   }
-  initial_state.waypoint_indices = std::vector<uint>(0, robot_ids.size());
+  initial_state.waypoint_indices = std::vector<uint>(robot_ids.size(), 0);
   initial_state.robot_ids = robot_ids;
   mapd::max_cost_heuristic h_func(map_graph, waypoints, robot_ids);
   // start search
@@ -661,6 +698,21 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
 
 }  // namespace onlinedcoptaskplanner
 
+void crash_handler(int sig)
+{
+  void *array[15];
+  size_t size;
+
+  size = backtrace(array, 15);
+
+  fprintf(stderr, "printing error to file...\n");
+  FILE *fp = fopen("crash_stacktrace.log", "w");
+  fprintf(fp, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, fileno(fp));
+  fclose(fp);
+}
+
+
 int main(int argc, char *argv[])
 {
   ros::init(argc, argv, "task_planner");
@@ -670,6 +722,11 @@ int main(int argc, char *argv[])
   c_print("initialization completed!", green);
   ros::AsyncSpinner spinner(2);
   spinner.start();
+  
+  if (signal(SIGSEGV, crash_handler) == SIG_ERR)
+  {
+    std::cerr << "can't print stack trace" << std::endl;
+  }
   ODTP.run();
   return 0;
 }

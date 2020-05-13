@@ -138,6 +138,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       }
 
       std::vector<uint> waypoints;
+      bool failed_planning = false;
       try
       {
         std::vector<unsigned int> last_leg, first_leg;  // this will contain the path, splitted in two sections
@@ -147,19 +148,26 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
           waypoints.push_back(v);
         }
 
-        // calculate path
-        plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
-        // code after previous call execute only if plan is successful
-        token.SINGLE_PLAN_REPAIR_PROGRESS = true;
-        token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
-        ROS_INFO_STREAM("Plan repaired successfully!");
+        // // calculate path
+        // plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
+        // // code after previous call execute only if plan is successful
+        // token.SINGLE_PLAN_REPAIR_PROGRESS = true;
+        // token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+        // ROS_INFO_STREAM("Plan repaired successfully!");
+        failed_planning = true;   // testing multi-agent repair
       }
       catch (std::string &e)
+      {
+        failed_planning = true;
+      }
+
+      if (failed_planning)
       {
         ROS_INFO_STREAM("Can't find a valid path for repair");
         token.ROBOT_WAYPOINTS[ID_ROBOT].VERTICES = waypoints;
       }
     }
+
 
     // last robot checks if there has been progress
     if (ID_ROBOT == TEAM_SIZE - 1)
