@@ -5,6 +5,7 @@
 #include "mapd.hpp"
 #include <execinfo.h>
 #include <signal.h>
+#include <chrono>
 
 namespace onlinedcoptaskplanner
 {
@@ -114,8 +115,18 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
   tree.add_to_open(is_index, 0, h_value);
   ROS_DEBUG_STREAM("initial state: " << std::endl << is);
   ROS_DEBUG_STREAM("Starting state exploration...");
+  uint64_t count = 0;
+  auto start = std::chrono::system_clock::now();
   while (!tree.is_open_empty())
   {
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    if (elapsed.count() >= 10.0)
+    {
+      ROS_DEBUG_STREAM("Visited states: " << count);
+      start = std::chrono::system_clock::now();
+    }
+    count++;
     uint64_t s_index = tree.get_next_state();
     mapd::mapd_state s(s_index, vertices_number, waypoints_number, robot_ids);
     tree.set_state_to_visited(s_index);
