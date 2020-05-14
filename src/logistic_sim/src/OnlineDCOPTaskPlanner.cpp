@@ -85,12 +85,15 @@ std::ostream& operator<<(std::ostream &out, const std::vector<T> &v)
 }
 
 template <class T = uint(uint64_t)>
-std::vector<std::vector<uint> > search_function(const std::vector<std::vector<uint> > &waypoints,
+void search_function(const std::vector<std::vector<uint> > &waypoints,
                                                 const mapd::mapd_state &is,
                                                 const std::vector<std::vector<uint> > &graph,
                                                 const std::vector<uint> &robot_ids,
                                                 T *h_func,
-                                                const std::vector<std::vector<uint> > &other_paths)
+                                                const std::vector<std::vector<uint> > &other_paths,
+                                                std::vector<std::vector<uint> > *result_task_paths,
+                                                std::vector<std::vector<uint> > *result_home_paths,
+                                                const std::vector<bool> &going_home)
 {
   ROS_DEBUG_STREAM("waypoints: " << std::endl << waypoints);
   ROS_DEBUG_STREAM("robot_ids: " << std::endl << robot_ids);
@@ -148,7 +151,7 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
     {
       ROS_DEBUG_STREAM("found solution!");
       // reconstruct path
-      std::vector<std::vector<uint> > result(robot_number);
+      std::vector<std::vector<uint> > task_path(robot_number), home_path(robot_number);
       try
       {
         while (true)
@@ -156,7 +159,14 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
           // ROS_DEBUG_STREAM("final path: " << s.configuration);
           for (int i = 0; i < robot_number; i++)
           {
-            result[i].emplace(result[i].begin(), s.configuration[i]);
+            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1)
+            {
+              home_path[i].emplace(home_path[i].begin(), s.configuration[i]);
+            }
+            else
+            {
+              task_path[i].emplace(task_path[i].begin(), s.configuration[i]);
+            }
           }
           s = mapd::mapd_state(tree.get_prev_state(s_index), vertices_number, waypoints_number, robot_ids);
           s_index = s.get_index_notation(vertices_number, waypoints_number);
@@ -166,7 +176,9 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
       {
         // reached initial state
         ROS_DEBUG_STREAM("returning complete paths!");
-        return result;
+        *result_task_paths = task_path;
+        *result_home_paths = home_path;
+        return;
       }
     }
 
@@ -227,7 +239,7 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
   }
 
   ROS_WARN_STREAM("Can't find solution!");
-  return std::vector<std::vector<uint> >();
+  return;
 }
 
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -504,6 +516,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   map_graph = build_graph();
   std::vector<std::vector<uint> > waypoints;
   std::vector<uint> robot_ids;
+  std::vector<bool> going_home;
   mapd::mapd_state initial_state;
   for (int i=0; i<TEAM_SIZE; i++)
   {
@@ -511,6 +524,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     {
       waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
       robot_ids.push_back(i);
+      going_home.push_back(true);
+      
       initial_state.configuration.push_back(msg->TRAILS[i].PATH.front());
     }
   }
@@ -518,14 +533,18 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   initial_state.robot_ids = robot_ids;
   mapd::max_cost_heuristic h_func(map_graph, waypoints, robot_ids);
   // start search
-  std::vector<std::vector<uint> > paths = search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths);
+  std::vector<std::vector<uint> > paths, home_paths;
+
+  search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths, going_home);
 
   // insert paths inside token
   for (int i=0; i<paths.size(); i++)
   {
     uint robot_id = robot_ids[i];
     token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
-    ROS_DEBUG_STREAM("final path: " << paths[i]);
+    token.HOME_TRAILS[robot_id].PATH = home_paths[i];
+    ROS_DEBUG_STREAM("final task path: " << paths[i]);
+    ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
   }
 
   token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);

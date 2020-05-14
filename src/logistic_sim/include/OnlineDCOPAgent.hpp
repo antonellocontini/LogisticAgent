@@ -21,6 +21,7 @@ protected:
                                             logistic_sim::Token &token, std::vector<unsigned int> &first_leg, std::vector<unsigned int> &last_leg);
 
   // book-keeping of the waypoints still to reach in the current plan
-  std::list<uint> active_waypoints;
+  std::list<logistic_sim::Mission> assigned_missions;
+  std::list<std::list<uint> > task_waypoints;
 };
 }

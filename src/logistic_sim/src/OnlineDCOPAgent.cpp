@@ -142,10 +142,22 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       try
       {
         std::vector<unsigned int> last_leg, first_leg;  // this will contain the path, splitted in two sections
-        waypoints.push_back(current_vertex);
-        for (uint v : active_waypoints)
+        if (!task_waypoints.empty())
         {
-          waypoints.push_back(v);
+          waypoints.push_back(current_vertex);
+          for (uint v : task_waypoints.front())
+          {
+            waypoints.push_back(v);
+          }
+        }
+        // add home vertex to waypoints
+        waypoints.push_back(initial_vertex);
+
+        // insert future tasks inside token
+        for (logistic_sim::Mission &m : assigned_missions)
+        {
+          token.MISSION.push_back(m);
+          token.NEW_MISSIONS_AVAILABLE = true;
         }
 
         // // calculate path
@@ -191,6 +203,8 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   else if (msg->MULTI_PLAN_REPAIR)
   {
     ROS_INFO_STREAM("TODO MULTI-ROBOT REPAIR PHASE");
+
+    // here replan for the remaining tasks
   }
   else if (msg->ALLOCATE)
   {
@@ -233,9 +247,18 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
   if (goal_success)
   {
     // check if a waypoint has been reached, for waypoint book-keeping
-    if (!active_waypoints.empty() && next_vertex == active_waypoints.front())
+    if (!task_waypoints.empty())
     {
-      active_waypoints.pop_front();
+      std::list<uint> &active_waypoints = task_waypoints.front();
+      if (!active_waypoints.empty() && next_vertex == active_waypoints.front())
+      {
+        active_waypoints.pop_front();
+        if (active_waypoints.empty())
+        {
+          task_waypoints.pop_front();
+          assigned_missions.pop_front();
+        }
+      }
     }
 
     // update travelled distance, for statistics
@@ -363,15 +386,17 @@ void OnlineDCOPAgent::plan_and_update_token(const std::vector<uint> &waypoints,
       robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg, &f);
 
   // update active waypoints
-  if (!active_waypoints.empty())
+  if (!task_waypoints.empty())
   {
     // the last waypoint is the home, but new tasks have been inserted
-    active_waypoints.pop_back();
+    task_waypoints.back().pop_back();
   }
+  std::list<uint> new_task_waypoints;
   for (int i = 1; i < waypoints.size(); i++)
   {
-    active_waypoints.push_back(waypoints[i]);
+    new_task_waypoints.push_back(waypoints[i]);
   }
+  task_waypoints.push_back(new_task_waypoints);
 
   std::cout << "first_leg: ";
   for (unsigned int v : first_leg)
@@ -431,6 +456,8 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
     }
     waypoints.push_back(initial_vertex);
     plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
+    // add mission to local list
+    assigned_missions.push_back(m);
 
     // update token statistics
     token.MISSIONS_COMPLETED[ID_ROBOT]++;
