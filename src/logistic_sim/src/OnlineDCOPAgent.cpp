@@ -252,9 +252,11 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
       std::list<uint> &active_waypoints = task_waypoints.front();
       if (!active_waypoints.empty() && next_vertex == active_waypoints.front())
       {
+        ROS_INFO_STREAM("Reached waypoint " << next_vertex);
         active_waypoints.pop_front();
         if (active_waypoints.empty())
         {
+          ROS_INFO_STREAM("Task completed!");
           task_waypoints.pop_front();
           assigned_missions.pop_front();
         }

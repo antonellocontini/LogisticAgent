@@ -522,7 +522,9 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   {
     if (!msg->HAS_REPAIRED_PATH[i])
     {
-      waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
+      std::vector<uint> w = msg->ROBOT_WAYPOINTS[i].VERTICES;
+      w.erase(w.begin());   // mapd planning algorithm does not need initial vertex in waypoints
+      waypoints.push_back(w);
       robot_ids.push_back(i);
       going_home.push_back(true);
       
