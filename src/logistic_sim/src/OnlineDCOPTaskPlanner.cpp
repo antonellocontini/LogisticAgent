@@ -272,7 +272,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     ROS_ERROR_STREAM_COND(!property_validity, "Conflict-free property does not hold anymore!");
     ROS_INFO_STREAM_COND(property_validity, "Conflict-free property still holds true");
 
-    token.REPAIR = true;
+    token.NEED_REPAIR = true;
     token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, false);
   }
   else if (msg->REPAIR)
@@ -525,6 +525,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
       std::vector<uint> w = msg->ROBOT_WAYPOINTS[i].VERTICES;
       w.erase(w.begin());   // mapd planning algorithm does not need initial vertex in waypoints
       waypoints.push_back(w);
+      // waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
       robot_ids.push_back(i);
       going_home.push_back(true);
       

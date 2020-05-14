@@ -120,7 +120,6 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // delete path from token and return to current vertex
         token.TRAILS[ID_ROBOT].PATH = { current_vertex };
         token.HOME_TRAILS[ID_ROBOT].PATH.clear();
-        sendGoal(current_vertex);
       }
     }
   }
@@ -336,7 +335,14 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
         first_to_see_equal = true;
     }
 
-    if (msg->NEW_MISSIONS_AVAILABLE && first_to_see_equal)
+    if (msg->NEED_REPAIR && first_to_see_equal)
+    {
+      // start the plan repair phase
+      token.NEED_REPAIR = false;
+      token.REPAIR = true;
+      token.ID_RECEIVER = 0;
+    }
+    else if (msg->NEW_MISSIONS_AVAILABLE && first_to_see_equal)
     {
       token.ALLOCATE = true;
 

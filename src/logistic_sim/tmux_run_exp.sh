@@ -3,18 +3,18 @@
 USE_KAIROS=false
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=1
+NROBOTS=2
 INITPOS=default
-ALG=OnlineCentralizedAgent
+ALG=OnlineDCOPAgent
 LOC=AMCL
 # LOC=fake_localization
 NAV=ros
 SPEEDUP=3.0
 CAPACITY=3
-TP_NAME=OnlineGreedyTaskPlanner
+TP_NAME=OnlineDCOPTaskPlanner
 GEN=file
 DEBUG=false
-MISSIONS_FILE=video.txt
+MISSIONS_FILE=1.txt
 NRUNS=1
 
 if [ "$USE_KAIROS" = "true" ]; then
@@ -99,7 +99,7 @@ function launch_robots {
 
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
-	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=$DEBUG --wait" C-m
+	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=true --wait" C-m
 	# if [ $DEBUG = true ] ; then
 	# 	if [ -f "commands_taskplanner.txt" ] ; then
 	# 		echo "Debug mode activated, gdb commands from file..."
