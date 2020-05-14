@@ -106,8 +106,9 @@ void mapd_state::_get_neigh_impl(const std::vector<std::vector<unsigned int> > &
                                   unsigned int robot_i) const
 {
   int robots_number = configuration.size();
-  std::vector<unsigned int> near_vertices = {configuration[robot_i]};
-  near_vertices.insert(near_vertices.end(), gr[robot_i].begin(), gr[robot_i].end());
+  uint robot_current_pos = configuration[robot_i];
+  std::vector<unsigned int> near_vertices = {robot_current_pos};
+  near_vertices.insert(near_vertices.end(), gr[robot_current_pos].begin(), gr[robot_current_pos].end());
   for (unsigned int v : near_vertices)
   {
     temp_state.configuration[robot_i] = v;
