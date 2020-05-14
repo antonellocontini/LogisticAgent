@@ -153,17 +153,19 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
       {
         while (true)
         {
-          ROS_DEBUG_STREAM(s.configuration);
+          // ROS_DEBUG_STREAM("final path: " << s.configuration);
           for (int i = 0; i < robot_number; i++)
           {
             result[i].emplace(result[i].begin(), s.configuration[i]);
           }
           s = mapd::mapd_state(tree.get_prev_state(s_index), vertices_number, waypoints_number, robot_ids);
+          s_index = s.get_index_notation(vertices_number, waypoints_number);
         }
       }
       catch (const std::string &e)
       {
         // reached initial state
+        ROS_DEBUG_STREAM("returning complete paths!");
         return result;
       }
     }
@@ -175,31 +177,35 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
     uint best_state_g_value;
     uint s_value = tree.visited_state_g(s_index);
     auto neigh_list = s.get_neigh(graph, waypoints);
-    if (neigh_list.empty())
-    {
-      ROS_DEBUG_STREAM("Warning! Neighbour list is empty");
-    }
+    // if (neigh_list.empty())
+    // {
+    //   ROS_DEBUG_STREAM("Warning! Neighbour list is empty");
+    // }
+    // ROS_DEBUG_STREAM("Neighbours #: " << neigh_list.size());
     for (const mapd::mapd_state &x : neigh_list)
     {
       uint64_t x_index = x.get_index_notation(vertices_number, waypoints_number);
-      if (is_transition_valid(s, x, other_paths, tree.visited_state_g(s_index)))
+      if (x_index != s_index)
       {
-        // check that new state is not closed
-        if (!tree.is_state_closed(x_index))
+        if (is_transition_valid(s, x, other_paths, tree.visited_state_g(s_index)))
         {
-          // check that new state is not visited
-          if (!tree.is_state_visited(x_index))
+          // check that new state is not closed
+          if (!tree.is_state_closed(x_index))
           {
-            // check that new state is not already in queue (unless found with a better path)
-            if (!tree.is_state_in_queue(x_index) || tree.visited_state_g(x_index) > s_value + 1)
+            // check that new state is not visited
+            if (!tree.is_state_visited(x_index))
             {
-              uint x_value = s_value + 1 + (*h_func)(x_index);
-              if (x_value < best_state_f_value)
+              // check that new state is not already in queue (unless found with a better path)
+              if (!tree.is_state_in_queue(x_index) || tree.visited_state_g(x_index) > s_value + 1)
               {
-                best_state_f_value = x_value;
-                best_state_g_value = s_value + 1;
-                best_state_index = x_index;
-                new_state_found = true;
+                uint x_value = s_value + 1 + (*h_func)(x_index);
+                if (x_value < best_state_f_value)
+                {
+                  best_state_f_value = x_value;
+                  best_state_g_value = s_value + 1;
+                  best_state_index = x_index;
+                  new_state_found = true;
+                }
               }
             }
           }
@@ -219,6 +225,9 @@ std::vector<std::vector<uint> > search_function(const std::vector<std::vector<ui
       tree.set_state_to_closed(s_index);
     }
   }
+
+  ROS_WARN_STREAM("Can't find solution!");
+  return std::vector<std::vector<uint> >();
 }
 
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
@@ -256,10 +265,12 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   }
   else if (msg->REPAIR)
   {
+    edges_mutex.unlock();
     ROS_DEBUG_STREAM("Waiting for agents to repair their paths...");
   }
   else if (msg->MULTI_PLAN_REPAIR)
   {
+    edges_mutex.unlock();
     ROS_WARN_STREAM("For now we use centralized implementation of multi-robot repair!");
     // at this point, we have the robots' waypoints and their current position inside the token
     // run MAPD algorithm to find a solution and insert such solution inside the token
@@ -513,9 +524,11 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   for (int i=0; i<paths.size(); i++)
   {
     uint robot_id = robot_ids[i];
-    token.TRAILS[robot_id].PATH = paths[i];
+    token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
+    ROS_DEBUG_STREAM("final path: " << paths[i]);
   }
 
+  token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);
   token.MULTI_PLAN_REPAIR = false;
 }
 
