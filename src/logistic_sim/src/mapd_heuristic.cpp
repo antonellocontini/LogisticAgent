@@ -80,14 +80,18 @@ uint max_cost_heuristic::operator()(uint64_t state_index)
     uint agent_cost = 0;
     uint curr_pos = s.configuration[i];
     uint next_pos;
+    // std::cout << waypoints_number[i] << std::endl;
     for (int j = s.waypoint_indices[i]; j < waypoints_number[i]; j++)
     {
-      next_pos = waypoints[i][s.waypoint_indices[i]];
+      next_pos = waypoints[i][j];
       agent_cost += fw[curr_pos][next_pos];
+      // std::cout << "\tfrom " << curr_pos << " to " << next_pos << ": " << fw[curr_pos][next_pos] << std::endl;
       curr_pos = next_pos;
     }
+    // std::cout << std::endl;
 
     result = std::max(result, agent_cost);
+    // getc(stdin);
   }
 
   return result;
