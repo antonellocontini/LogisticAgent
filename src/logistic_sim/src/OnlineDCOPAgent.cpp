@@ -153,9 +153,11 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         waypoints.push_back(initial_vertex);
 
         // insert future tasks inside token
-        for (logistic_sim::Mission &m : assigned_missions)
+        auto it = assigned_missions.begin();
+        it++;
+        for (; it != assigned_missions.end(); it++)
         {
-          token.MISSION.push_back(m);
+          token.MISSION.push_back(*it);
           token.NEW_MISSIONS_AVAILABLE = true;
         }
 
