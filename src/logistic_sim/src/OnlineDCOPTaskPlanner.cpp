@@ -105,7 +105,7 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
     waypoints_number.push_back(x.size());
   }
   ROS_DEBUG_STREAM("instantiate tree");
-  mapd::mapd_search_tree tree(graph);
+  mapd::mapd_search_tree tree(graph, waypoints_number, robot_ids);
   int vertices_number = graph.size();
   uint64_t is_index = is.get_index_notation(vertices_number, waypoints_number);
   ROS_DEBUG_STREAM("initial state index notation: " << is_index);
@@ -176,6 +176,8 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
       catch (const std::string &e)
       {
         // reached initial state
+        ROS_DEBUG_STREAM("initial h-value: " << h_value);
+        ROS_DEBUG_STREAM("path length: " << task_path[0].size() + home_path[0].size());
         ROS_DEBUG_STREAM("returning complete paths!");
         *result_task_paths = task_path;
         *result_home_paths = home_path;

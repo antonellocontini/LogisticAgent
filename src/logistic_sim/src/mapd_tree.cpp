@@ -1,13 +1,16 @@
 #include "mapd.hpp"
 #include <functional>
+#include <numeric>
 
 namespace mapd
 {
 
 using namespace std::placeholders;
 
-mapd_search_tree::mapd_search_tree(const std::vector<std::vector<unsigned int> > &graph)
-  : graph(graph), open(std::bind(&mapd_search_tree::cmp_function, this, _1, _2)), visited(), g(), f(), prev()
+mapd_search_tree::mapd_search_tree(const std::vector<std::vector<unsigned int> > &graph,
+                                   const std::vector<unsigned int> &waypoints_number,
+                                   const std::vector<unsigned int> &robot_ids)
+  : graph(graph), open(std::bind(&mapd_search_tree::cmp_function, this, _1, _2)), visited(), g(), f(), prev(), waypoints_number(waypoints_number), robot_ids(robot_ids)
 {
 
 }
@@ -136,16 +139,48 @@ uint64_t mapd_search_tree::get_prev_state(uint64_t state) const
 
 bool mapd_search_tree::cmp_function(uint64_t lhs, uint64_t rhs) const
 {
-  unsigned int lhs_f = f.find(lhs)->second, rhs_f = f.find(rhs)->second;
-  unsigned int lhs_g = g.find(lhs)->second, rhs_g = g.find(rhs)->second;
+  unsigned int lhs_f = f.find(lhs)->second,
+               rhs_f = f.find(rhs)->second;
+  unsigned int lhs_g = g.find(lhs)->second,
+               rhs_g = g.find(rhs)->second;
   
   if (lhs_f < rhs_f)
   {
     return true;
   }
-  else if (lhs_f == rhs_f && lhs_g > rhs_g)
+  else if (lhs_f == rhs_f)
   {
-    return true;
+    mapd_state lhs_state(lhs, graph.size(), waypoints_number, robot_ids),
+               rhs_state(rhs, graph.size(), waypoints_number, robot_ids);
+    uint lhs_progress = 999, rhs_progress = 999;
+    for (int i=0; i<waypoints_number.size(); i++)
+    {
+      if (lhs_state.waypoint_indices[i] < lhs_progress)
+      {
+        lhs_progress = lhs_state.waypoint_indices[i];
+      }
+      if (rhs_state.waypoint_indices[i] < rhs_progress)
+      {
+        rhs_progress = rhs_state.waypoint_indices[i];
+      }
+    }
+
+    if (lhs_progress > rhs_progress)
+    {
+      return true;
+    }
+    else if (lhs_progress == rhs_progress && lhs_g > rhs_g)
+    {
+      return true;
+    }
+    // if (lhs_g > rhs_g)
+    // {
+    //   return true;
+    // }
+    // else if (lhs_g == rhs_g && lhs_progress > rhs_progress)
+    // {
+    //   return true;
+    // }
   }
   return false;
 }

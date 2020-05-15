@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& out, const mapd_state &s);
 class mapd_search_tree
 {
 public:
-  mapd_search_tree(const std::vector<std::vector<unsigned int> > &graph);
+  mapd_search_tree(const std::vector<std::vector<unsigned int> > &graph, const std::vector<unsigned int> &waypoints_number, const std::vector<unsigned int> &robot_ids);
   void add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value, uint64_t prev_state);
   void add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value);
   bool is_open_empty() const;
@@ -76,6 +76,8 @@ protected:
   std::map<uint64_t, unsigned int, std::function<bool (uint64_t, uint64_t)> > open;  // map ordered by compare function
   std::unordered_map<uint64_t, unsigned int> visited, g, f; // keeps already visited states, tells if they are gray or black
   std::unordered_map<uint64_t, uint64_t> prev;  // keeps ancestors
+  std::vector<unsigned int> waypoints_number;
+  std::vector<unsigned int> robot_ids;
 };
 
 struct max_cost_heuristic
