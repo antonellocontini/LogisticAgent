@@ -182,7 +182,7 @@ bool mapd_search_tree::cmp_function(uint64_t lhs, uint64_t rhs) const
     //   return true;
     // }
   }
-  return false;
+  return lhs < rhs;
 }
 
 
