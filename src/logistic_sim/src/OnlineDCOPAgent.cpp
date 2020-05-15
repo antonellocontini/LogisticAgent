@@ -202,6 +202,10 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
           token.MULTI_PLAN_REPAIR = true;
           ROS_WARN_STREAM("Some robots are in deadlock, going to multi-robot repair phase");
         }
+        else
+        {
+          token.SINGLE_PLAN_REPAIR_PROGRESS = false;
+        }
       }
     }
   }
