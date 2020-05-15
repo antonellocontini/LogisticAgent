@@ -67,7 +67,7 @@ std::ostream& operator<<(std::ostream &out, const std::vector<std::vector<T> > &
     {
       out << " " << x;
     }
-    out << std::endl;
+    out << " END" << std::endl;
   }
   return out;
 }
@@ -133,6 +133,7 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
     }
     count++;
     uint64_t s_index = tree.get_next_state();
+    // ROS_DEBUG_STREAM("VISIT: " << s_index);
     mapd::mapd_state s(s_index, vertices_number, waypoints_number, robot_ids);
     tree.set_state_to_visited(s_index);
 
@@ -511,7 +512,9 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   {
     if (msg->HAS_REPAIRED_PATH[i])
     {
-      other_paths.push_back(msg->TRAILS[i].PATH);
+      std::vector<uint> robot_path = msg->TRAILS[i].PATH;
+      robot_path.insert(robot_path.end(), msg->HOME_TRAILS[i].PATH.begin(), msg->HOME_TRAILS[i].PATH.end());
+      other_paths.push_back(robot_path);
     }
   }
 
