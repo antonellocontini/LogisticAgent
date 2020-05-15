@@ -160,18 +160,18 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         }
 
         // calculate path
-        if (ID_ROBOT % 2 == 0)
-        {
+        // if (ID_ROBOT % 2 == 0)
+        // {
           plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
           // code after previous call execute only if plan is successful
           token.SINGLE_PLAN_REPAIR_PROGRESS = true;
           token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
           ROS_INFO_STREAM("Plan repaired successfully!");
-        }
-        else
-        {
-          failed_planning = true;   // testing multi-agent repair
-        }
+        // }
+        // else
+        // {
+        //   failed_planning = true;   // testing multi-agent repair
+        // }
       }
       catch (std::string &e)
       {
