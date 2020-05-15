@@ -1,6 +1,7 @@
 #include "mapd.hpp"
 #include <functional>
 #include <numeric>
+#include <algorithm>
 
 namespace mapd
 {
@@ -45,7 +46,11 @@ uint64_t mapd_search_tree::get_next_state() const
 
 void mapd_search_tree::pop_next_state()
 {
-  open.erase(open.begin());
+  auto it = open.begin();
+  if (it != open.end())
+  {
+    open.erase(it);
+  }
 }
 
 
@@ -148,31 +153,42 @@ bool mapd_search_tree::cmp_function(uint64_t lhs, uint64_t rhs) const
   {
     return true;
   }
-  else if (lhs_f == rhs_f)
+  else if (lhs_f > rhs_f)
+  {
+    return false;
+  }
+  else
   {
     mapd_state lhs_state(lhs, graph.size(), waypoints_number, robot_ids),
                rhs_state(rhs, graph.size(), waypoints_number, robot_ids);
-    uint lhs_progress = 999, rhs_progress = 999;
-    for (int i=0; i<waypoints_number.size(); i++)
-    {
-      if (lhs_state.waypoint_indices[i] < lhs_progress)
-      {
-        lhs_progress = lhs_state.waypoint_indices[i];
-      }
-      if (rhs_state.waypoint_indices[i] < rhs_progress)
-      {
-        rhs_progress = rhs_state.waypoint_indices[i];
-      }
-    }
+    uint lhs_progress = *std::min_element(lhs_state.waypoint_indices.begin(), lhs_state.waypoint_indices.end());
+    uint rhs_progress = *std::min_element(rhs_state.waypoint_indices.begin(), rhs_state.waypoint_indices.end());
 
     if (lhs_progress > rhs_progress)
     {
       return true;
     }
-    else if (lhs_progress == rhs_progress && lhs_g > rhs_g)
+    else if (lhs_progress < rhs_progress)
+    {
+      return false;
+    }
+    else if (lhs_g > rhs_g)
     {
       return true;
     }
+    else if (lhs_g < rhs_g)
+    {
+      return false;
+    }
+    else if (lhs < rhs)
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+    
     // if (lhs_g > rhs_g)
     // {
     //   return true;
@@ -182,7 +198,6 @@ bool mapd_search_tree::cmp_function(uint64_t lhs, uint64_t rhs) const
     //   return true;
     // }
   }
-  return lhs < rhs;
 }
 
 
