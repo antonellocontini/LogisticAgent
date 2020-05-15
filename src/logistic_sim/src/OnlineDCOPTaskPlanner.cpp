@@ -159,7 +159,8 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
           // ROS_DEBUG_STREAM("final path: " << s.configuration);
           for (int i = 0; i < robot_number; i++)
           {
-            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1)
+            // the last condition is to make sure that the second last waypoint is inserted in the task path, not the home path
+            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1 && s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
             {
               home_path[i].emplace(home_path[i].begin(), s.configuration[i]);
             }
