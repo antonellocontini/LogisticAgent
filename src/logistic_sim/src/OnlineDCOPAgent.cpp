@@ -102,7 +102,8 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         uint u = trail[i - 1], v = trail[i];
         for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
         {
-          if (u == e.u && v == e.v)
+          if ((u == e.u && v == e.v) || 
+               (u == e.v && v == e.u))
           {
             good_path = false;
           }
