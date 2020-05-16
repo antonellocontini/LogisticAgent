@@ -16,20 +16,27 @@ OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::st
 
 bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to, const std::vector<std::vector<uint> > &other_paths, uint timestep)
 {
-  raise(SIGSEGV);
   int robots_number = to.configuration.size();
-  for (auto x : to.configuration)
+  for (uint x : to.configuration)
   {
+    // check vertex conflicts
     if (std::count(to.configuration.begin(), to.configuration.end(), x) > 1)
     {
+      // ROS_DEBUG_STREAM("Internal vertex conflict");
       return false;
     }
 
-    // check vertex does not cause conflict with other paths
+    // check vertex conflicts with other paths
     for (const auto &p : other_paths)
     {
       if (p.size() > timestep+1 && p[timestep+1] == x)
       {
+        // ROS_DEBUG_STREAM("Vertex conflict with other robot at timestep " << timestep+1);
+        return false;
+      }
+      else if (p.size() <= timestep+1 && p.back() == x)
+      {
+        // ROS_DEBUG_STREAM("Vertex conflict with other robot at timestep " << timestep+1);
         return false;
       }
     }
@@ -37,10 +44,12 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
 
   for (int i = 0; i < robots_number; i++)
   {
+    // check swap conflicts within state
     for (int j = i; j < robots_number; j++)
     {
       if (to.configuration[i] == from.configuration[j] && to.configuration[j] == from.configuration[i])
       {
+        // ROS_DEBUG_STREAM("Internal swap conflict");
         return false;
       }
     }
@@ -50,6 +59,7 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
     {
       if (p.size() > timestep+1 && to.configuration[i] == p[timestep] && from.configuration[i] == p[timestep+1])
       {
+        // ROS_DEBUG_STREAM("Swap conflict with other robot from timestep " << timestep << " to timestep " << timestep+1);
         return false;
       }
     }
@@ -83,6 +93,156 @@ std::ostream& operator<<(std::ostream &out, const std::vector<T> &v)
   out << std::endl;
   return out;
 }
+
+
+template <class T = uint(uint64_t)>
+void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
+                                                const mapd::mapd_state &is,
+                                                const std::vector<std::vector<uint> > &graph,
+                                                const std::vector<uint> &robot_ids,
+                                                T *h_func,
+                                                const std::vector<std::vector<uint> > &other_paths,
+                                                std::vector<std::vector<uint> > *result_task_paths,
+                                                std::vector<std::vector<uint> > *result_home_paths,
+                                                const std::vector<bool> &going_home)
+{
+  ROS_DEBUG_STREAM("waypoints: " << std::endl << waypoints);
+  ROS_DEBUG_STREAM("robot_ids: " << std::endl << robot_ids);
+  ROS_DEBUG_STREAM("other_paths: " << std::endl << other_paths);
+  int robot_number = robot_ids.size();
+  std::vector<uint> waypoints_number;
+  for (const auto &x : waypoints)
+  {
+    waypoints_number.push_back(x.size());
+  }
+  ROS_DEBUG_STREAM("instantiate tree");
+  mapd::mapd_search_tree tree(graph, waypoints_number, robot_ids);
+  int vertices_number = graph.size();
+  uint64_t is_index = is.get_index_notation(vertices_number, waypoints_number);
+  ROS_DEBUG_STREAM("initial state index notation: " << is_index);
+  // ROS_DEBUG_STREAM("heuristic function: " << *h_func);
+  // std::ofstream test("test_heuristic.txt");
+  // test << *h_func;
+  // test.close();
+  uint h_value = (*h_func)(is_index);
+  ROS_DEBUG_STREAM("initial state h-value: " << h_value);
+  ROS_DEBUG_STREAM("add initial state to tree");
+  tree.add_to_open(is_index, 0, h_value);
+  ROS_DEBUG_STREAM("initial state: " << std::endl << is);
+  ROS_DEBUG_STREAM("Starting state exploration...");
+  uint64_t count = 0, closed_count = 0;
+  auto start = std::chrono::system_clock::now();
+  while (!tree.is_open_empty())
+  {
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    if (elapsed.count() >= 10.0)
+    {
+      ROS_DEBUG_STREAM("Visited states: " << count);
+      ROS_DEBUG_STREAM("Open queue size: " << tree.open_size());
+      start = std::chrono::system_clock::now();
+    }
+    count++;
+    uint64_t s_index = tree.get_next_state();
+    // ROS_DEBUG_STREAM("VISIT: " << s_index);
+    mapd::mapd_state s(s_index, vertices_number, waypoints_number, robot_ids);
+    tree.set_state_to_closed(s_index);
+    tree.pop_next_state();
+    closed_count++;
+
+    // check if this is a final state
+    bool is_final = true;
+    for (int i = 0; i < robot_number; i++)
+    {
+      if (s.waypoint_indices[i] != waypoints_number[i] - 1 || s.configuration[i] != waypoints[i].back())
+      {
+        is_final = false;
+        break;
+      }
+    }
+
+    if (is_final)
+    {
+      ROS_DEBUG_STREAM("found solution!");
+      // reconstruct path
+      std::vector<std::vector<uint> > task_path(robot_number), home_path(robot_number);
+      try
+      {
+        while (true)
+        {
+          // ROS_DEBUG_STREAM("final path: " << s.configuration);
+          for (int i = 0; i < robot_number; i++)
+          {
+            // the last condition is to make sure that the second last waypoint is inserted in the task path, not the home path
+            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1 && s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
+            {
+              home_path[i].emplace(home_path[i].begin(), s.configuration[i]);
+            }
+            else
+            {
+              task_path[i].emplace(task_path[i].begin(), s.configuration[i]);
+            }
+          }
+          s = mapd::mapd_state(tree.get_prev_state(s_index), vertices_number, waypoints_number, robot_ids);
+          s_index = s.get_index_notation(vertices_number, waypoints_number);
+        }
+      }
+      catch (const std::string &e)
+      {
+        // reached initial state
+        ROS_DEBUG_STREAM("initial h-value: " << h_value);
+        ROS_DEBUG_STREAM("path length: " << task_path[0].size() + home_path[0].size());
+        ROS_DEBUG_STREAM("returning complete paths!");
+        *result_task_paths = task_path;
+        *result_home_paths = home_path;
+        return;
+      }
+    }
+
+
+    uint s_g_value = tree.visited_state_g(s_index);
+    auto neigh_list = s.get_neigh(graph, waypoints);
+    // if (neigh_list.empty())
+    // {
+    //   ROS_DEBUG_STREAM("Warning! Neighbour list is empty");
+    // }
+    // ROS_DEBUG_STREAM("Neighbours #: " << neigh_list.size());
+    for (const mapd::mapd_state &x : neigh_list)
+    {
+      uint64_t x_index = x.get_index_notation(vertices_number, waypoints_number);
+      if (x_index != s_index)
+      {
+        if (is_transition_valid(s, x, other_paths, tree.visited_state_g(s_index)))
+        {
+          // check that new state is not closed
+          if (!tree.is_state_closed(x_index))
+          {
+            // check that new state is not already in queue (unless found with a better path)
+            if (!tree.is_state_in_queue(x_index) || tree.visited_state_g(x_index) > s_g_value + 1)
+            {
+              uint x_f_value = s_g_value + 1 + (*h_func)(x_index);
+              tree.add_to_open(x_index, s_g_value + 1, x_f_value, s_index);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  ROS_WARN_STREAM("Can't find solution!");
+  uint64_t total_states = 1;
+  for (int i=0; i<robot_number; i++)
+  {
+    total_states *= graph.size();
+  }
+  for (uint x : waypoints_number)
+  {
+    total_states *= x;
+  }
+  ROS_DEBUG_STREAM("Closed states: " << closed_count << "\tTotal states: " << total_states);
+  return;
+}
+
 
 template <class T = uint(uint64_t)>
 void search_function(const std::vector<std::vector<uint> > &waypoints,
@@ -119,7 +279,7 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
   tree.add_to_open(is_index, 0, h_value);
   ROS_DEBUG_STREAM("initial state: " << std::endl << is);
   ROS_DEBUG_STREAM("Starting state exploration...");
-  uint64_t count = 0;
+  uint64_t count = 0, closed_count = 0;
   auto start = std::chrono::system_clock::now();
   while (!tree.is_open_empty())
   {
@@ -239,10 +399,21 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
       // if a new state could not been found, it means that the current one is closed and can be removed from open queue
       tree.pop_next_state();
       tree.set_state_to_closed(s_index);
+      closed_count++;
     }
   }
 
   ROS_WARN_STREAM("Can't find solution!");
+  uint64_t total_states = 1;
+  for (int i=0; i<robot_number; i++)
+  {
+    total_states *= graph.size();
+  }
+  for (uint x : waypoints_number)
+  {
+    total_states *= x;
+  }
+  ROS_DEBUG_STREAM("Closed states: " << closed_count << "\tTotal states: " << total_states);
   return;
 }
 
@@ -544,7 +715,9 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // start search
   std::vector<std::vector<uint> > paths, home_paths;
 
-  search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths, going_home);
+  // test with no other paths
+  astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint> >(), &paths, &home_paths, going_home);
+  // search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths, going_home);
 
   // insert paths inside token
   for (int i=0; i<paths.size(); i++)
