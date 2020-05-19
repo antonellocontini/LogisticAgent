@@ -60,7 +60,7 @@ mapd_state::mapd_state(const mapd_state &s)
 }
 
 
-mapd_state::mapd_state(unsigned int index, unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number, const std::vector<unsigned int> &robot_ids)
+mapd_state::mapd_state(uint64_t index, unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number, const std::vector<unsigned int> &robot_ids)
   : configuration(waypoints_number.size()), waypoint_indices(waypoints_number.size()), robot_ids(robot_ids)
 {
   int robots_number = waypoints_number.size();

@@ -24,7 +24,7 @@ struct mapd_state
   mapd_state(const std::vector<unsigned int> &configuration, const std::vector<unsigned int> &waypoint_indices, const std::vector<unsigned int> &robot_ids);
   mapd_state(const mapd_state &s);
   // constructor from index notation
-  mapd_state(unsigned int index, unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number, const std::vector<unsigned int> &robot_ids);
+  mapd_state(uint64_t index, unsigned int vertices_number, const std::vector<unsigned int> &waypoints_number, const std::vector<unsigned int> &robot_ids);
 
   std::vector<unsigned int> configuration;
   std::vector<unsigned int> waypoint_indices;
