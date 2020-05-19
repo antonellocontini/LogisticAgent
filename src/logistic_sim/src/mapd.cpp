@@ -68,13 +68,13 @@ mapd_state::mapd_state(uint64_t index, unsigned int vertices_number, const std::
   for (int i=robots_number-1; i>=0; i--)
   {
     waypoint_indices[i] = index % waypoints_number[i];
-    index /= waypoints_number[i];
+    index /= (uint64_t) waypoints_number[i];
   }
 
   for (int i=robots_number-1; i>=0; i--)
   {
     configuration[i] = index % vertices_number;
-    index /= vertices_number;
+    index /= (uint64_t) vertices_number;
   }
 }
 
@@ -86,14 +86,14 @@ uint64_t mapd_state::get_index_notation(unsigned int vertices_number, const std:
 
   for (int i=0; i<robots_number; i++)
   {
-    index *= vertices_number;
-    index += configuration[i];
+    index *= (uint64_t) vertices_number;
+    index += (uint64_t) configuration[i];
   }
 
   for (int i=0; i<robots_number; i++)
   {
-    index *= waypoints_number[i];
-    index += waypoint_indices[i];
+    index *= (uint64_t) waypoints_number[i];
+    index += (uint64_t) waypoint_indices[i];
   }
 
   return index;
