@@ -1,11 +1,11 @@
+#include <execinfo.h>
+#include <signal.h>
+#include <chrono>
 #include <unordered_map>
 #include "OnlineDCOPTaskPlanner.hpp"
 #include "boost/filesystem.hpp"
 #include "get_graph.hpp"
 #include "mapd.hpp"
-#include <execinfo.h>
-#include <signal.h>
-#include <chrono>
 
 namespace onlinedcoptaskplanner
 {
@@ -14,7 +14,8 @@ OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::st
 {
 }
 
-bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to, const std::vector<std::vector<uint> > &other_paths, uint timestep)
+bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &to,
+                         const std::vector<std::vector<uint>> &other_paths, uint timestep)
 {
   int robots_number = to.configuration.size();
   for (uint x : to.configuration)
@@ -29,12 +30,12 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
     // check vertex conflicts with other paths
     for (const auto &p : other_paths)
     {
-      if (p.size() > timestep+1 && p[timestep+1] == x)
+      if (p.size() > timestep + 1 && p[timestep + 1] == x)
       {
         // ROS_DEBUG_STREAM("Vertex conflict with other robot at timestep " << timestep+1);
         return false;
       }
-      else if (p.size() <= timestep+1 && p.back() == x)
+      else if (p.size() <= timestep + 1 && p.back() == x)
       {
         // ROS_DEBUG_STREAM("Vertex conflict with other robot at timestep " << timestep+1);
         return false;
@@ -57,9 +58,10 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
     // check swap conflicts with other paths
     for (const auto &p : other_paths)
     {
-      if (p.size() > timestep+1 && to.configuration[i] == p[timestep] && from.configuration[i] == p[timestep+1])
+      if (p.size() > timestep + 1 && to.configuration[i] == p[timestep] && from.configuration[i] == p[timestep + 1])
       {
-        // ROS_DEBUG_STREAM("Swap conflict with other robot from timestep " << timestep << " to timestep " << timestep+1);
+        // ROS_DEBUG_STREAM("Swap conflict with other robot from timestep " << timestep << " to timestep " <<
+        // timestep+1);
         return false;
       }
     }
@@ -68,8 +70,8 @@ bool is_transition_valid(const mapd::mapd_state &from, const mapd::mapd_state &t
   return true;
 }
 
-template<class T>
-std::ostream& operator<<(std::ostream &out, const std::vector<std::vector<T> > &v)
+template <class T>
+std::ostream &operator<<(std::ostream &out, const std::vector<std::vector<T>> &v)
 {
   for (const auto &w : v)
   {
@@ -82,9 +84,8 @@ std::ostream& operator<<(std::ostream &out, const std::vector<std::vector<T> > &
   return out;
 }
 
-
-template<class T>
-std::ostream& operator<<(std::ostream &out, const std::vector<T> &v)
+template <class T>
+std::ostream &operator<<(std::ostream &out, const std::vector<T> &v)
 {
   for (const T &x : v)
   {
@@ -94,17 +95,12 @@ std::ostream& operator<<(std::ostream &out, const std::vector<T> &v)
   return out;
 }
 
-
 template <class T = uint(uint64_t)>
-void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
-                                                const mapd::mapd_state &is,
-                                                const std::vector<std::vector<uint> > &graph,
-                                                const std::vector<uint> &robot_ids,
-                                                T *h_func,
-                                                const std::vector<std::vector<uint> > &other_paths,
-                                                std::vector<std::vector<uint> > *result_task_paths,
-                                                std::vector<std::vector<uint> > *result_home_paths,
-                                                const std::vector<bool> &going_home)
+void astar_search_function(const std::vector<std::vector<uint>> &waypoints, const mapd::mapd_state &is,
+                           const std::vector<std::vector<uint>> &graph, const std::vector<uint> &robot_ids, T *h_func,
+                           const std::vector<std::vector<uint>> &other_paths,
+                           std::vector<std::vector<uint>> *result_task_paths,
+                           std::vector<std::vector<uint>> *result_home_paths, const std::vector<bool> &going_home)
 {
   ROS_DEBUG_STREAM("waypoints: " << std::endl << waypoints);
   ROS_DEBUG_STREAM("robot_ids: " << std::endl << robot_ids);
@@ -132,6 +128,27 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
   ROS_DEBUG_STREAM("Starting state exploration...");
   uint64_t count = 0, closed_count = 0;
   auto start = std::chrono::system_clock::now();
+
+  // test final config
+  std::vector<uint> final_config, final_waypoints;
+  for (int i = 0; i < robot_number; i++)
+  {
+    final_config.push_back(waypoints[i].back());
+    final_waypoints.push_back(waypoints_number[i]);
+  }
+  ROS_DEBUG_STREAM("final config: " << final_config);
+  ROS_DEBUG_STREAM("robot_number: " << robot_number);
+
+  // test reachability
+  std::vector<std::vector<std::vector<bool> > > reachability(graph.size(), std::vector<std::vector<bool>>(robot_number));
+  for (int j=0; j<graph.size(); j++)
+  {
+    for (int i=0; i<robot_number; i++)
+    {
+      reachability[j][i] = std::vector<bool>(waypoints_number[i], false);
+    }
+  }
+
   while (!tree.is_open_empty())
   {
     // timer to show statistics
@@ -164,11 +181,28 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
       }
     }
 
+    for (int i=0; i<robot_number; i++)
+    {
+      // update reachability
+      uint v = s.configuration[i];
+      reachability[v][i][s.waypoint_indices[i]] = true;
+    }
+
+    if (s.configuration == final_config)
+    {
+      ROS_DEBUG_STREAM(closed_count << "\tfinal config test - final config reached on these waypoints: " << s.waypoint_indices << "\tconfiguration: " << s.configuration << "\tfinal config: " << final_config);
+    }
+
+    if (s.waypoint_indices == final_waypoints)
+    {
+      ROS_DEBUG_STREAM(closed_count << "\tfinal waypoints test - last waypoints reached in this configuration " << s.configuration);
+    }
+
     if (is_final)
     {
       ROS_DEBUG_STREAM("found solution!");
       // reconstruct path
-      std::vector<std::vector<uint> > task_path(robot_number), home_path(robot_number);
+      std::vector<std::vector<uint>> task_path(robot_number), home_path(robot_number);
       try
       {
         while (true)
@@ -176,8 +210,10 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
           // ROS_DEBUG_STREAM("final path: " << s.configuration);
           for (int i = 0; i < robot_number; i++)
           {
-            // the last condition is to make sure that the second last waypoint is inserted in the task path, not the home path
-            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1 && s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
+            // the last condition is to make sure that the second last waypoint is inserted in the task path, not the
+            // home path
+            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1 &&
+                s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
             {
               home_path[i].emplace(home_path[i].begin(), s.configuration[i]);
             }
@@ -201,7 +237,6 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
         return;
       }
     }
-
 
     uint s_g_value = tree.visited_state_g(s_index);
     std::vector<mapd::mapd_state> neigh_list = s.get_neigh(graph, waypoints);
@@ -229,9 +264,25 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
     }
   }
 
+  ROS_DEBUG_STREAM("Reached vertices:");
+  for (int i=0; i<reachability.size(); i++)
+  {
+    std::vector<std::string> vs;
+    for (const auto &vec : reachability[i])
+    {
+      std::string temp_str;
+      for (bool v : vec)
+      {
+        temp_str += (v ? "Y" : "N");
+      }
+      vs.push_back(temp_str);
+    }
+    ROS_DEBUG_STREAM("vertex " << i << "\t" << vs);
+  }
+  
   ROS_WARN_STREAM("Can't find solution!");
   uint64_t total_states = 1;
-  for (int i=0; i<robot_number; i++)
+  for (int i = 0; i < robot_number; i++)
   {
     total_states *= graph.size();
   }
@@ -240,20 +291,16 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
     total_states *= x;
   }
   ROS_DEBUG_STREAM("Closed states: " << closed_count << "\tTotal states: " << total_states);
+
   return;
 }
 
-
 template <class T = uint(uint64_t)>
-void search_function(const std::vector<std::vector<uint> > &waypoints,
-                                                const mapd::mapd_state &is,
-                                                const std::vector<std::vector<uint> > &graph,
-                                                const std::vector<uint> &robot_ids,
-                                                T *h_func,
-                                                const std::vector<std::vector<uint> > &other_paths,
-                                                std::vector<std::vector<uint> > *result_task_paths,
-                                                std::vector<std::vector<uint> > *result_home_paths,
-                                                const std::vector<bool> &going_home)
+void search_function(const std::vector<std::vector<uint>> &waypoints, const mapd::mapd_state &is,
+                     const std::vector<std::vector<uint>> &graph, const std::vector<uint> &robot_ids, T *h_func,
+                     const std::vector<std::vector<uint>> &other_paths,
+                     std::vector<std::vector<uint>> *result_task_paths,
+                     std::vector<std::vector<uint>> *result_home_paths, const std::vector<bool> &going_home)
 {
   ROS_DEBUG_STREAM("waypoints: " << std::endl << waypoints);
   ROS_DEBUG_STREAM("robot_ids: " << std::endl << robot_ids);
@@ -312,7 +359,7 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
     {
       ROS_DEBUG_STREAM("found solution!");
       // reconstruct path
-      std::vector<std::vector<uint> > task_path(robot_number), home_path(robot_number);
+      std::vector<std::vector<uint>> task_path(robot_number), home_path(robot_number);
       try
       {
         while (true)
@@ -320,8 +367,10 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
           // ROS_DEBUG_STREAM("final path: " << s.configuration);
           for (int i = 0; i < robot_number; i++)
           {
-            // the last condition is to make sure that the second last waypoint is inserted in the task path, not the home path
-            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1 && s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
+            // the last condition is to make sure that the second last waypoint is inserted in the task path, not the
+            // home path
+            if (going_home[i] && s.waypoint_indices[i] == waypoints_number[i] - 1 &&
+                s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
             {
               home_path[i].emplace(home_path[i].begin(), s.configuration[i]);
             }
@@ -405,7 +454,7 @@ void search_function(const std::vector<std::vector<uint> > &waypoints,
 
   ROS_WARN_STREAM("Can't find solution!");
   uint64_t total_states = 1;
-  for (int i=0; i<robot_number; i++)
+  for (int i = 0; i < robot_number; i++)
   {
     total_states *= graph.size();
   }
@@ -678,8 +727,8 @@ void OnlineDCOPTaskPlanner::init_token(const logistic_sim::TokenConstPtr &msg, l
 void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   // get valid paths
-  std::vector<std::vector<uint> > other_paths;
-  for (int i=0; i<TEAM_SIZE; i++)
+  std::vector<std::vector<uint>> other_paths;
+  for (int i = 0; i < TEAM_SIZE; i++)
   {
     if (msg->HAS_REPAIRED_PATH[i])
     {
@@ -691,21 +740,21 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 
   // build map graph
   map_graph = build_graph();
-  std::vector<std::vector<uint> > waypoints;
+  std::vector<std::vector<uint>> waypoints;
   std::vector<uint> robot_ids;
   std::vector<bool> going_home;
   mapd::mapd_state initial_state;
-  for (int i=0; i<TEAM_SIZE; i++)
+  for (int i = 0; i < TEAM_SIZE; i++)
   {
     if (!msg->HAS_REPAIRED_PATH[i])
     {
       std::vector<uint> w = msg->ROBOT_WAYPOINTS[i].VERTICES;
-      w.erase(w.begin());   // mapd planning algorithm does not need initial vertex in waypoints
+      w.erase(w.begin());  // mapd planning algorithm does not need initial vertex in waypoints
       waypoints.push_back(w);
       // waypoints.push_back(msg->ROBOT_WAYPOINTS[i].VERTICES);
       robot_ids.push_back(i);
       going_home.push_back(true);
-      
+
       initial_state.configuration.push_back(msg->TRAILS[i].PATH.front());
     }
   }
@@ -713,14 +762,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   initial_state.robot_ids = robot_ids;
   mapd::max_cost_heuristic h_func(map_graph, waypoints, robot_ids);
   // start search
-  std::vector<std::vector<uint> > paths, home_paths;
+  std::vector<std::vector<uint>> paths, home_paths;
 
   // test with no other paths
-  astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint> >(), &paths, &home_paths, going_home);
-  // search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths, going_home);
+  astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
+                        &paths, &home_paths, going_home);
+  // search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths,
+  // going_home);
 
   // insert paths inside token
-  for (int i=0; i<paths.size(); i++)
+  for (int i = 0; i < paths.size(); i++)
   {
     uint robot_id = robot_ids[i];
     token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
@@ -747,7 +798,6 @@ void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
   }
 }
 
-
 void OnlineDCOPTaskPlanner::print_graph()
 {
   std::ofstream test("test-map.graph");
@@ -762,10 +812,9 @@ void OnlineDCOPTaskPlanner::print_graph()
   test.close();
 }
 
-
-std::vector<std::vector<unsigned int> > OnlineDCOPTaskPlanner::build_graph()
+std::vector<std::vector<unsigned int>> OnlineDCOPTaskPlanner::build_graph()
 {
-  std::vector<std::vector<unsigned int> > result = std::vector<std::vector<unsigned int>>(dimension);
+  std::vector<std::vector<unsigned int>> result = std::vector<std::vector<unsigned int>>(dimension);
   for (int i = 0; i < dimension; i++)
   {
     for (int j = 0; j < vertex_web[i].num_neigh; j++)
@@ -955,7 +1004,6 @@ void crash_handler(int sig)
   fclose(fp);
 }
 
-
 int main(int argc, char *argv[])
 {
   ros::init(argc, argv, "task_planner");
@@ -965,7 +1013,7 @@ int main(int argc, char *argv[])
   c_print("initialization completed!", green);
   ros::AsyncSpinner spinner(2);
   spinner.start();
-  
+
   if (signal(SIGSEGV, crash_handler) == SIG_ERR)
   {
     std::cerr << "can't print stack trace" << std::endl;
