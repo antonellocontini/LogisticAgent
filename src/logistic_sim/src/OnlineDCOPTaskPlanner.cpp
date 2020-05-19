@@ -134,6 +134,7 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
   auto start = std::chrono::system_clock::now();
   while (!tree.is_open_empty())
   {
+    // timer to show statistics
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     if (elapsed.count() >= 10.0)
@@ -154,6 +155,8 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
     bool is_final = true;
     for (int i = 0; i < robot_number; i++)
     {
+      // if a robot hasn't completed all its waypoints or is not on the final vertex
+      // then this is not the final configuration
       if (s.waypoint_indices[i] != waypoints_number[i] - 1 || s.configuration[i] != waypoints[i].back())
       {
         is_final = false;
@@ -201,7 +204,7 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
 
 
     uint s_g_value = tree.visited_state_g(s_index);
-    auto neigh_list = s.get_neigh(graph, waypoints);
+    std::vector<mapd::mapd_state> neigh_list = s.get_neigh(graph, waypoints);
     // if (neigh_list.empty())
     // {
     //   ROS_DEBUG_STREAM("Warning! Neighbour list is empty");
@@ -212,17 +215,14 @@ void astar_search_function(const std::vector<std::vector<uint> > &waypoints,
       uint64_t x_index = x.get_index_notation(vertices_number, waypoints_number);
       if (x_index != s_index)
       {
-        if (is_transition_valid(s, x, other_paths, tree.visited_state_g(s_index)))
+        if (is_transition_valid(s, x, other_paths, s_g_value))
         {
-          // check that new state is not closed
-          if (!tree.is_state_closed(x_index))
+          // check that neighbour state is new or reached through a better path
+          int neigh_g_value = tree.visited_state_g(x_index);
+          if (neigh_g_value == -1 || neigh_g_value > s_g_value + 1)
           {
-            // check that new state is not already in queue (unless found with a better path)
-            if (!tree.is_state_in_queue(x_index) || tree.visited_state_g(x_index) > s_g_value + 1)
-            {
-              uint x_f_value = s_g_value + 1 + (*h_func)(x_index);
-              tree.add_to_open(x_index, s_g_value + 1, x_f_value, s_index);
-            }
+            uint x_f_value = s_g_value + 1 + (*h_func)(x_index);
+            tree.add_to_open(x_index, s_g_value + 1, x_f_value, s_index);
           }
         }
       }
