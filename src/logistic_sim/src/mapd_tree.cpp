@@ -26,6 +26,16 @@ void mapd_search_tree::add_to_open(uint64_t state, unsigned int g_value, unsigne
 
 void mapd_search_tree::add_to_open(uint64_t state, unsigned int g_value, unsigned int f_value)
 {
+  // if state is already present in open it must first be remvoed from open,
+  // then reinserted with the new g and f values
+  int old_g_value = visited_state_g(state);
+  if (old_g_value != -1)
+  {
+    // if (open.count(state) > 0)
+    // {
+      open.erase(state);
+    // }
+  }
   g[state] = g_value;
   f[state] = f_value;
   open[state] = f_value;
