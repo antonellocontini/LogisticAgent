@@ -67,8 +67,8 @@ mapd_state::mapd_state(uint64_t index, unsigned int vertices_number, const std::
 
   for (int i=robots_number-1; i>=0; i--)
   {
-    waypoint_indices[i] = index % waypoints_number[i];
-    index /= (uint64_t) waypoints_number[i];
+    waypoint_indices[i] = index % (waypoints_number[i] + 1);
+    index /= (uint64_t) (waypoints_number[i] + 1);
   }
 
   for (int i=robots_number-1; i>=0; i--)
@@ -92,7 +92,7 @@ uint64_t mapd_state::get_index_notation(unsigned int vertices_number, const std:
 
   for (int i=0; i<robots_number; i++)
   {
-    index *= (uint64_t) waypoints_number[i];
+    index *= (uint64_t) (waypoints_number[i] + 1);
     index += (uint64_t) waypoint_indices[i];
   }
 
@@ -112,8 +112,17 @@ void mapd_state::_get_neigh_impl(const std::vector<std::vector<unsigned int> > &
   for (unsigned int v : near_vertices)
   {
     temp_state.configuration[robot_i] = v;
-    unsigned int next_waypoint = waypoints[robot_i][waypoint_indices[robot_i]];
-    if (v == next_waypoint && waypoint_indices[robot_i] < waypoints[robot_i].size() - 1)
+    unsigned int next_waypoint;
+    if (waypoint_indices[robot_i] < waypoints[robot_i].size())
+    {
+      next_waypoint = waypoints[robot_i][waypoint_indices[robot_i]];
+    }
+    else
+    {
+      next_waypoint = waypoints[robot_i].back();
+    }
+    
+    if (v == next_waypoint && waypoint_indices[robot_i] < waypoints[robot_i].size())
     {
       temp_state.waypoint_indices[robot_i] = waypoint_indices[robot_i] + 1;
     }

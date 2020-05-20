@@ -6,6 +6,7 @@
 #include "boost/filesystem.hpp"
 #include "get_graph.hpp"
 #include "mapd.hpp"
+#include "mapd_time_test.hpp"
 
 namespace onlinedcoptaskplanner
 {
@@ -130,11 +131,10 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
   auto start = std::chrono::system_clock::now();
 
   // test final config
-  std::vector<uint> final_config, final_waypoints;
+  std::vector<uint> final_config;
   for (int i = 0; i < robot_number; i++)
   {
     final_config.push_back(waypoints[i].back());
-    final_waypoints.push_back(waypoints_number[i]);
   }
   ROS_DEBUG_STREAM("final config: " << final_config);
   ROS_DEBUG_STREAM("robot_number: " << robot_number);
@@ -145,7 +145,7 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
   {
     for (int i=0; i<robot_number; i++)
     {
-      reachability[j][i] = std::vector<bool>(waypoints_number[i], false);
+      reachability[j][i] = std::vector<bool>(waypoints_number[i] + 1, false);
     }
   }
 
@@ -174,7 +174,7 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
     {
       // if a robot hasn't completed all its waypoints or is not on the final vertex
       // then this is not the final configuration
-      if (s.waypoint_indices[i] != waypoints_number[i] - 1 || s.configuration[i] != waypoints[i].back())
+      if (s.waypoint_indices[i] < waypoints_number[i] || s.configuration[i] != waypoints[i].back())
       {
         is_final = false;
         break;
@@ -193,10 +193,12 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
       ROS_DEBUG_STREAM(closed_count << "\tfinal config test - final config reached on these waypoints: " << s.waypoint_indices << "\tconfiguration: " << s.configuration << "\tfinal config: " << final_config);
     }
 
-    if (s.waypoint_indices == final_waypoints)
-    {
-      ROS_DEBUG_STREAM(closed_count << "\tfinal waypoints test - last waypoints reached in this configuration " << s.configuration);
-    }
+    // if (s.waypoint_indices == final_waypoints)
+    // {
+    //   ROS_DEBUG_STREAM(closed_count << "\tfinal waypoints test - last waypoints reached in this configuration " << s.configuration);
+    // }
+
+    // ROS_DEBUG_STREAM(closed_count << "\t" << s.waypoint_indices);
 
     if (is_final)
     {
@@ -288,7 +290,7 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
   }
   for (uint x : waypoints_number)
   {
-    total_states *= x;
+    total_states *= (x + 1);
   }
   ROS_DEBUG_STREAM("Closed states: " << closed_count << "\tTotal states: " << total_states);
 
@@ -764,9 +766,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // start search
   std::vector<std::vector<uint>> paths, home_paths;
 
+  // test with time
+  mapd_time::state test_is;
+  test_is.configuration = initial_state.configuration;
+  test_is.waypoint_indices = initial_state.waypoint_indices;
+  mapd_time::search_tree test_st(map_graph, waypoints, test_is);
+  test_st.start_search();
+  getc(stdin);
   // test with no other paths
-  astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
-                        &paths, &home_paths, going_home);
+  // astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
+  //                       &paths, &home_paths, going_home);
   // search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths,
   // going_home);
 
