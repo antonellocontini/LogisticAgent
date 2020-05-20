@@ -766,13 +766,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // start search
   std::vector<std::vector<uint>> paths, home_paths;
 
+  ROS_DEBUG_STREAM("robot_ids:\n" << robot_ids);
+  ROS_DEBUG_STREAM("initial configuration:\n" << initial_state.configuration);
+  ROS_DEBUG_STREAM("waypoints\n" << waypoints);
+
   // test with time
   mapd_time::state test_is;
   test_is.configuration = initial_state.configuration;
   test_is.waypoint_indices = initial_state.waypoint_indices;
   mapd_time::search_tree test_st(map_graph, waypoints, test_is);
-  test_st.start_search();
-  getc(stdin);
+  test_st.astar_search(paths, home_paths, other_paths);
   // test with no other paths
   // astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
   //                       &paths, &home_paths, going_home);
@@ -783,7 +786,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   for (int i = 0; i < paths.size(); i++)
   {
     uint robot_id = robot_ids[i];
-    token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
+    token.TRAILS[robot_id].PATH = paths[i];
+    // token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
     token.HOME_TRAILS[robot_id].PATH = home_paths[i];
     ROS_DEBUG_STREAM("final task path: " << paths[i]);
     ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
