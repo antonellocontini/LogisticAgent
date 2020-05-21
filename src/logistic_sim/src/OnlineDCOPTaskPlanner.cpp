@@ -775,7 +775,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   test_is.configuration = initial_state.configuration;
   test_is.waypoint_indices = initial_state.waypoint_indices;
   mapd_time::search_tree test_st(map_graph, waypoints, test_is);
-  test_st.astar_search(paths, home_paths, other_paths);
+  test_st.dcop_search(paths, home_paths, other_paths);
   // test with no other paths
   // astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
   //                       &paths, &home_paths, going_home);

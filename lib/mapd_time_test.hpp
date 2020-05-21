@@ -41,6 +41,18 @@ struct state
     }
     else
     {
+      for (int i=0; i<waypoint_indices.size(); i++)
+      {
+        if (waypoint_indices[i] > other.waypoint_indices[i])
+        {
+          return true;
+        }
+        else if (waypoint_indices[i] < other.waypoint_indices[i])
+        {
+          return false;
+        }
+      }
+
       for (int i=0; i<configuration.size(); i++)
       {
         if (configuration[i] < other.configuration[i])
@@ -53,17 +65,6 @@ struct state
         }
       }
 
-      for (int i=0; i<waypoint_indices.size(); i++)
-      {
-        if (waypoint_indices[i] < other.waypoint_indices[i])
-        {
-          return true;
-        }
-        else if (waypoint_indices[i] > other.waypoint_indices[i])
-        {
-          return false;
-        }
-      }
 
       return false;
     }
@@ -222,6 +223,8 @@ struct search_tree
 
         if (good)
         {
+          temp_state.time = s.time + 1;
+          temp_state.f = temp_state.time + heuristic_function(temp_state);
           result.push_back(temp_state);
         }
       }
@@ -246,13 +249,18 @@ struct search_tree
     int best_f_value = -1;
     for (state t : result)
     {
-      t.time = s.time + 1;
-      t.f = t.time + heuristic_function(t);
       auto it = dcop_visited.find(t);
-      if (it != dcop_visited.end() && (best_f_value == -1 || t.f < best_f_value))
+      if (it == dcop_visited.end())
       {
-        best_f_value = t.f;
-        best_state = t;
+        auto open_it = open.find(t);
+        if (open_it == open.end() || open_it->f > t.f)
+        {
+          if (t.f < best_f_value)
+          {
+            best_f_value = t.f;
+            best_state = t;
+          }
+        }
       }
     }
     return best_f_value;
@@ -348,9 +356,7 @@ struct search_tree
 
       for (state n : near_states(s, other_paths))
       {
-        // std::cout << "neighbour:\n"; 
-        n.time = s.time + 1;
-        n.f = n.time + heuristic_function(n);
+        // std::cout << "neighbour:\n";
         if (visited.count(n) == 0)
         {
           if (open.count(n) == 0)
@@ -377,25 +383,31 @@ struct search_tree
                , robots_number = waypoints.size();
     
     open.clear();
+    prev.clear();
+    dcop_visited.clear();
     initial_state.time = 0;
     initial_state.f = heuristic_function(initial_state);
     open.insert(initial_state);
 
-    uint count = 0;
+    uint count = 0, closed_count = 0;
     auto start = std::chrono::system_clock::now();
     while(!open.empty())
     {
+      count++;
+      state s = *open.begin();
+      dcop_visited[s] = GRAY;
+
       auto end = std::chrono::system_clock::now();
       std::chrono::duration<double> diff = end - start;
       if (diff.count() > 10.0)
       {
         start = std::chrono::system_clock::now();
-        std::cout << "visited nodes: " << count << std::endl;
-        std::cout << "queue size: " << open.size() << std::endl;
+        ROS_DEBUG_STREAM("visited nodes: " << count);
+        ROS_DEBUG_STREAM("closed nodes: " << closed_count);
+        ROS_DEBUG_STREAM("queue size: " << open.size());
+        ROS_DEBUG_STREAM("f-frontier: " << s.f << "\n");
       }
-      count++;
-      state s = *open.begin();
-      dcop_visited[s] = GRAY;
+
       if (is_final_state(s))
       {
         ROS_DEBUG_STREAM("found solution!");
@@ -443,7 +455,8 @@ struct search_tree
           }
         }
       }
-      state best_state;
+
+      state best_state;   // filled by next call
       int new_state_f_value = get_dcop_near_state(best_state, s, other_paths);
       if (new_state_f_value != -1)
       {
@@ -453,6 +466,8 @@ struct search_tree
       else
       {
         dcop_visited[s] = BLACK;
+        open.erase(s);
+        closed_count++;
       }
     }
 
