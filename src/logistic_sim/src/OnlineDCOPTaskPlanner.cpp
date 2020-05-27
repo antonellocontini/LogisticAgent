@@ -907,7 +907,7 @@ struct conflict_free_state
   {
     if (f < other.f)
       return true;
-    else if (g > other.g)
+    else if (f == other.f && g > other.g)
       return true;
     return false;
   }
@@ -999,6 +999,93 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
       return true;
   }
   return false;
+}
+
+
+bool reachability_test(uint from, const std::vector<uint> &destinations, const std::vector<uint> &banned_vertices, vertex *vertex_web)
+{
+  uint found_count = 0;
+  std::map<uint, conflict_free_state> visited;
+  std::map<uint, conflict_free_state> open;
+
+  conflict_free_state initial_state;
+  initial_state.g = 0;
+  initial_state.f = 0;
+
+  open[from] = initial_state;
+
+  while (!open.empty())
+  {
+    auto u_it = open.begin();
+    uint u_id = u_it->first;
+    conflict_free_state u_state = u_it->second;
+    open.erase(u_id);
+    // ROS_DEBUG_STREAM(u_id);
+
+    visited[u_id].f = u_state.f;
+    visited[u_id].g = u_state.g;
+    visited[u_id].prev = u_state.prev;
+
+    // reached home vertex
+    auto it = std::find(destinations.begin(), destinations.end(), u_id);
+    auto banned_it = std::find(banned_vertices.begin(), banned_vertices.end(), u_id);
+    if (it != destinations.end())
+    {
+      int pos = it - destinations.begin();
+      found_count++;
+      if (found_count == destinations.size())
+        return true;
+    }
+    else if (banned_it == banned_vertices.end())
+    {
+      // check neighbour states
+      for (int i = 0; i < vertex_web[u_id].num_neigh; i++)
+      {
+        uint v_id = vertex_web[u_id].id_neigh[i];
+        if (!visited.count(v_id) && !open.count(v_id))
+        {
+          conflict_free_state v_state;
+          v_state.g = u_state.g + 1;
+          v_state.f = v_state.g;
+          v_state.prev = u_id;
+          open[v_id] = v_state;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+
+bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector<uint> &configuration, const std::vector<uint> &robot_ids, const std::vector<std::vector<uint> > &waypoints)
+{
+  for (int i=0; i<configuration.size(); i++)
+  {
+    uint from = configuration[i];
+    std::vector<uint> banned_vertices = configuration;
+    banned_vertices.erase(banned_vertices.begin() + i);
+    std::vector<uint> destinations = waypoints[i];
+
+    // add other homes to banned vertices and own home to destinations
+    for (int j=0; j<home_vertex.size(); j++)
+    {
+      if (home_vertex[j] == robot_ids[i])
+      {
+        destinations.push_back(home_vertex[j]);
+      }
+      else
+      {
+        banned_vertices.push_back(home_vertex[j]);
+      }
+    }
+
+    if (!reachability_test(from, destinations, banned_vertices, vertex_web))
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace onlinedcoptaskplanner

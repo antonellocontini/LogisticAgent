@@ -253,7 +253,7 @@ struct search_tree
       if (it == dcop_visited.end())
       {
         auto open_it = open.find(t);
-        if (open_it == open.end() || open_it->f > t.f)
+        if (open_it == open.end())
         {
           if (t.f < best_f_value)
           {
@@ -299,8 +299,8 @@ struct search_tree
       if (diff.count() > 10.0)
       {
         start = std::chrono::system_clock::now();
-        std::cout << "visited nodes: " << count << std::endl;
-        std::cout << "queue size: " << open.size() << std::endl;
+        ROS_DEBUG_STREAM("visited nodes: " << count);
+        ROS_DEBUG_STREAM("queue size: " << open.size() << "\n");
       }
       count++;
       state s = *open.begin();
