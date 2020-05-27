@@ -28,6 +28,8 @@ protected:
   // check if a configuration is good for recovery
   bool check_valid_recovery_configuration(const std::vector<uint> &configuration, const std::vector<uint> &robot_ids, const std::vector<std::vector<uint> > &waypoints);
 
+  std::vector<std::vector<uint> > find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids);
+
   void init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
   void multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
 

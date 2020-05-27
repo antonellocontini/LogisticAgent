@@ -1088,6 +1088,40 @@ bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector
   return true;
 }
 
+
+void enumerate_configs(std::vector<std::vector<uint> > &result, std::vector<uint> &temp_config, uint num_vertices, uint robot_number, uint iteration = 0)
+{
+  for (uint i=0;i<num_vertices;i++)
+  {
+    temp_config[iteration] = i;
+    if (iteration < robot_number - 1)
+    {
+      enumerate_configs(result, temp_config, num_vertices, robot_number, iteration + 1);
+    }
+    else
+    {
+      result.push_back(temp_config);
+    }
+  }
+}
+
+std::vector<std::vector<uint> > OnlineDCOPTaskPlanner::find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids)
+{
+  uint robot_number = waypoints.size();
+  std::vector<std::vector<uint> > configurations, result;
+  std::vector<uint> temp_config(robot_number, 0);
+  enumerate_configs(configurations, temp_config, map_graph.size(), robot_number);
+
+  for (const std::vector<uint> &conf : configurations)
+  {
+    if (check_valid_recovery_configuration(conf, robot_ids, waypoints))
+    {
+      result.push_back(conf);
+    }
+  }
+  return result;
+}
+
 }  // namespace onlinedcoptaskplanner
 
 void crash_handler(int sig)
