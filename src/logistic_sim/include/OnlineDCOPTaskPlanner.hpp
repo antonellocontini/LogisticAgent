@@ -29,12 +29,18 @@ protected:
   bool check_valid_recovery_configuration(const std::vector<uint> &configuration, const std::vector<uint> &robot_ids, const std::vector<std::vector<uint> > &waypoints);
 
   std::vector<std::vector<uint> > find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids);
+  std::vector<uint> find_best_recovery_config(const std::vector<std::vector<uint> > &waypoints
+                                            , const std::vector<uint> &robot_ids
+                                            , const std::vector<uint> &current_config
+                                            , const std::vector<std::vector<uint> > &other_paths);
+
 
   void init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
   void multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
 
-  std::vector<std::vector<unsigned int>> map_graph;
+  std::vector<std::vector<unsigned int>> map_graph, fw_matrix;
 
   std::vector<std::vector<unsigned int> > build_graph();
+  void build_fw_matrix();
 };
 }

@@ -742,6 +742,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 
   // build map graph
   map_graph = build_graph();
+  build_fw_matrix();
   std::vector<std::vector<uint>> waypoints;
   std::vector<uint> robot_ids;
   std::vector<bool> going_home;
@@ -768,14 +769,26 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 
   ROS_DEBUG_STREAM("robot_ids:\n" << robot_ids);
   ROS_DEBUG_STREAM("initial configuration:\n" << initial_state.configuration);
-  ROS_DEBUG_STREAM("waypoints\n" << waypoints);
+  ROS_DEBUG_STREAM("waypoints:\n" << waypoints);
+  ROS_DEBUG_STREAM("other paths:\n" << other_paths);
 
-  // test with time
   mapd_time::state test_is;
   test_is.configuration = initial_state.configuration;
   test_is.waypoint_indices = initial_state.waypoint_indices;
-  mapd_time::search_tree test_st(map_graph, waypoints, test_is);
-  test_st.dcop_search(paths, home_paths, other_paths);
+  // test recovery configuration
+  ROS_DEBUG_STREAM("searching recovery configuration...");
+  std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration, other_paths);
+  std::vector<std::vector<uint> > recovery_waypoints;
+  for (int i=0; i<destination.size(); i++)
+  {
+    recovery_waypoints.push_back({destination[i]});
+  }
+  ROS_DEBUG_STREAM("recovery configuration:\n" << recovery_waypoints);
+  mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
+  recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
+  // test with time
+  // mapd_time::search_tree test_st(map_graph, waypoints, test_is);
+  // test_st.dcop_search(paths, home_paths, other_paths);
   // test with no other paths
   // astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
   //                       &paths, &home_paths, going_home);
@@ -793,8 +806,9 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
   }
 
-  token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);
+  // token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);
   token.MULTI_PLAN_REPAIR = false;
+  token.SINGLE_PLAN_REPAIR = true;
 }
 
 void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
@@ -1105,6 +1119,7 @@ void enumerate_configs(std::vector<std::vector<uint> > &result, std::vector<uint
   }
 }
 
+
 std::vector<std::vector<uint> > OnlineDCOPTaskPlanner::find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids)
 {
   uint robot_number = waypoints.size();
@@ -1120,6 +1135,110 @@ std::vector<std::vector<uint> > OnlineDCOPTaskPlanner::find_all_recovery_configs
     }
   }
   return result;
+}
+
+
+uint max_cost_heuristic(const std::vector<uint> &current_config, const std::vector<uint> &final_config, const std::vector<std::vector<uint> > &fw_matrix)
+{
+  uint robot_number = current_config.size();
+  uint result = 0;
+  for (uint i=0; i<robot_number; i++)
+  {
+    if (fw_matrix[current_config[i]][final_config[i]] > result)
+    {
+      result = fw_matrix[current_config[i]][final_config[i]];
+    }
+  }
+  return result;
+}
+
+
+std::vector<uint> OnlineDCOPTaskPlanner::find_best_recovery_config(const std::vector<std::vector<uint> > &waypoints
+                                                                 , const std::vector<uint> &robot_ids
+                                                                 , const std::vector<uint> &current_config
+                                                                 , const std::vector<std::vector<uint> > &other_paths)
+{
+  uint robot_number = waypoints.size();
+  std::vector<std::vector<uint> > configurations;
+  auto valid_configs = std::set<std::vector<uint>, std::function<bool(const std::vector<uint>&, const std::vector<uint>&)> >{
+    [&](const std::vector<uint> &lhs, const std::vector<uint> &rhs)
+    {
+      // max cost heuristic
+      if (max_cost_heuristic(current_config, lhs, fw_matrix) < max_cost_heuristic(current_config, rhs, fw_matrix))
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+  };
+  std::vector<uint> temp_config(robot_number, 0);
+  enumerate_configs(configurations, temp_config, map_graph.size(), robot_number);
+
+  for (const std::vector<uint> &conf : configurations)
+  {
+    if (check_valid_recovery_configuration(conf, robot_ids, waypoints))
+    {
+      // check if configuration can cause trouble to other robots
+      uint h_val = max_cost_heuristic(current_config, conf, fw_matrix);
+      bool good = true;
+      for (int i=0; i<other_paths.size(); i++)
+      {
+        for (uint v : conf)
+        {
+          if (h_val < other_paths[i].size() && std::find(other_paths[i].begin() + h_val, other_paths[i].end(), v) != other_paths[i].end())
+          {
+            good = false;
+          }
+        }
+      }
+      if (good)
+      {
+        valid_configs.emplace(conf);
+      }
+    }
+  }
+  if (valid_configs.empty())
+  {
+    ROS_ERROR_STREAM("Can't find a valid recovery configuration!");
+    return std::vector<uint>(robot_number, 0);
+  }
+  else
+  {
+    return *valid_configs.begin();
+  }
+}
+
+
+void OnlineDCOPTaskPlanner::build_fw_matrix()
+{
+  uint vertex_number = map_graph.size();
+  uint max_v = std::numeric_limits<uint>::max();
+  fw_matrix = std::vector<std::vector<uint> >(vertex_number, std::vector<uint>(vertex_number, max_v));
+  for (uint i=0; i<vertex_number; i++)
+  {
+    fw_matrix[i][i] = 0;
+    for (uint u : map_graph[i])
+    {
+      fw_matrix[i][u] = 1;
+    }
+  }
+
+  for (uint k=0; k<vertex_number; k++)
+  {
+    for (uint i=0; i<vertex_number; i++)
+    {
+      for (uint j=0; j<vertex_number; j++)
+      {
+        if (fw_matrix[i][k] != max_v && fw_matrix[k][j] != max_v && fw_matrix[i][j] > fw_matrix[i][k] + fw_matrix[k][j])
+        {
+          fw_matrix[i][j] = fw_matrix[i][k] + fw_matrix[k][j];
+        }
+      }
+    }
+  }
 }
 
 }  // namespace onlinedcoptaskplanner

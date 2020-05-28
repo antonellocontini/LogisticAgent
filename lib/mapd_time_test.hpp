@@ -377,7 +377,8 @@ struct search_tree
 
   std::list<state> dcop_search(std::vector<std::vector<unsigned int>> &paths
                               , std::vector<std::vector<unsigned int>> &home_paths
-                              , const std::vector<std::vector<unsigned int>> &other_paths)
+                              , const std::vector<std::vector<unsigned int>> &other_paths
+                              , bool home_included = true)
   {
     unsigned int vertices = graph.size()
                , robots_number = waypoints.size();
@@ -434,7 +435,7 @@ struct search_tree
                 unsigned int x = s.configuration[i];
                 ss << std::setw(3) << x;
 
-                if (s.waypoint_indices[i] == waypoints[i].size() - 1 && s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
+                if (home_included && s.waypoint_indices[i] == waypoints[i].size() - 1 && s.configuration[i] != waypoints[i][s.waypoint_indices[i] - 1])
                 {
                   home_paths[i].push_back(x);
                 }
