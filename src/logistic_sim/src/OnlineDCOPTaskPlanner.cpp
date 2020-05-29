@@ -776,8 +776,15 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   test_is.configuration = initial_state.configuration;
   test_is.waypoint_indices = initial_state.waypoint_indices;
   // test recovery configuration
+  mapd_time::search_tree recovery_search_tree(map_graph, waypoints, test_is);
   ROS_DEBUG_STREAM("searching recovery configuration...");
-  std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration, other_paths);
+  // std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration, other_paths);
+  // std::vector<uint> destination = recovery_search_tree.find_recovery_configuration(other_paths, robot_ids, bind(&OnlineDCOPTaskPlanner::check_valid_recovery_configuration, this, _1, _2, _3));
+  std::vector<uint> destination(robot_ids.size(), 0);
+  for (int i=0; i<robot_ids.size(); i++)
+  {
+    destination[i] = home_vertex[robot_ids[i]];
+  }
   std::vector<std::vector<uint> > recovery_waypoints;
   for (int i=0; i<destination.size(); i++)
   {
@@ -799,9 +806,10 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   for (int i = 0; i < paths.size(); i++)
   {
     uint robot_id = robot_ids[i];
-    token.TRAILS[robot_id].PATH = paths[i];
+    // token.TRAILS[robot_id].PATH = paths[i];
+    token.HOME_TRAILS[robot_id].PATH = paths[i];
     // token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
-    token.HOME_TRAILS[robot_id].PATH = home_paths[i];
+    // token.HOME_TRAILS[robot_id].PATH = home_paths[i];
     ROS_DEBUG_STREAM("final task path: " << paths[i]);
     ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
   }
@@ -1050,7 +1058,8 @@ bool reachability_test(uint from, const std::vector<uint> &destinations, const s
       if (found_count == destinations.size())
         return true;
     }
-    else if (banned_it == banned_vertices.end())
+    
+    if (banned_it == banned_vertices.end())
     {
       // check neighbour states
       for (int i = 0; i < vertex_web[u_id].num_neigh; i++)

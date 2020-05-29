@@ -278,6 +278,80 @@ struct search_tree
     return true;
   }
 
+  template<class T = bool(const std::vector<uint> &configuration, const std::vector<uint> &robot_ids, const std::vector<std::vector<uint> > &waypoints)>
+  std::vector<unsigned int> find_recovery_configuration(const std::vector<std::vector<unsigned int>> &other_paths
+                                                      , const std::vector<uint> &robot_ids
+                                                      , T check_configuration_func)
+  {
+    unsigned int vertices = graph.size()
+               , robots_number = waypoints.size();
+    
+    open.clear();
+    initial_state.time = 0;
+    initial_state.f = 0;
+    open.insert(initial_state);
+
+    uint count = 0;
+    auto start = std::chrono::system_clock::now();
+    while(!open.empty())
+    {
+      auto end = std::chrono::system_clock::now();
+      std::chrono::duration<double> diff = end - start;
+      if (diff.count() > 10.0)
+      {
+        start = std::chrono::system_clock::now();
+        ROS_DEBUG_STREAM("visited nodes: " << count);
+        ROS_DEBUG_STREAM("queue size: " << open.size() << "\n");
+      }
+      count++;
+      state s = *open.begin();
+      open.erase(s);
+      
+      if (check_configuration_func(s.configuration, robot_ids, waypoints))
+      {
+        // check if configuration can cause trouble to other robots
+        uint h_val = s.f;
+        bool good = true;
+        for (int i=0; i<other_paths.size(); i++)
+        {
+          for (uint v : s.configuration)
+          {
+            if (h_val < other_paths[i].size() && std::find(other_paths[i].begin() + h_val, other_paths[i].end(), v) != other_paths[i].end())
+            {
+              good = false;
+            }
+          }
+        }
+        if (good)
+        {
+          return s.configuration;
+        }
+      }
+
+      visited.insert(s);
+
+      for (state n : near_states(s, other_paths))
+      {
+        // std::cout << "neighbour:\n";
+        if (visited.count(n) == 0)
+        {
+          if (open.count(n) == 0)
+          {
+            // std::cout << "\tinserted\n";
+            n.f = n.time;
+            open.insert(n);
+            prev[n] = s;
+          }
+        }
+        
+      }
+    }
+
+    ROS_WARN_STREAM("fail!");
+    ROS_DEBUG_STREAM("visited states: " << count);
+    return std::vector<unsigned int>(robots_number, 0);
+  }
+
   std::list<state> astar_search(std::vector<std::vector<unsigned int>> &paths
                               , std::vector<std::vector<unsigned int>> &home_paths
                               , const std::vector<std::vector<unsigned int>> &other_paths)

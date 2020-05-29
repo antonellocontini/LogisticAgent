@@ -144,7 +144,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         std::vector<unsigned int> last_leg, first_leg;  // this will contain the path, splitted in two sections
         if (!task_waypoints.empty())
         {
-          waypoints.push_back(current_vertex);
+          waypoints.push_back(token.TRAILS[ID_ROBOT].PATH.back());
           for (uint v : task_waypoints.front())
           {
             waypoints.push_back(v);
