@@ -7,6 +7,7 @@
 #include "get_graph.hpp"
 #include "mapd.hpp"
 #include "mapd_time_test.hpp"
+#include "mapf.hpp"
 
 namespace onlinedcoptaskplanner
 {
@@ -730,6 +731,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 {
   // get valid paths
   std::vector<std::vector<uint>> other_paths;
+  std::map<uint, std::vector<uint> > other_paths_map;
   for (int i = 0; i < TEAM_SIZE; i++)
   {
     if (msg->HAS_REPAIRED_PATH[i])
@@ -737,6 +739,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
       std::vector<uint> robot_path = msg->TRAILS[i].PATH;
       robot_path.insert(robot_path.end(), msg->HOME_TRAILS[i].PATH.begin(), msg->HOME_TRAILS[i].PATH.end());
       other_paths.push_back(robot_path);
+      other_paths_map[i] = robot_path;
     }
   }
 
@@ -791,11 +794,23 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     recovery_waypoints.push_back({destination[i]});
   }
   ROS_DEBUG_STREAM("recovery configuration:\n" << recovery_waypoints);
-  mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
-  recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
+  // test new state definition with no time included
+  mapf::state test_mapf_is;
+  for (int i=0; i<TEAM_SIZE; i++)
+  {
+    test_mapf_is.configuration.push_back(msg->TRAILS[i].PATH.front());
+  }
+  mapf::search_tree test_mapf(map_graph, destination, test_mapf_is, other_paths_map);
+  test_mapf.astar_search(paths);
+
+  // reach recovery configuration with pseudo-dcop search
+  // mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
+  // recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
+
   // test with time
   // mapd_time::search_tree test_st(map_graph, waypoints, test_is);
   // test_st.dcop_search(paths, home_paths, other_paths);
+
   // test with no other paths
   // astar_search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, std::vector<std::vector<uint>>(),
   //                       &paths, &home_paths, going_home);
@@ -811,7 +826,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     // token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
     // token.HOME_TRAILS[robot_id].PATH = home_paths[i];
     ROS_DEBUG_STREAM("final task path: " << paths[i]);
-    ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
+    // ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
   }
 
   // token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);
