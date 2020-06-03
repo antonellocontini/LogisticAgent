@@ -800,7 +800,15 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   {
     test_mapf_is.configuration.push_back(msg->TRAILS[i].PATH.front());
   }
-  mapf::search_tree test_mapf(map_graph, destination, test_mapf_is, other_paths_map);
+  std::vector<unsigned int> test_destination(TEAM_SIZE, 0);
+  for (int i=0; i<TEAM_SIZE; i++)
+  {
+    if (!msg->HAS_REPAIRED_PATH[i])
+    {
+      test_destination[i] = home_vertex[i];
+    }
+  }
+  mapf::search_tree test_mapf(map_graph, test_destination, test_mapf_is, other_paths_map);
   test_mapf.astar_search(paths);
 
   // reach recovery configuration with pseudo-dcop search

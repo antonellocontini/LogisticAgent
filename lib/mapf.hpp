@@ -182,8 +182,6 @@ struct search_tree
 
     for (unsigned int v : near_vertices)
     {
-      unsigned int next_waypoint = final_configuration[robot_i];
-
       temp_state.configuration[robot_i] = v;
 
       if (robot_i < robots_number - 1)
@@ -214,28 +212,6 @@ struct search_tree
               good = false;
             }
           }
-
-          // check other paths
-          for (const auto &pair : other_paths)
-          {
-            const std::vector<uint> &path = pair.second;
-            // vertex conflict
-            if (path.size() > g_v + 1 && temp_state.configuration[i] == path[g_v + 1])
-            {
-              good = false;
-            }
-            else if (path.size() <= g_v + 1 && temp_state.configuration[i] == path.back())
-            {
-              good = false;
-            }
-
-            // edge conflict
-            if (path.size() > g_v + 1 && temp_state.configuration[i] == path[g_v] &&
-                s.configuration[i] == path[g_v + 1])
-            {
-              good = false;
-            }
-          }
         }
 
         if (good)
@@ -258,7 +234,14 @@ struct search_tree
 
   bool is_final_state(const state &s) const
   {
-    return s.configuration == final_configuration;
+    for (int i=0; i<s.configuration.size(); i++)
+    {
+      if (other_paths.count(i) == 0 && s.configuration[i] != final_configuration[i])
+      {
+        return false;
+      }
+    }
+    return true;
   }
 
   std::list<state> astar_search(std::vector<std::vector<unsigned int>> &paths)
@@ -327,6 +310,12 @@ struct search_tree
 
       for (state n : near_states(s))
       {
+        // std::stringstream ss;
+        // for (uint x : n.configuration)
+        // {
+        //   ss << " " << x;
+        // }
+        // ROS_DEBUG_STREAM(ss.str());
         // std::cout << "neighbour:\n";
         if (visited.count(n) == 0)
         {
