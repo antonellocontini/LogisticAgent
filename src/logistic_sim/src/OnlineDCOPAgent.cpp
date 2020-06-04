@@ -160,6 +160,9 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         {
           token.MISSION.push_back(*it);
           token.NEW_MISSIONS_AVAILABLE = true;
+          // update token statistics
+          token.MISSIONS_COMPLETED[ID_ROBOT]--;
+          token.TASKS_COMPLETED[ID_ROBOT] -= (*it).DEMANDS.size();
         }
 
         // calculate path
