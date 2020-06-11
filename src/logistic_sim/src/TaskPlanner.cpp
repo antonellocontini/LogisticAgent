@@ -1248,6 +1248,8 @@ void TaskPlanner::initialize_token()
   token.NEW_MISSIONS_AVAILABLE = false;
   token.SHUTDOWN = false;
 
+  sleep(2);
+
   pub_token.publish(token);
   ros::spinOnce();
 
