@@ -11,6 +11,31 @@
 
 namespace onlinedcoptaskplanner
 {
+
+std::stringstream log_ss;
+
+std::string current_time_str()
+{
+  auto current_time = std::chrono::system_clock::now();
+  std::time_t now_t = std::chrono::system_clock::to_time_t(current_time);
+  char c_str[50];
+  tm *timeinfo;
+  timeinfo = localtime(&now_t);
+  strftime(c_str, 50, "[%F %T]", timeinfo);
+  return std::string(c_str);
+}
+
+std::string current_time_filename_str()
+{
+  auto current_time = std::chrono::system_clock::now();
+  std::time_t now_t = std::chrono::system_clock::to_time_t(current_time);
+  char c_str[50];
+  tm *timeinfo;
+  timeinfo = localtime(&now_t);
+  strftime(c_str, 50, "%F-%T", timeinfo);
+  return std::string(c_str);
+}
+
 OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::string &name)
   : OnlineTaskPlanner(nh_, name)
 {
@@ -688,6 +713,16 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       // stats << robots_data;
       stats.close();
 
+      // write repair data
+      std::stringstream repair_filename;
+      repair_filename << filename.str() << "repair_data.txt";
+      ofstream repair_stats_file(repair_filename.str());
+      repair_stats_file << "OBSTACLE_EVENTS: " << msg->OBSTACLE_EVENTS << "\n";
+      repair_stats_file << "SUCCESSFULL_SA_REPAIR: " << msg->SUCCESSFULL_SA_REPAIR << "\n";
+      repair_stats_file << "SUCCESSFULL_MA_REPAIR: " << msg->SUCCESSFULL_MA_REPAIR << "\n";
+      repair_stats_file << "FAILED_REPAIR: " << msg->FAILED_REPAIR << "\n";
+      repair_stats_file.close();
+
       for (int i = 0; i < TEAM_SIZE; i++)
       {
         std::stringstream ss;
@@ -770,9 +805,14 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // start search
   std::vector<std::vector<uint>> paths, home_paths;
 
+  std::string str_time = current_time_str();
+  log_ss << str_time << "\t" << "robot_ids:\n" << robot_ids << "\n";
   ROS_DEBUG_STREAM("robot_ids:\n" << robot_ids);
+  log_ss << str_time << "\t" << "initial configuration:\n" << initial_state.configuration << "\n";
   ROS_DEBUG_STREAM("initial configuration:\n" << initial_state.configuration);
+  log_ss << str_time << "\t" << "waypoints:\n" << waypoints << "\n";
   ROS_DEBUG_STREAM("waypoints:\n" << waypoints);
+  log_ss << str_time << "\t" << "other paths:\n" << other_paths << "\n";
   ROS_DEBUG_STREAM("other paths:\n" << other_paths);
 
   mapd_time::state test_is;
@@ -781,6 +821,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // test recovery configuration
   mapd_time::search_tree recovery_search_tree(map_graph, waypoints, test_is);
   ROS_DEBUG_STREAM("searching recovery configuration...");
+  log_ss << str_time << "\t" << "searching recovery configuration..." << "\n";
   // std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration, other_paths);
   // std::vector<uint> destination = recovery_search_tree.find_recovery_configuration(other_paths, robot_ids, bind(&OnlineDCOPTaskPlanner::check_valid_recovery_configuration, this, _1, _2, _3));
   std::vector<uint> destination(robot_ids.size(), 0);
@@ -794,6 +835,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     recovery_waypoints.push_back({destination[i]});
   }
   ROS_DEBUG_STREAM("recovery configuration:\n" << recovery_waypoints);
+  log_ss << str_time << "\t" << "recovery configuration:\n" << recovery_waypoints << "\n";
   // test new state definition with no time included
   mapf::state test_mapf_is;
   for (int i=0; i<TEAM_SIZE; i++)
@@ -809,7 +851,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     }
   }
   mapf::search_tree test_mapf(map_graph, test_destination, test_mapf_is, other_paths_map);
-  test_mapf.astar_search(paths);
+  std::list<mapf::state> result = test_mapf.astar_search(paths);
 
   // reach recovery configuration with pseudo-dcop search
   // mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
@@ -825,21 +867,37 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths,
   // going_home);
 
-  // insert paths inside token
-  for (int i = 0; i < paths.size(); i++)
+  if (!result.empty())
   {
-    uint robot_id = robot_ids[i];
-    // token.TRAILS[robot_id].PATH = paths[i];
-    token.HOME_TRAILS[robot_id].PATH = paths[i];
-    // token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
-    // token.HOME_TRAILS[robot_id].PATH = home_paths[i];
-    ROS_DEBUG_STREAM("final task path: " << paths[i]);
-    // ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
-  }
+    // insert paths inside token
+    for (int i = 0; i < paths.size(); i++)
+    {
+      uint robot_id = robot_ids[i];
+      // token.TRAILS[robot_id].PATH = paths[i];
+      token.HOME_TRAILS[robot_id].PATH = paths[i];
+      // token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
+      // token.HOME_TRAILS[robot_id].PATH = home_paths[i];
+      ROS_DEBUG_STREAM("final task path: " << paths[i]);
+      log_ss << str_time << "\t" << "final task path: " << paths[i] << "\n";
+      // ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
+    }
 
-  // token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);
-  token.MULTI_PLAN_REPAIR = false;
-  token.SINGLE_PLAN_REPAIR = true;
+    // token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, true);
+    token.MULTI_PLAN_REPAIR = false;
+    token.SINGLE_PLAN_REPAIR = true;
+    token.SUCCESSFULL_MA_REPAIR++;
+  }
+  else
+  {
+    std::string log_filename = current_time_filename_str() + ".log";
+    ROS_ERROR_STREAM("Could not find a MA path to recovery configuration!!! - shutting down...");
+    ROS_ERROR_STREAM("Logging MA data to " << log_filename);
+    std::ofstream of(log_filename);
+    of << log_ss.str();
+    of.close();
+    token.FAILED_REPAIR++;
+    token.SHUTDOWN = true;
+  }
 }
 
 void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
@@ -890,7 +948,9 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
 
   if (msg.remove)
   {
+    std::string time_str = current_time_str();
     ROS_INFO_STREAM("Requested remotion of edge (" << msg.u << "," << msg.v << ")");
+    log_ss << time_str << "\t" << "Requested remotion of edge (" << msg.u << "," << msg.v << ")" << "\n";
     print_graph();
     result = RemoveEdge(vertex_web, dimension, msg.u, msg.v);
     ROS_ERROR_STREAM_COND(result > 0, "Failed remotion!");
