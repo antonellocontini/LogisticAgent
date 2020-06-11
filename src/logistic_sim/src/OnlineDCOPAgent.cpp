@@ -142,9 +142,9 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       try
       {
         std::vector<unsigned int> last_leg, first_leg;  // this will contain the path, splitted in two sections
+        waypoints.push_back(token.TRAILS[ID_ROBOT].PATH.back());
         if (!task_waypoints.empty())
         {
-          waypoints.push_back(token.TRAILS[ID_ROBOT].PATH.back());
           for (uint v : task_waypoints.front())
           {
             waypoints.push_back(v);
@@ -155,21 +155,39 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
         // insert future tasks inside token
         auto it = assigned_missions.begin();
-        it++;
-        for (; it != assigned_missions.end(); it++)
+        if (it != assigned_missions.end())
         {
-          token.MISSION.push_back(*it);
-          token.NEW_MISSIONS_AVAILABLE = true;
-          // update token statistics
-          token.MISSIONS_COMPLETED[ID_ROBOT]--;
-          token.TASKS_COMPLETED[ID_ROBOT] -= (*it).DEMANDS.size();
+          it++;
+          for (; it != assigned_missions.end(); it++)
+          {
+            token.MISSION.push_back(*it);
+            token.NEW_MISSIONS_AVAILABLE = true;
+            // update token statistics
+            token.MISSIONS_COMPLETED[ID_ROBOT]--;
+            token.TASKS_COMPLETED[ID_ROBOT] -= (*it).DEMANDS.size();
+            ROS_INFO_STREAM("mission removed: " << (*it).DEMANDS.size() << " tasks removed!");
+            ROS_INFO_STREAM("completed missions: " << token.MISSIONS_COMPLETED[ID_ROBOT]);
+            ROS_INFO_STREAM("completed tasks: " << token.TASKS_COMPLETED[ID_ROBOT]);
+          }
         }
+        it = assigned_missions.begin();
+        it++;
+        assigned_missions.erase(it, assigned_missions.end());
 
         // calculate path
         // if (ID_ROBOT % 2 == 0)
         // {
           plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
           // code after previous call execute only if plan is successful
+          // update active waypoints
+          task_waypoints.clear();
+          std::list<uint> new_task_waypoints;
+          // the first waypoint is the current vertex, it must not be inserted
+          for (int i = 1; i < waypoints.size(); i++)
+          {
+            new_task_waypoints.push_back(waypoints[i]);
+          }
+          task_waypoints.push_back(new_task_waypoints);
           token.SINGLE_PLAN_REPAIR_PROGRESS = true;
           token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
           ROS_INFO_STREAM("Plan repaired successfully!");
@@ -276,7 +294,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
           ROS_INFO_STREAM("Task completed!");
           task_waypoints.pop_front();
           assigned_missions.pop_front();
-          ROS_INFO_STREAM("Remaining tasks: " << assigned_missions.size());
+          ROS_INFO_STREAM("Remaining missions: " << assigned_missions.size());
         }
       }
     }
@@ -412,19 +430,6 @@ void OnlineDCOPAgent::plan_and_update_token(const std::vector<uint> &waypoints,
   std::vector<unsigned int> astar_result = spacetime_dijkstra(
       robot_paths, map_graph, waypoints, token.TRAILS[ID_ROBOT].PATH.size() - 1, &last_leg, &first_leg, &f);
 
-  // update active waypoints
-  if (!task_waypoints.empty())
-  {
-    // the last waypoint is the home, but new tasks have been inserted
-    task_waypoints.back().pop_back();
-  }
-  std::list<uint> new_task_waypoints;
-  for (int i = 1; i < waypoints.size(); i++)
-  {
-    new_task_waypoints.push_back(waypoints[i]);
-  }
-  task_waypoints.push_back(new_task_waypoints);
-
   std::cout << "first_leg: ";
   for (unsigned int v : first_leg)
   {
@@ -483,12 +488,28 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
     }
     waypoints.push_back(initial_vertex);
     plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
+    // update active waypoints
+    if (!task_waypoints.empty())
+    {
+      // the last waypoint is the home, but new tasks have been inserted
+      task_waypoints.back().pop_back();
+    }
+    std::list<uint> new_task_waypoints;
+    // the first waypoint is the current vertex, it must not be inserted
+    for (int i = 1; i < waypoints.size(); i++)
+    {
+      new_task_waypoints.push_back(waypoints[i]);
+    }
+    task_waypoints.push_back(new_task_waypoints);
     // add mission to local list
     assigned_missions.push_back(m);
 
     // update token statistics
     token.MISSIONS_COMPLETED[ID_ROBOT]++;
     token.TASKS_COMPLETED[ID_ROBOT] += m.DEMANDS.size();
+    ROS_INFO_STREAM("mission added: " << m.DEMANDS.size() << " new tasks added!");
+    ROS_INFO_STREAM("completed missions: " << token.MISSIONS_COMPLETED[ID_ROBOT]);
+    ROS_INFO_STREAM("completed tasks: " << token.TASKS_COMPLETED[ID_ROBOT]);
 
     // remove mission from token
     token.MISSION.erase(token.MISSION.begin());

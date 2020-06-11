@@ -13,7 +13,8 @@ public:
 
 protected:
 
-  std::chrono::system_clock::time_point last_edge_removal;
+  // std::chrono::system_clock::time_point last_edge_removal;
+  ros::Time last_edge_removal;
 
   ros::ServiceServer change_edge_service;
   void print_graph();   // for test

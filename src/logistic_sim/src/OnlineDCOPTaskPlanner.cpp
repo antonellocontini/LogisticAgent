@@ -554,9 +554,11 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       req.add = false;
       logistic_sim::ChangeEdgeResponse res;
       uint timestep = msg->GOAL_STATUS[0];
-      auto current_time = std::chrono::system_clock::now();
-      std::chrono::duration<double> diff = current_time - last_edge_removal;
-      if (diff.count() > 10.0)
+      // auto current_time = std::chrono::system_clock::now();
+      ros::Time current_time = ros::Time::now();
+      ros::Duration diff = current_time - last_edge_removal;
+      // std::chrono::duration<double> diff = current_time - last_edge_removal;
+      if (diff.toSec() > 10.0)
       {
         bool changed = false;
         if (timestep == 20)
