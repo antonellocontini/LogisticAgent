@@ -13,6 +13,8 @@ public:
 
 protected:
 
+  std::chrono::system_clock::time_point last_edge_removal;
+
   ros::ServiceServer change_edge_service;
   void print_graph();   // for test
   void advertise_change_edge_service(ros::NodeHandle &nh) override;

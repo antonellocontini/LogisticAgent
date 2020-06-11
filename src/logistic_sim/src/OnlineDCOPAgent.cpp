@@ -200,6 +200,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       {
         token.SINGLE_PLAN_REPAIR = false;
         token.SUCCESSFULL_SA_REPAIR++;
+        token.OBSTACLE_EVENTS++;
       }
       else
       {

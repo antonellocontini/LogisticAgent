@@ -544,6 +544,57 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   else
   {
     edges_mutex.unlock();
+
+    // simulate edge removal at fixed time steps
+    if (mapname == "icelab_black")
+    {
+      logistic_sim::ChangeEdgeRequest req;
+      req.cost = 0;
+      req.remove = true;
+      req.add = false;
+      logistic_sim::ChangeEdgeResponse res;
+      uint timestep = msg->GOAL_STATUS[0];
+      auto current_time = std::chrono::system_clock::now();
+      std::chrono::duration<double> diff = current_time - last_edge_removal;
+      if (diff.count() > 10.0)
+      {
+        bool changed = false;
+        if (timestep == 20)
+        {
+          req.u = 28;
+          req.v = 31;
+          change_edge(req, res);
+          changed = true;
+        }
+        else if (timestep == 40)
+        {
+          req.u = 45;
+          req.v = 49;
+          change_edge(req, res);
+          changed = true;
+        }
+        else if (timestep == 60)
+        {
+          req.u = 42;
+          req.v = 46;
+          change_edge(req, res);
+          changed = true;
+        }
+        else if (timestep == 80)
+        {
+          req.u = 30;
+          req.v = 31;
+          change_edge(req, res);
+          changed = true;
+        }
+
+        if (changed)
+        {
+          last_edge_removal = current_time;
+        }
+      }
+    }
+
     // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
 
@@ -896,6 +947,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     of << log_ss.str();
     of.close();
     token.FAILED_REPAIR++;
+    token.OBSTACLE_EVENTS++;
     token.SHUTDOWN = true;
   }
 }
