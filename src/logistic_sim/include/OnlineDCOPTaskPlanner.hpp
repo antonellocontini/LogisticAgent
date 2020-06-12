@@ -14,7 +14,7 @@ public:
 protected:
 
   bool first_missions_sent = false;
-  uint first_valid_timestep;
+  uint first_valid_timestep = 0;
 
   // std::chrono::system_clock::time_point last_edge_removal;
   ros::Time last_edge_removal;
