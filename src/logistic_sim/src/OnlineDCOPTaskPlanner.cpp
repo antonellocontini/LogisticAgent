@@ -553,7 +553,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       req.remove = true;
       req.add = false;
       logistic_sim::ChangeEdgeResponse res;
-      uint timestep = msg->GOAL_STATUS[0];
+      uint timestep = msg->GOAL_STATUS[0] - first_valid_timestep;
       // auto current_time = std::chrono::system_clock::now();
       ros::Time current_time = ros::Time::now();
       ros::Duration diff = current_time - last_edge_removal;
@@ -623,6 +623,12 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     // robots will set this flag to false when this missions have been accepted
     if (!mission_windows.empty() && !token.NEW_MISSIONS_AVAILABLE)
     {
+      if (!first_missions_sent)
+      {
+        first_missions_sent = true;
+        first_valid_timestep = msg->GOAL_STATUS[0];
+      }
+
       start = std::chrono::system_clock::now();
       allocation_phase = true;
       token.MISSION = mission_windows.front();
