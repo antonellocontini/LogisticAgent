@@ -12,7 +12,6 @@ public:
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
 
 protected:
-
   bool first_missions_sent = false;
   uint first_valid_timestep = 0;
 

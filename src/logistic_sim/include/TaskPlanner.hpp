@@ -208,7 +208,7 @@ protected:
   void wait_agents();
   void initialize_token();
 
-  bool offline_mode;
+  bool offline_mode = false;
   int window_size;
   void detect_offline_mode();
 };

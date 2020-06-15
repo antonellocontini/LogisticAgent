@@ -237,7 +237,7 @@ void Agent::run()
 
   ros::Rate loop_rate(30);  // 0.033 seconds or 30Hz
 
-  while (ros::ok() && !end_simulation)
+  while (ros::ok())
   {
     if (ResendGoal)
     {
@@ -248,10 +248,10 @@ void Agent::run()
       ResendGoal = false;
     }
 
-    if (end_simulation)
-    {
-      return;
-    }
+    // if (end_simulation)
+    // {
+    //   return;
+    // }
 
     loop_rate.sleep();
 

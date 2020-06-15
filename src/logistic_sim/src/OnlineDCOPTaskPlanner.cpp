@@ -11,7 +11,6 @@
 
 namespace onlinedcoptaskplanner
 {
-
 std::stringstream log_ss;
 
 std::string current_time_str()
@@ -166,10 +165,10 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
   ROS_DEBUG_STREAM("robot_number: " << robot_number);
 
   // test reachability
-  std::vector<std::vector<std::vector<bool> > > reachability(graph.size(), std::vector<std::vector<bool>>(robot_number));
-  for (int j=0; j<graph.size(); j++)
+  std::vector<std::vector<std::vector<bool>>> reachability(graph.size(), std::vector<std::vector<bool>>(robot_number));
+  for (int j = 0; j < graph.size(); j++)
   {
-    for (int i=0; i<robot_number; i++)
+    for (int i = 0; i < robot_number; i++)
     {
       reachability[j][i] = std::vector<bool>(waypoints_number[i] + 1, false);
     }
@@ -207,7 +206,7 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
       }
     }
 
-    for (int i=0; i<robot_number; i++)
+    for (int i = 0; i < robot_number; i++)
     {
       // update reachability
       uint v = s.configuration[i];
@@ -216,12 +215,15 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
 
     if (s.configuration == final_config)
     {
-      ROS_DEBUG_STREAM(closed_count << "\tfinal config test - final config reached on these waypoints: " << s.waypoint_indices << "\tconfiguration: " << s.configuration << "\tfinal config: " << final_config);
+      ROS_DEBUG_STREAM(closed_count << "\tfinal config test - final config reached on these waypoints: "
+                                    << s.waypoint_indices << "\tconfiguration: " << s.configuration
+                                    << "\tfinal config: " << final_config);
     }
 
     // if (s.waypoint_indices == final_waypoints)
     // {
-    //   ROS_DEBUG_STREAM(closed_count << "\tfinal waypoints test - last waypoints reached in this configuration " << s.configuration);
+    //   ROS_DEBUG_STREAM(closed_count << "\tfinal waypoints test - last waypoints reached in this configuration " <<
+    //   s.configuration);
     // }
 
     // ROS_DEBUG_STREAM(closed_count << "\t" << s.waypoint_indices);
@@ -293,7 +295,7 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
   }
 
   ROS_DEBUG_STREAM("Reached vertices:");
-  for (int i=0; i<reachability.size(); i++)
+  for (int i = 0; i < reachability.size(); i++)
   {
     std::vector<std::string> vs;
     for (const auto &vec : reachability[i])
@@ -307,7 +309,7 @@ void astar_search_function(const std::vector<std::vector<uint>> &waypoints, cons
     }
     ROS_DEBUG_STREAM("vertex " << i << "\t" << vs);
   }
-  
+
   ROS_WARN_STREAM("Can't find solution!");
   uint64_t total_states = 1;
   for (int i = 0; i < robot_number; i++)
@@ -545,58 +547,6 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   {
     edges_mutex.unlock();
 
-    // simulate edge removal at fixed time steps
-    if (mapname == "icelab_black")
-    {
-      logistic_sim::ChangeEdgeRequest req;
-      req.cost = 0;
-      req.remove = true;
-      req.add = false;
-      logistic_sim::ChangeEdgeResponse res;
-      uint timestep = msg->GOAL_STATUS[0] - first_valid_timestep;
-      // auto current_time = std::chrono::system_clock::now();
-      ros::Time current_time = ros::Time::now();
-      ros::Duration diff = current_time - last_edge_removal;
-      // std::chrono::duration<double> diff = current_time - last_edge_removal;
-      if (first_valid_timestep != 0 && diff.toSec() > 10.0)
-      {
-        bool changed = false;
-        if (timestep == 20)
-        {
-          req.u = 28;
-          req.v = 31;
-          change_edge(req, res);
-          changed = true;
-        }
-        else if (timestep == 40)
-        {
-          req.u = 45;
-          req.v = 49;
-          change_edge(req, res);
-          changed = true;
-        }
-        else if (timestep == 60)
-        {
-          req.u = 42;
-          req.v = 46;
-          change_edge(req, res);
-          changed = true;
-        }
-        else if (timestep == 80)
-        {
-          req.u = 30;
-          req.v = 31;
-          change_edge(req, res);
-          changed = true;
-        }
-
-        if (changed)
-        {
-          last_edge_removal = current_time;
-        }
-      }
-    }
-
     // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
 
@@ -626,7 +576,8 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       if (!first_missions_sent)
       {
         first_missions_sent = true;
-        first_valid_timestep = msg->GOAL_STATUS[0];
+        first_valid_timestep = *std::max_element(msg->GOAL_STATUS.begin(), msg->GOAL_STATUS.end());
+        ROS_DEBUG_STREAM("Starting timestep: " << first_valid_timestep);
       }
 
       start = std::chrono::system_clock::now();
@@ -708,6 +659,47 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     }
     if (eq)
     {
+      struct edge_removal_plan
+      {
+        uint from;
+        uint to;
+        uint timestep;
+      };
+      // simulate edge removal at fixed time steps
+      if (mapname == "icelab_black")
+      {
+        static std::list<edge_removal_plan> edge_list = {{28,31,20}, {45,49,40}, {42,46,60}, {30,31,80}};
+        logistic_sim::ChangeEdgeRequest req;
+        req.cost = 0;
+        req.remove = true;
+        req.add = false;
+        logistic_sim::ChangeEdgeResponse res;
+        uint current_goal_status = *std::max_element(msg->GOAL_STATUS.begin(), msg->GOAL_STATUS.end());
+        uint timestep = current_goal_status - first_valid_timestep;
+        // auto current_time = std::chrono::system_clock::now();
+        ros::Time current_time = ros::Time::now();
+        ros::Duration diff = current_time - last_edge_removal;
+        // std::chrono::duration<double> diff = current_time - last_edge_removal;
+        if (first_valid_timestep != 0 && diff.toSec() >= 10.0 && !edge_list.empty())
+        {
+          const edge_removal_plan &edge = edge_list.front();
+          if (timestep >= edge.timestep)
+          {
+            ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+            req.u = edge.from;
+            req.v = edge.to;
+            change_edge(req, res);
+            last_edge_removal = current_time;
+            edge_list.pop_front();
+          }
+        }
+      }
+      // if (!first_missions_sent)
+      // {
+      //   first_valid_timestep = msg->GOAL_STATUS[0];
+      //   ROS_DEBUG_STREAM("Starting timestep: " << first_valid_timestep);
+      // }
+
       std::vector<logistic_sim::Path> paths = token.TRAILS;
       for (int i = 0; i < TEAM_SIZE; i++)
       {
@@ -797,7 +789,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       ros::NodeHandle nh;
       nh.setParam("/simulation_running", "false");
       ros::shutdown();
-      int cmd_result = system("./stop_experiment.sh");
+      // int cmd_result = system("./stop_experiment.sh");
     }
   }
 
@@ -825,7 +817,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 {
   // get valid paths
   std::vector<std::vector<uint>> other_paths;
-  std::map<uint, std::vector<uint> > other_paths_map;
+  std::map<uint, std::vector<uint>> other_paths_map;
   for (int i = 0; i < TEAM_SIZE; i++)
   {
     if (msg->HAS_REPAIRED_PATH[i])
@@ -865,13 +857,21 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   std::vector<std::vector<uint>> paths, home_paths;
 
   std::string str_time = current_time_str();
-  log_ss << str_time << "\t" << "robot_ids:\n" << robot_ids << "\n";
+  log_ss << str_time << "\t"
+         << "robot_ids:\n"
+         << robot_ids << "\n";
   ROS_DEBUG_STREAM("robot_ids:\n" << robot_ids);
-  log_ss << str_time << "\t" << "initial configuration:\n" << initial_state.configuration << "\n";
+  log_ss << str_time << "\t"
+         << "initial configuration:\n"
+         << initial_state.configuration << "\n";
   ROS_DEBUG_STREAM("initial configuration:\n" << initial_state.configuration);
-  log_ss << str_time << "\t" << "waypoints:\n" << waypoints << "\n";
+  log_ss << str_time << "\t"
+         << "waypoints:\n"
+         << waypoints << "\n";
   ROS_DEBUG_STREAM("waypoints:\n" << waypoints);
-  log_ss << str_time << "\t" << "other paths:\n" << other_paths << "\n";
+  log_ss << str_time << "\t"
+         << "other paths:\n"
+         << other_paths << "\n";
   ROS_DEBUG_STREAM("other paths:\n" << other_paths);
 
   mapd_time::state test_is;
@@ -880,29 +880,35 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // test recovery configuration
   mapd_time::search_tree recovery_search_tree(map_graph, waypoints, test_is);
   ROS_DEBUG_STREAM("searching recovery configuration...");
-  log_ss << str_time << "\t" << "searching recovery configuration..." << "\n";
-  // std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration, other_paths);
-  // std::vector<uint> destination = recovery_search_tree.find_recovery_configuration(other_paths, robot_ids, bind(&OnlineDCOPTaskPlanner::check_valid_recovery_configuration, this, _1, _2, _3));
+  log_ss << str_time << "\t"
+         << "searching recovery configuration..."
+         << "\n";
+  // std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration,
+  // other_paths);
+  // std::vector<uint> destination = recovery_search_tree.find_recovery_configuration(other_paths, robot_ids,
+  // bind(&OnlineDCOPTaskPlanner::check_valid_recovery_configuration, this, _1, _2, _3));
   std::vector<uint> destination(robot_ids.size(), 0);
-  for (int i=0; i<robot_ids.size(); i++)
+  for (int i = 0; i < robot_ids.size(); i++)
   {
     destination[i] = home_vertex[robot_ids[i]];
   }
-  std::vector<std::vector<uint> > recovery_waypoints;
-  for (int i=0; i<destination.size(); i++)
+  std::vector<std::vector<uint>> recovery_waypoints;
+  for (int i = 0; i < destination.size(); i++)
   {
-    recovery_waypoints.push_back({destination[i]});
+    recovery_waypoints.push_back({ destination[i] });
   }
   ROS_DEBUG_STREAM("recovery configuration:\n" << recovery_waypoints);
-  log_ss << str_time << "\t" << "recovery configuration:\n" << recovery_waypoints << "\n";
+  log_ss << str_time << "\t"
+         << "recovery configuration:\n"
+         << recovery_waypoints << "\n";
   // test new state definition with no time included
   mapf::state test_mapf_is;
-  for (int i=0; i<TEAM_SIZE; i++)
+  for (int i = 0; i < TEAM_SIZE; i++)
   {
     test_mapf_is.configuration.push_back(msg->TRAILS[i].PATH.front());
   }
   std::vector<unsigned int> test_destination(TEAM_SIZE, 0);
-  for (int i=0; i<TEAM_SIZE; i++)
+  for (int i = 0; i < TEAM_SIZE; i++)
   {
     if (!msg->HAS_REPAIRED_PATH[i])
     {
@@ -910,8 +916,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     }
   }
   mapf::search_tree test_mapf(map_graph, test_destination, test_mapf_is, other_paths_map);
-  std::list<mapf::state> result = test_mapf.astar_search(paths);
-
+  uint time_limit = 15 * 60;
+  std::list<mapf::state> result = test_mapf.astar_search(paths, time_limit);
   // reach recovery configuration with pseudo-dcop search
   // mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
   // recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
@@ -926,6 +932,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // search_function(waypoints, initial_state, map_graph, robot_ids, &h_func, other_paths, &paths, &home_paths,
   // going_home);
 
+  // update last goal time to prevent shutdown
+  last_goal_time = ros::Time::now();
   if (!result.empty())
   {
     // insert paths inside token
@@ -937,7 +945,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
       // token.TRAILS[robot_id].PATH.insert(token.TRAILS[robot_id].PATH.end(), paths[i].begin(), paths[i].end());
       // token.HOME_TRAILS[robot_id].PATH = home_paths[i];
       ROS_DEBUG_STREAM("final task path: " << paths[i]);
-      log_ss << str_time << "\t" << "final task path: " << paths[i] << "\n";
+      log_ss << str_time << "\t"
+             << "final task path: " << paths[i] << "\n";
       // ROS_DEBUG_STREAM("final home path: " << home_paths[i]);
     }
 
@@ -1010,7 +1019,9 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
   {
     std::string time_str = current_time_str();
     ROS_INFO_STREAM("Requested remotion of edge (" << msg.u << "," << msg.v << ")");
-    log_ss << time_str << "\t" << "Requested remotion of edge (" << msg.u << "," << msg.v << ")" << "\n";
+    log_ss << time_str << "\t"
+           << "Requested remotion of edge (" << msg.u << "," << msg.v << ")"
+           << "\n";
     print_graph();
     result = RemoveEdge(vertex_web, dimension, msg.u, msg.v);
     ROS_ERROR_STREAM_COND(result > 0, "Failed remotion!");
@@ -1166,8 +1177,8 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
   return false;
 }
 
-
-bool reachability_test(uint from, const std::vector<uint> &destinations, const std::vector<uint> &banned_vertices, vertex *vertex_web)
+bool reachability_test(uint from, const std::vector<uint> &destinations, const std::vector<uint> &banned_vertices,
+                       vertex *vertex_web)
 {
   uint found_count = 0;
   std::map<uint, conflict_free_state> visited;
@@ -1201,7 +1212,7 @@ bool reachability_test(uint from, const std::vector<uint> &destinations, const s
       if (found_count == destinations.size())
         return true;
     }
-    
+
     if (banned_it == banned_vertices.end())
     {
       // check neighbour states
@@ -1223,10 +1234,11 @@ bool reachability_test(uint from, const std::vector<uint> &destinations, const s
   return false;
 }
 
-
-bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector<uint> &configuration, const std::vector<uint> &robot_ids, const std::vector<std::vector<uint> > &waypoints)
+bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector<uint> &configuration,
+                                                               const std::vector<uint> &robot_ids,
+                                                               const std::vector<std::vector<uint>> &waypoints)
 {
-  for (int i=0; i<configuration.size(); i++)
+  for (int i = 0; i < configuration.size(); i++)
   {
     uint from = configuration[i];
     std::vector<uint> banned_vertices = configuration;
@@ -1234,7 +1246,7 @@ bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector
     std::vector<uint> destinations = waypoints[i];
 
     // add other homes to banned vertices and own home to destinations
-    for (int j=0; j<home_vertex.size(); j++)
+    for (int j = 0; j < home_vertex.size(); j++)
     {
       if (home_vertex[j] == robot_ids[i])
       {
@@ -1254,10 +1266,10 @@ bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector
   return true;
 }
 
-
-void enumerate_configs(std::vector<std::vector<uint> > &result, std::vector<uint> &temp_config, uint num_vertices, uint robot_number, uint iteration = 0)
+void enumerate_configs(std::vector<std::vector<uint>> &result, std::vector<uint> &temp_config, uint num_vertices,
+                       uint robot_number, uint iteration = 0)
 {
-  for (uint i=0;i<num_vertices;i++)
+  for (uint i = 0; i < num_vertices; i++)
   {
     temp_config[iteration] = i;
     if (iteration < robot_number - 1)
@@ -1271,11 +1283,11 @@ void enumerate_configs(std::vector<std::vector<uint> > &result, std::vector<uint
   }
 }
 
-
-std::vector<std::vector<uint> > OnlineDCOPTaskPlanner::find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids)
+std::vector<std::vector<uint>> OnlineDCOPTaskPlanner::find_all_recovery_configs(
+    const std::vector<std::vector<uint>> &waypoints, const std::vector<uint> &robot_ids)
 {
   uint robot_number = waypoints.size();
-  std::vector<std::vector<uint> > configurations, result;
+  std::vector<std::vector<uint>> configurations, result;
   std::vector<uint> temp_config(robot_number, 0);
   enumerate_configs(configurations, temp_config, map_graph.size(), robot_number);
 
@@ -1289,12 +1301,12 @@ std::vector<std::vector<uint> > OnlineDCOPTaskPlanner::find_all_recovery_configs
   return result;
 }
 
-
-uint max_cost_heuristic(const std::vector<uint> &current_config, const std::vector<uint> &final_config, const std::vector<std::vector<uint> > &fw_matrix)
+uint max_cost_heuristic(const std::vector<uint> &current_config, const std::vector<uint> &final_config,
+                        const std::vector<std::vector<uint>> &fw_matrix)
 {
   uint robot_number = current_config.size();
   uint result = 0;
-  for (uint i=0; i<robot_number; i++)
+  for (uint i = 0; i < robot_number; i++)
   {
     if (fw_matrix[current_config[i]][final_config[i]] > result)
     {
@@ -1304,28 +1316,26 @@ uint max_cost_heuristic(const std::vector<uint> &current_config, const std::vect
   return result;
 }
 
-
-std::vector<uint> OnlineDCOPTaskPlanner::find_best_recovery_config(const std::vector<std::vector<uint> > &waypoints
-                                                                 , const std::vector<uint> &robot_ids
-                                                                 , const std::vector<uint> &current_config
-                                                                 , const std::vector<std::vector<uint> > &other_paths)
+std::vector<uint> OnlineDCOPTaskPlanner::find_best_recovery_config(const std::vector<std::vector<uint>> &waypoints,
+                                                                   const std::vector<uint> &robot_ids,
+                                                                   const std::vector<uint> &current_config,
+                                                                   const std::vector<std::vector<uint>> &other_paths)
 {
   uint robot_number = waypoints.size();
-  std::vector<std::vector<uint> > configurations;
-  auto valid_configs = std::set<std::vector<uint>, std::function<bool(const std::vector<uint>&, const std::vector<uint>&)> >{
-    [&](const std::vector<uint> &lhs, const std::vector<uint> &rhs)
-    {
-      // max cost heuristic
-      if (max_cost_heuristic(current_config, lhs, fw_matrix) < max_cost_heuristic(current_config, rhs, fw_matrix))
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-  };
+  std::vector<std::vector<uint>> configurations;
+  auto valid_configs =
+      std::set<std::vector<uint>, std::function<bool(const std::vector<uint> &, const std::vector<uint> &)>>{ [&](
+          const std::vector<uint> &lhs, const std::vector<uint> &rhs) {
+        // max cost heuristic
+        if (max_cost_heuristic(current_config, lhs, fw_matrix) < max_cost_heuristic(current_config, rhs, fw_matrix))
+        {
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      } };
   std::vector<uint> temp_config(robot_number, 0);
   enumerate_configs(configurations, temp_config, map_graph.size(), robot_number);
 
@@ -1336,11 +1346,12 @@ std::vector<uint> OnlineDCOPTaskPlanner::find_best_recovery_config(const std::ve
       // check if configuration can cause trouble to other robots
       uint h_val = max_cost_heuristic(current_config, conf, fw_matrix);
       bool good = true;
-      for (int i=0; i<other_paths.size(); i++)
+      for (int i = 0; i < other_paths.size(); i++)
       {
         for (uint v : conf)
         {
-          if (h_val < other_paths[i].size() && std::find(other_paths[i].begin() + h_val, other_paths[i].end(), v) != other_paths[i].end())
+          if (h_val < other_paths[i].size() &&
+              std::find(other_paths[i].begin() + h_val, other_paths[i].end(), v) != other_paths[i].end())
           {
             good = false;
           }
@@ -1363,13 +1374,12 @@ std::vector<uint> OnlineDCOPTaskPlanner::find_best_recovery_config(const std::ve
   }
 }
 
-
 void OnlineDCOPTaskPlanner::build_fw_matrix()
 {
   uint vertex_number = map_graph.size();
   uint max_v = std::numeric_limits<uint>::max();
-  fw_matrix = std::vector<std::vector<uint> >(vertex_number, std::vector<uint>(vertex_number, max_v));
-  for (uint i=0; i<vertex_number; i++)
+  fw_matrix = std::vector<std::vector<uint>>(vertex_number, std::vector<uint>(vertex_number, max_v));
+  for (uint i = 0; i < vertex_number; i++)
   {
     fw_matrix[i][i] = 0;
     for (uint u : map_graph[i])
@@ -1378,11 +1388,11 @@ void OnlineDCOPTaskPlanner::build_fw_matrix()
     }
   }
 
-  for (uint k=0; k<vertex_number; k++)
+  for (uint k = 0; k < vertex_number; k++)
   {
-    for (uint i=0; i<vertex_number; i++)
+    for (uint i = 0; i < vertex_number; i++)
     {
-      for (uint j=0; j<vertex_number; j++)
+      for (uint j = 0; j < vertex_number; j++)
       {
         if (fw_matrix[i][k] != max_v && fw_matrix[k][j] != max_v && fw_matrix[i][j] > fw_matrix[i][k] + fw_matrix[k][j])
         {
@@ -1419,10 +1429,12 @@ int main(int argc, char *argv[])
   ros::AsyncSpinner spinner(2);
   spinner.start();
 
-  if (signal(SIGSEGV, crash_handler) == SIG_ERR)
-  {
-    std::cerr << "can't print stack trace" << std::endl;
-  }
+  // if (signal(SIGSEGV, crash_handler) == SIG_ERR)
+  // {
+  //   std::cerr << "can't print stack trace" << std::endl;
+  // }
   ODTP.run();
+  sleep(3);
+  int cmd_result = system("tmux kill-session -t log_sim");
   return 0;
 }

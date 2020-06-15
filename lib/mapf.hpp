@@ -244,7 +244,7 @@ struct search_tree
     return true;
   }
 
-  std::list<state> astar_search(std::vector<std::vector<unsigned int>> &paths)
+  std::list<state> astar_search(std::vector<std::vector<unsigned int>> &paths, uint time_limit = 0)
   {
     unsigned int vertices = graph.size(), robots_number = final_configuration.size();
 
@@ -344,6 +344,12 @@ struct search_tree
             prev[n] = s;
           }
         }
+      }
+
+      if (time_limit > 0 && diff.count() > time_limit)
+      {
+        ROS_WARN_STREAM("MAPF Time limit reached!");
+        open.clear();
       }
     }
 
