@@ -178,6 +178,11 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // if (ID_ROBOT % 2 == 0)
         // {
           plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
+          if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
+          {
+            token.TRAILS[ID_ROBOT].PATH.push_back(token.HOME_TRAILS[ID_ROBOT].PATH.front());
+            token.HOME_TRAILS[ID_ROBOT].PATH.erase(token.HOME_TRAILS[ID_ROBOT].PATH.begin());
+          }
           // code after previous call execute only if plan is successful
           // update active waypoints
           task_waypoints.clear();
