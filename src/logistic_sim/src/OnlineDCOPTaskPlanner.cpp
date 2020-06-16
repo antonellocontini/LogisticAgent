@@ -9,6 +9,8 @@
 #include "mapd_time_test.hpp"
 #include "mapf.hpp"
 
+#define EDGE_REMOVAL_TEST true
+
 namespace onlinedcoptaskplanner
 {
 std::stringstream log_ss;
@@ -496,6 +498,27 @@ void search_function(const std::vector<std::vector<uint>> &waypoints, const mapd
   return;
 }
 
+
+void OnlineDCOPTaskPlanner::init(int argc, char **argv)
+{
+  OnlineTaskPlanner::init(argc, argv);
+  // set edge list for removal tests
+  if (mapname == "icelab_black")
+  {
+    edge_list = {{28,31,20}, {45,49,40}, {42,46,60}, {30,31,80}};
+  }
+  else if (mapname == "grid")
+  {
+    edge_list = {{11,16,5}, {13,18,10}, {7,12,15}, {7,8,20}, {15,16,25}, {13,14,30}};
+  }
+  else
+  {
+    edge_list = {};
+  }
+  
+}
+
+
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
   if (msg->ID_RECEIVER != TASK_PLANNER_ID)
@@ -659,16 +682,10 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     }
     if (eq)
     {
-      struct edge_removal_plan
-      {
-        uint from;
-        uint to;
-        uint timestep;
-      };
+      
       // simulate edge removal at fixed time steps
-      if (mapname == "icelab_black")
+      if (EDGE_REMOVAL_TEST)
       {
-        static std::list<edge_removal_plan> edge_list = {{28,31,20}, {45,49,40}, {42,46,60}, {30,31,80}};
         logistic_sim::ChangeEdgeRequest req;
         req.cost = 0;
         req.remove = true;
@@ -772,6 +789,12 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       repair_stats_file << "SUCCESSFULL_SA_REPAIR: " << msg->SUCCESSFULL_SA_REPAIR << "\n";
       repair_stats_file << "SUCCESSFULL_MA_REPAIR: " << msg->SUCCESSFULL_MA_REPAIR << "\n";
       repair_stats_file << "FAILED_REPAIR: " << msg->FAILED_REPAIR << "\n";
+      repair_stats_file << "REPAIRS_PER_ROBOT:\n";
+      for (int i=0; i<TEAM_SIZE; i++)
+      {
+        repair_stats_file << msg->REPAIRS_PER_ROBOT[i] << " ";
+      }
+      repair_stats_file << "\n";
       repair_stats_file.close();
 
       for (int i = 0; i < TEAM_SIZE; i++)

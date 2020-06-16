@@ -66,6 +66,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token.FAILED_ALLOCATION.push_back(false);
     token.ACTIVE_ROBOTS = TEAM_SIZE;
     token.ROBOT_WAYPOINTS.push_back(logistic_sim::Waypoints());
+    token.REPAIRS_PER_ROBOT.push_back(0);
 
     initialize = false;
     next_vertex = current_vertex = initial_vertex;
@@ -195,6 +196,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
           task_waypoints.push_back(new_task_waypoints);
           token.SINGLE_PLAN_REPAIR_PROGRESS = true;
           token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+          token.REPAIRS_PER_ROBOT[ID_ROBOT]++;
           ROS_INFO_STREAM("Plan repaired successfully!");
         // }
         // else

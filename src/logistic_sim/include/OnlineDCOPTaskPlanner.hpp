@@ -4,14 +4,25 @@
 
 namespace onlinedcoptaskplanner
 {
+
+struct edge_removal_plan
+{
+  uint from;
+  uint to;
+  uint timestep;
+};
+
 class OnlineDCOPTaskPlanner : public onlinetaskplanner::OnlineTaskPlanner
 {
 public:
   OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::string &name = "OnlineDCOPTaskPlanner");
 
+  void init(int argc, char **argv) override;
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
 
 protected:
+  std::list<edge_removal_plan> edge_list;
+
   bool first_missions_sent = false;
   uint first_valid_timestep = 0;
 

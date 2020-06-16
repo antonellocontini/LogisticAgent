@@ -50,6 +50,7 @@ float32[]   TOTAL_DISTANCE
 # statistics for repair variants
 uint32      OBSTACLE_EVENTS
 uint32      SUCCESSFULL_SA_REPAIR
+uint32[]    REPAIRS_PER_ROBOT
 uint32      SUCCESSFULL_MA_REPAIR
 uint32      FAILED_REPAIR
 
