@@ -111,6 +111,9 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         }
       }
 
+      // test
+      good_path = false;
+
       if (good_path)
       {
         token.HAS_REPAIRED_PATH[ID_ROBOT] = true;

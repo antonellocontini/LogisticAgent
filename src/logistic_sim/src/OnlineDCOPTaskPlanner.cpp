@@ -498,26 +498,27 @@ void search_function(const std::vector<std::vector<uint>> &waypoints, const mapd
   return;
 }
 
-
 void OnlineDCOPTaskPlanner::init(int argc, char **argv)
 {
   OnlineTaskPlanner::init(argc, argv);
+  std::string str_time = current_time_str();
+  log_ss << str_time << "\n"
+         << "\tmapname: " << mapname << "\n"
+         << "\ttask_set_file: " << task_set_file << "\n";
   // set edge list for removal tests
   if (mapname == "icelab_black")
   {
-    edge_list = {{28,31,20}, {45,49,40}, {42,46,60}, {30,31,80}};
+    edge_list = { { 28, 31, 20 }, { 45, 49, 40 }, { 42, 46, 60 }, { 30, 31, 80 } };
   }
   else if (mapname == "grid")
   {
-    edge_list = {{11,16,5}, {13,18,10}, {7,12,15}, {7,8,20}, {15,16,25}, {13,14,30}};
+    edge_list = { { 11, 16, 5 }, { 13, 18, 10 }, { 7, 12, 15 }, { 7, 8, 20 }, { 15, 16, 25 }, { 13, 14, 30 } };
   }
   else
   {
     edge_list = {};
   }
-  
 }
-
 
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
@@ -557,7 +558,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     edges_mutex.unlock();
     ROS_DEBUG_STREAM("Waiting for agents to repair their paths...");
   }
-  else if (msg->MULTI_PLAN_REPAIR)
+  else if (msg->MULTI_PLAN_REPAIR && !msg->SHUTDOWN)
   {
     edges_mutex.unlock();
     ROS_WARN_STREAM("For now we use centralized implementation of multi-robot repair!");
@@ -682,7 +683,6 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     }
     if (eq)
     {
-      
       // simulate edge removal at fixed time steps
       if (EDGE_REMOVAL_TEST)
       {
@@ -790,7 +790,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       repair_stats_file << "SUCCESSFULL_MA_REPAIR: " << msg->SUCCESSFULL_MA_REPAIR << "\n";
       repair_stats_file << "FAILED_REPAIR: " << msg->FAILED_REPAIR << "\n";
       repair_stats_file << "REPAIRS_PER_ROBOT:\n";
-      for (int i=0; i<TEAM_SIZE; i++)
+      for (int i = 0; i < TEAM_SIZE; i++)
       {
         repair_stats_file << msg->REPAIRS_PER_ROBOT[i] << " ";
       }
@@ -1201,7 +1201,7 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
 }
 
 bool reachability_test(uint from, const std::vector<uint> &destinations, const std::vector<uint> &banned_vertices,
-                       vertex *vertex_web)
+                       vertex *vertex_web, uint *reached_destinations = nullptr)
 {
   uint found_count = 0;
   std::map<uint, conflict_free_state> visited;
@@ -1212,6 +1212,11 @@ bool reachability_test(uint from, const std::vector<uint> &destinations, const s
   initial_state.f = 0;
 
   open[from] = initial_state;
+
+  if (reached_destinations != nullptr)
+  {
+    *reached_destinations = 0;
+  }
 
   while (!open.empty())
   {
@@ -1232,6 +1237,10 @@ bool reachability_test(uint from, const std::vector<uint> &destinations, const s
     {
       int pos = it - destinations.begin();
       found_count++;
+      if (reached_destinations != nullptr)
+      {
+        *reached_destinations = found_count;
+      }
       if (found_count == destinations.size())
         return true;
     }
@@ -1259,8 +1268,12 @@ bool reachability_test(uint from, const std::vector<uint> &destinations, const s
 
 bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector<uint> &configuration,
                                                                const std::vector<uint> &robot_ids,
-                                                               const std::vector<std::vector<uint>> &waypoints)
+                                                               const std::vector<std::vector<uint>> &waypoints,
+                                                               double *reachability_factor)
 {
+  uint total_destinations = 0;
+  uint reached_destinations = 0;
+  bool valid_configuration = true;
   for (int i = 0; i < configuration.size(); i++)
   {
     uint from = configuration[i];
@@ -1281,12 +1294,19 @@ bool OnlineDCOPTaskPlanner::check_valid_recovery_configuration(const std::vector
       }
     }
 
-    if (!reachability_test(from, destinations, banned_vertices, vertex_web))
+    uint robot_reached_destinations;
+    if (!reachability_test(from, destinations, banned_vertices, vertex_web, &robot_reached_destinations))
     {
-      return false;
+      valid_configuration = false;
     }
+    total_destinations += destinations.size();
+    reached_destinations += robot_reached_destinations;
   }
-  return true;
+  if (reachability_factor != nullptr)
+  {
+    *reachability_factor = static_cast<double>(reached_destinations) / static_cast<double>(total_destinations);
+  }
+  return valid_configuration;
 }
 
 void enumerate_configs(std::vector<std::vector<uint>> &result, std::vector<uint> &temp_config, uint num_vertices,
@@ -1395,6 +1415,192 @@ std::vector<uint> OnlineDCOPTaskPlanner::find_best_recovery_config(const std::ve
   {
     return *valid_configs.begin();
   }
+}
+
+void OnlineDCOPTaskPlanner::_generate_near_configs_impl(std::vector<std::vector<uint>> &result,
+                                                        const std::vector<uint> &s, std::vector<uint> &temp_state,
+                                                        unsigned int robot_i)
+{
+  unsigned int current_vertex = s[robot_i], robots_number = s.size();
+  std::vector<unsigned int> near_vertices;
+  near_vertices = { current_vertex };
+  near_vertices.insert(near_vertices.end(), map_graph[current_vertex].begin(), map_graph[current_vertex].end());
+
+  for (unsigned int v : near_vertices)
+  {
+    temp_state[robot_i] = v;
+
+    if (robot_i < robots_number - 1)
+    {
+      _generate_near_configs_impl(result, s, temp_state, robot_i + 1);
+    }
+    else
+    {
+      // check conflict state
+      bool good = true;
+
+      if (s == temp_state)
+      {
+        good = false;
+      }
+
+      for (int i = 0; i < robots_number; i++)
+      {
+        for (int j = i + 1; j < robots_number; j++)
+        {
+          if (temp_state[i] == temp_state[j])
+          {
+            good = false;
+          }
+        }
+      }
+
+      if (good)
+      {
+        result.push_back(temp_state);
+      }
+    }
+  }
+}
+
+std::vector<std::vector<uint>> OnlineDCOPTaskPlanner::generate_near_configs(const std::vector<uint> &config)
+{
+  std::vector<std::vector<uint>> result;
+  std::vector<uint> temp_state = config;
+  _generate_near_configs_impl(result, config, temp_state, 0);
+  return result;
+}
+
+std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std::vector<std::vector<uint>> &waypoints,
+                                                                      const std::vector<uint> &robot_ids,
+                                                                      const std::vector<std::vector<uint>> &other_paths)
+{
+  struct edge_count
+  {
+    uint vertex;
+    uint edges;
+
+    bool operator<(const edge_count &other) const
+    {
+      if (edges < other.edges)
+      {
+        return true;
+      }
+      else if (edges == other.edges)
+      {
+        return vertex < other.vertex;
+      }
+    }
+  };
+  uint robot_number = robot_ids.size();
+  std::vector<uint> starting_configuration(robot_number);
+
+  std::set<edge_count> vertex_set;
+  for (int i = 0; i < map_graph.size(); i++)
+  {
+    if (std::find(dst_vertex.begin(), dst_vertex.end(), i) == dst_vertex.end() && src_vertex != i)
+    {
+      uint count = map_graph[i].size();
+      edge_count ec;
+      ec.vertex = i;
+      ec.edges = count;
+      vertex_set.insert(ec);
+    }
+  }
+
+  auto it = vertex_set.rbegin();
+  for (int i = 0; i < robot_number; i++)
+  {
+    starting_configuration[i] = it->vertex;
+    it++;
+  }
+
+  auto cmp_function = [&](const std::vector<uint>& lhs, const std::vector<uint>& rhs)
+  {
+    for (int i=0; i<lhs.size(); i++)
+    {
+      if (lhs[i] < rhs[i])
+      {
+        return true;
+      }
+      else if (lhs[i] > rhs[i])
+      {
+        return false;
+      }
+    }
+    return false;
+  };
+  std::set<std::vector<uint>, std::function<bool(const std::vector<uint>&, const std::vector<uint>&)> > visited_states(cmp_function), unvisited_states(cmp_function);
+
+  std::vector<uint> current_configuration = starting_configuration;
+  double time_limit = 15 * 60;
+  auto start_time = std::chrono::system_clock::now();
+  bool good = true;
+  while (good)
+  {
+    auto current_time = std::chrono::system_clock::now();
+    std::chrono::duration<double> delta = current_time - start_time;
+    if (delta.count() > time_limit)
+    {
+      good = false;
+    }
+
+    visited_states.insert(current_configuration);
+    if (unvisited_states.find(current_configuration) != unvisited_states.end())
+    {
+      unvisited_states.erase(current_configuration);
+    }
+
+    double reachability_factor;
+    if (check_valid_recovery_configuration(current_configuration, robot_ids, waypoints, &reachability_factor))
+    {
+      return current_configuration;
+    }
+    else
+    {
+      // check neighbours for better state
+      std::vector<uint> best_config;
+      double best_value = 0.0;
+      std::vector<std::vector<uint>> near_configs = generate_near_configs(current_configuration);
+      for (auto &c : near_configs)
+      {
+        double d;
+        if (check_valid_recovery_configuration(c, robot_ids, waypoints, &d))
+        {
+          return c;
+        }
+        else if (visited_states.find(c) == visited_states.end())
+        {
+          if (unvisited_states.find(c) == unvisited_states.end())
+          {
+            unvisited_states.insert(c);
+          }
+          if (d > reachability_factor && d > best_value)
+          {
+            reachability_factor = d;
+            best_value = d;
+            best_config = c;
+          }
+        }
+      }
+
+      if (best_value > 0.0)
+      {
+        current_configuration = best_config;
+      }
+      else if (!unvisited_states.empty())
+      {
+        current_configuration = *unvisited_states.begin();
+      }
+      else
+      {
+        good = false;
+      }
+    }
+  }
+
+  ROS_WARN_STREAM("Can't find new recovery configuration!");
+  return std::vector<uint>();
 }
 
 void OnlineDCOPTaskPlanner::build_fw_matrix()

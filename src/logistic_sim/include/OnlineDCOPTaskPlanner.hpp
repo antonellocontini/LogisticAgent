@@ -42,7 +42,11 @@ protected:
   bool check_conflict_free_property();
 
   // check if a configuration is good for recovery
-  bool check_valid_recovery_configuration(const std::vector<uint> &configuration, const std::vector<uint> &robot_ids, const std::vector<std::vector<uint> > &waypoints);
+  bool check_valid_recovery_configuration(const std::vector<uint> &configuration
+                                        , const std::vector<uint> &robot_ids
+                                        , const std::vector<std::vector<uint> > &waypoints
+                                        , double* reachability_factor = nullptr);
+
 
   std::vector<std::vector<uint> > find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids);
   std::vector<uint> find_best_recovery_config(const std::vector<std::vector<uint> > &waypoints
@@ -50,6 +54,11 @@ protected:
                                             , const std::vector<uint> &current_config
                                             , const std::vector<std::vector<uint> > &other_paths);
 
+  void _generate_near_configs_impl(std::vector<std::vector<uint> > &result, const std::vector<uint> &s, std::vector<uint> &temp_state, unsigned int robot_i = 0);
+  std::vector<std::vector<uint> > generate_near_configs(const std::vector<uint> &config);
+  std::vector<uint> local_search_recovery_config(const std::vector<std::vector<uint> > &waypoints
+                                            , const std::vector<uint> &robot_ids
+                                            , const std::vector<std::vector<uint> > &other_paths);
 
   void init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
   void multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
