@@ -56,9 +56,12 @@ protected:
 
   void _generate_near_configs_impl(std::vector<std::vector<uint> > &result, const std::vector<uint> &s, std::vector<uint> &temp_state, unsigned int robot_i = 0);
   std::vector<std::vector<uint> > generate_near_configs(const std::vector<uint> &config);
+  std::vector<uint> create_random_config(const std::vector<uint> &valid_vertices, uint robot_number,
+                    const std::set<std::vector<uint>, std::function<bool(const std::vector<uint> &, const std::vector<uint> &)>> &visited_states);
   std::vector<uint> local_search_recovery_config(const std::vector<std::vector<uint> > &waypoints
                                             , const std::vector<uint> &robot_ids
-                                            , const std::vector<std::vector<uint> > &other_paths);
+                                            , const std::vector<std::vector<uint> > &other_paths
+                                            , std::chrono::duration<double> *search_duration = nullptr);
 
   void init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
   void multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token);
