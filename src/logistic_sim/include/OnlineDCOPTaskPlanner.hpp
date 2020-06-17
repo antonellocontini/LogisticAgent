@@ -45,7 +45,9 @@ protected:
   bool check_valid_recovery_configuration(const std::vector<uint> &configuration
                                         , const std::vector<uint> &robot_ids
                                         , const std::vector<std::vector<uint> > &waypoints
-                                        , double* reachability_factor = nullptr);
+                                        , double* reachability_factor = nullptr
+                                        , std::vector<uint> *reached_per_robot = nullptr
+                                        , std::vector<uint> *destinations_per_robot = nullptr);
 
 
   std::vector<std::vector<uint> > find_all_recovery_configs(const std::vector<std::vector<uint> > &waypoints, const std::vector<uint> &robot_ids);
