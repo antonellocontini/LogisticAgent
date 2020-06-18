@@ -1699,7 +1699,6 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
     }
 
     double reachability_factor;
-    if (check_conflict_free_property())
     if (check_valid_recovery_configuration(current_configuration, robot_ids, waypoints, &reachability_factor))
     {
       if (search_duration != nullptr)
