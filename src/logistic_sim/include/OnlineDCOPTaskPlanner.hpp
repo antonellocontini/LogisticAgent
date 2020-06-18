@@ -38,8 +38,8 @@ protected:
   std::vector<logistic_sim::Edge> removed_edges;
   boost::mutex edges_mutex; // used to avoid conflicts with the token thread and the main thread
 
-  std::vector<bool> _check_conflict_free_impl(uint task_endpoint);
-  bool check_conflict_free_property();
+  std::vector<bool> _check_conflict_free_impl(uint task_endpoint, std::vector<uint> *homes = nullptr);
+  bool check_conflict_free_property(std::vector<uint> *homes = nullptr, double *reachability_factor = nullptr, bool print = true);
 
   // check if a configuration is good for recovery
   bool check_valid_recovery_configuration(const std::vector<uint> &configuration

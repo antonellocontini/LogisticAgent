@@ -3,11 +3,11 @@
 USE_KAIROS=false
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=2
+NROBOTS=6
 INITPOS=default
 ALG=OnlineDCOPAgent
-LOC=AMCL
-# LOC=fake_localization
+#LOC=AMCL
+LOC=fake_localization
 NAV=ros
 SPEEDUP=3.0
 CAPACITY=3
@@ -153,23 +153,40 @@ function set_footprints {
 	tmux selectw -t $SESSION:2
 }
 
-prepare_tmux
-launch_ros
+# prepare_tmux
+# launch_ros
 
-if [ "$USE_KAIROS" = "true" ]; then
-	launch_kairos_sim
-	launch_kairos_planner_agents
-else
+# if [ "$USE_KAIROS" = "true" ]; then
+# 	launch_kairos_sim
+# 	launch_kairos_planner_agents
+# else
+# 	launch_stage
+# 	launch_robots
+# 	launch_taskplanner
+# 	launch_agents
+# 	set_footprints
+# fi
+# date
+# tmux -2 attach-session -t $SESSION
+# echo ""
+# sleep 1
+
+for i in $(seq 2 2)
+do
+	MISSIONS_FILE="$i.txt"
+	echo "MISSIONS_FILE:" "$MISSIONS_FILE"
+	prepare_tmux
+	launch_ros
 	launch_stage
 	launch_robots
 	launch_taskplanner
 	launch_agents
 	set_footprints
-fi
-date
-tmux -2 attach-session -t $SESSION
-echo ""
-sleep 1
+	date
+	tmux -2 attach-session -t $SESSION
+	echo ""
+	sleep 1
+done
 
 # ALG=OnlineAgent
 # TP_NAME=OnlineTaskPlanner

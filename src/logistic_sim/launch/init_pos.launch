@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<launch>
+    <arg name="simtime" default="True" />
+    <arg name="goalwait" default="0" />
+    <arg name="commdelay" default="0.2" />
+    <arg name="navmodule" default="ros" />
+    <arg name="initpos" default="default" />
+    <arg name="map" default="grid" />
+    <arg name="nrobots" default="2" />
+
+    <param name="/use_sim_time" value="$(arg simtime)" />
+    <param name="/goal_reached_wait" value="$(arg goalwait)" />
+    <param name="/communication_delay" value="$(arg commdelay)" />
+    <param name="/navigation_module" value="$(arg navmodule)" />
+    <param name="/initial_positions" value="$(arg initpos)" />
+    <!-- <param name="iposes_string" command="cat '$(find logistic_sim)/params/initial_poses.txt' | grep '$(arg map)_$(arg nrobots)' | grep -o '\[.*\]'" /> -->
+
+    <!-- <node pkg="logistic_sim" type="set_init_poses.sh" args="$(arg map) $(arg nrobots)"
+            name="set_init_poses" output="screen">
+    </node> -->
+</launch>
