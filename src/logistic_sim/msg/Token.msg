@@ -73,3 +73,4 @@ Waypoints[] ROBOT_WAYPOINTS
 Edge[]      REMOVED_EDGES
 # vector that tells whether robots have repaired their paths
 bool[]      HAS_REPAIRED_PATH
+int32[]     NEW_HOMES # field set to -1 if no new home has been assigned

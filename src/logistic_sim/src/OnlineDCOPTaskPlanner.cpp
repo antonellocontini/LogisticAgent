@@ -10,7 +10,7 @@
 #include "mapd_time_test.hpp"
 #include "mapf.hpp"
 
-#define EDGE_REMOVAL_TEST false
+#define EDGE_REMOVAL_TEST true
 
 namespace onlinedcoptaskplanner
 {
@@ -550,6 +550,38 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     bool property_validity = check_conflict_free_property();
     ROS_ERROR_STREAM_COND(!property_validity, "Conflict-free property does not hold anymore!");
     ROS_INFO_STREAM_COND(property_validity, "Conflict-free property still holds true");
+    if (!property_validity)
+    {
+      map_graph = build_graph();
+      build_fw_matrix();
+      // find a new home/recovery configuration configuration and insert inside the token
+      std::vector<std::vector<uint> > waypoints;
+      std::vector<uint> robot_ids;
+      for (int i=0; i<TEAM_SIZE; i++)
+      {
+        waypoints.push_back(dst_vertex);
+        waypoints[i].push_back(src_vertex);
+        robot_ids.push_back(i);
+      }
+      std::vector<uint> recovery_configuration =
+          local_search_recovery_config(waypoints, robot_ids, {});
+      if (recovery_configuration.empty())
+      {
+        ROS_ERROR_STREAM("Can't find a new home configuration, shutting down...");
+        token.FAILED_REPAIR++;
+        token.SHUTDOWN = true;
+      }
+      else
+      {
+        ROS_DEBUG_STREAM("new recovery configuration: " << recovery_configuration);
+        for (int i=0; i<recovery_configuration.size(); i++)
+        {
+          uint v = recovery_configuration[i];
+          token.NEW_HOMES[i] = v;
+          home_vertex[i] = v;
+        }
+      }
+    }
 
     token.NEED_REPAIR = true;
     token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, false);
@@ -828,6 +860,7 @@ void OnlineDCOPTaskPlanner::init_token(const logistic_sim::TokenConstPtr &msg, l
   token.INIT = false;
   token.END_SIMULATION = false;
   token.ALL_MISSIONS_INSERTED = false;
+  token.NEW_HOMES = std::vector<int>(TEAM_SIZE, -1);
   if (!offline_mode)
   {
     ROS_DEBUG("online mode -- start time setted inside token init phase");
@@ -1007,7 +1040,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.FAILED_REPAIR++;
     token.OBSTACLE_EVENTS++;
     token.SHUTDOWN = true;
-    getc(stdin);
+    // getc(stdin);
   }
 }
 
@@ -1133,6 +1166,7 @@ struct conflict_free_state
 
 // implements tree search but tells which robots can reach a particular vertex from home
 // for now no heuristic
+// use reverse search, search path from vertex to
 std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_endpoint)
 {
   int found_count = 0;
@@ -1213,10 +1247,10 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property()
 
   for (bool r : property_validity)
   {
-    if (r)
-      return true;
+    if (!r)
+      return false;
   }
-  return false;
+  return true;
 }
 
 bool reachability_test(uint from, const std::vector<uint> &destinations, const std::vector<uint> &banned_vertices,
@@ -1665,6 +1699,7 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
     }
 
     double reachability_factor;
+    if (check_conflict_free_property())
     if (check_valid_recovery_configuration(current_configuration, robot_ids, waypoints, &reachability_factor))
     {
       if (search_duration != nullptr)

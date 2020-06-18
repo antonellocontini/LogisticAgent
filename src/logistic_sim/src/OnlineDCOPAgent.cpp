@@ -94,6 +94,13 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         token.GOAL_STATUS = std::vector<uint>(TEAM_SIZE, msg->GOAL_STATUS[0]);
       }
 
+      // if a new home has been assigned, take it
+      if (msg->NEW_HOMES[ID_ROBOT] != -1)
+      {
+        initial_vertex = msg->NEW_HOMES[ID_ROBOT];
+        token.NEW_HOMES[ID_ROBOT] = -1;
+      }
+
       // check if current path is good, if it is, no need to replan
       bool good_path = true;
       std::vector<uint> trail = msg->TRAILS[ID_ROBOT].PATH;
