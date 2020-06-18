@@ -167,7 +167,7 @@ struct search_tree
       near_vertices = { current_vertex };
       near_vertices.insert(near_vertices.end(), graph[current_vertex].begin(), graph[current_vertex].end());
     }
-    else
+    else  // if robot_i has already a path its move is constrained
     {
       const std::vector<uint> &path = path_it->second;
       if (g_v + 1 < path.size())
@@ -248,6 +248,7 @@ struct search_tree
   {
     unsigned int vertices = graph.size(), robots_number = final_configuration.size();
 
+    uint max_timestep_reached = 0;
     open.clear();
     g_value[initial_state] = 0;
     f_value[initial_state] = heuristic_function(initial_state);
@@ -308,6 +309,11 @@ struct search_tree
 
       visited.insert(s);
 
+      uint s_g_value = g_value.find(s)->second;
+      if (s_g_value > max_timestep_reached)
+      {
+        max_timestep_reached = s_g_value;
+      }
       for (state n : near_states(s))
       {
         // std::stringstream ss;
@@ -319,7 +325,6 @@ struct search_tree
         // std::cout << "neighbour:\n";
         if (visited.count(n) == 0)
         {
-          uint s_g_value = g_value.find(s)->second;
           uint new_f_value = s_g_value + 1 + heuristic_function(n);
           auto old_f_it = f_value.find(n);
           bool removed = false;
@@ -355,6 +360,7 @@ struct search_tree
 
     ROS_WARN_STREAM("fail!");
     ROS_DEBUG_STREAM("visited states: " << count);
+    ROS_DEBUG_STREAM("max timestep reached: " << max_timestep_reached);
     return std::list<state>();
   }
 

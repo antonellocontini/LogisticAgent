@@ -10,7 +10,7 @@
 #include "mapd_time_test.hpp"
 #include "mapf.hpp"
 
-#define EDGE_REMOVAL_TEST true
+#define EDGE_REMOVAL_TEST false
 
 namespace onlinedcoptaskplanner
 {
@@ -790,12 +790,12 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       repair_stats_file << "SUCCESSFULL_SA_REPAIR: " << msg->SUCCESSFULL_SA_REPAIR << "\n";
       repair_stats_file << "SUCCESSFULL_MA_REPAIR: " << msg->SUCCESSFULL_MA_REPAIR << "\n";
       repair_stats_file << "FAILED_REPAIR: " << msg->FAILED_REPAIR << "\n";
-      repair_stats_file << "REPAIRS_PER_ROBOT:\n";
-      for (int i = 0; i < TEAM_SIZE; i++)
-      {
-        repair_stats_file << msg->REPAIRS_PER_ROBOT[i] << " ";
-      }
-      repair_stats_file << "\n";
+      // repair_stats_file << "REPAIRS_PER_ROBOT:\n";
+      // for (int i = 0; i < TEAM_SIZE; i++)
+      // {
+      //   repair_stats_file << msg->REPAIRS_PER_ROBOT[i] << " ";
+      // }
+      // repair_stats_file << "\n";
       repair_stats_file.close();
 
       for (int i = 0; i < TEAM_SIZE; i++)
@@ -917,10 +917,13 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     test_waypoints.push_back(dst_vertex);
     test_waypoints[i].push_back(src_vertex);
   }
-  std::vector<uint> test_local_search =
-      local_search_recovery_config(test_waypoints, test_robot_ids, {}, &search_duration);
-  ROS_DEBUG_STREAM("test local search configuration:\n"
-                   << test_local_search << "time required: " << search_duration.count());
+
+  // LOCAL SEARCH TEST
+  // std::vector<uint> test_local_search =
+  //     local_search_recovery_config(test_waypoints, test_robot_ids, {}, &search_duration);
+  // ROS_DEBUG_STREAM("test local search configuration:\n"
+  //                  << test_local_search << "time required: " << search_duration.count());
+
   // std::vector<uint> destination = find_best_recovery_config(waypoints, robot_ids, initial_state.configuration,
   // other_paths);
   // std::vector<uint> destination = recovery_search_tree.find_recovery_configuration(other_paths, robot_ids,
@@ -1004,6 +1007,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.FAILED_REPAIR++;
     token.OBSTACLE_EVENTS++;
     token.SHUTDOWN = true;
+    getc(stdin);
   }
 }
 

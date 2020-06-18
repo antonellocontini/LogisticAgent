@@ -105,7 +105,24 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
     {
       if (current_waypoint + 1 == waypoints.size())
       {
-        if (time + 1 + start_time >= max_path_size)
+        bool good = true;
+        for (int i=0; i<TEAM_SIZE && good; i++)
+        {
+          if (i != ID_ROBOT && other_paths[i].PATH.size() > current_st.time + 1)
+          {
+            for (int j=current_st.time; j<other_paths[i].PATH.size(); j++)
+            {
+              if (other_paths[i].PATH[j] == u)
+              {
+                good = false;
+                break;
+              }
+            }
+          }
+        }
+        
+        //if (time + 1 + start_time >= max_path_size)
+        if (good)
         {
           std::vector<unsigned int> result =
               std::vector<unsigned int>(prev_paths[u][time][current_waypoint],
