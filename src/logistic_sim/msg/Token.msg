@@ -71,6 +71,7 @@ MAPDState   CURRENT_MAPD_STATE
 Waypoints[] ROBOT_WAYPOINTS
 # vector of edge removed from the last token cycle
 Edge[]      REMOVED_EDGES
+Edge[]      ADDED_EDGES
 # vector that tells whether robots have repaired their paths
 bool[]      HAS_REPAIRED_PATH
 int32[]     NEW_HOMES # field set to -1 if no new home has been assigned

@@ -537,14 +537,20 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     edges_mutex.unlock();
     init_token(msg, token);
   }
-  else if (removed_edges.size())
+  else if (removed_edges.size() != 0 || added_edges.size() != 0)
   {
-    // insert removed edges inside token to notify the agents
+    // insert edges modifications inside token to notify the agents
     for (const logistic_sim::Edge &e : removed_edges)
     {
       token.REMOVED_EDGES.push_back(e);
     }
     removed_edges.clear();
+
+    for (const logistic_sim::Edge &e : added_edges)
+    {
+      token.ADDED_EDGES.push_back(e);
+    }
+    added_edges.clear();
     edges_mutex.unlock();
 
     bool property_validity = check_conflict_free_property();
@@ -1138,9 +1144,24 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
     result = AddEdge(vertex_web, dimension, msg.u, msg.v, msg.cost);
     ROS_ERROR_STREAM_COND(!result, "Failed addition!");
 
-    if (result)
+    if (result == 0)
     {
-      ROS_INFO_STREAM("TODO EDGE ADDITION NOTIFICATION");
+      edges_mutex.lock();
+
+      logistic_sim::Edge e;
+      e.u = msg.u;
+      e.v = msg.v;
+      added_edges.push_back(e);
+
+      edges_mutex.unlock();
+
+      res.result = true;
+      return true;
+    }
+    else
+    {
+      res.result = false;
+      return false;
     }
   }
   else
