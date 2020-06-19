@@ -47,6 +47,8 @@ protected:
   std::vector<bool> _check_conflict_free_impl(uint task_endpoint, std::vector<uint> *homes = nullptr);
   bool check_conflict_free_property(std::vector<uint> *homes = nullptr, double *reachability_factor = nullptr, bool print = true);
 
+  void write_statistics(const logistic_sim::Token &msg);
+
   // check if a configuration is good for recovery
   bool check_valid_recovery_configuration(const std::vector<uint> &configuration
                                         , const std::vector<uint> &robot_ids
