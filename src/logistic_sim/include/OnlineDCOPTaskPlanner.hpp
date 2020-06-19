@@ -21,6 +21,8 @@ public:
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
 
 protected:
+  std::vector<double> astar_durations;
+
   std::list<edge_removal_plan> edge_list;
 
   bool first_missions_sent = false;
@@ -35,7 +37,7 @@ protected:
   bool change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res);
 
   // edges that must be removed in the next token cycle
-  std::vector<logistic_sim::Edge> removed_edges;
+  std::vector<logistic_sim::Edge> removed_edges, added_edges;
   boost::mutex edges_mutex; // used to avoid conflicts with the token thread and the main thread
 
   std::vector<bool> _check_conflict_free_impl(uint task_endpoint, std::vector<uint> *homes = nullptr);

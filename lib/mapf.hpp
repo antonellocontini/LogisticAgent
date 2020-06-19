@@ -244,7 +244,7 @@ struct search_tree
     return true;
   }
 
-  std::list<state> astar_search(std::vector<std::vector<unsigned int>> &paths, uint time_limit = 0)
+  std::list<state> astar_search(std::vector<std::vector<unsigned int>> &paths, uint time_limit = 0, double* duration = nullptr)
   {
     unsigned int vertices = graph.size(), robots_number = final_configuration.size();
 
@@ -256,10 +256,11 @@ struct search_tree
 
     uint count = 0;
     auto start = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff;
     while (!open.empty())
     {
       auto end = std::chrono::system_clock::now();
-      std::chrono::duration<double> diff = end - start;
+      diff = end - start;
       if (diff.count() > 10.0)
       {
         start = std::chrono::system_clock::now();
@@ -301,6 +302,10 @@ struct search_tree
               }
 
               ROS_DEBUG_STREAM(ss.str());
+            }
+            if (duration != nullptr)
+            {
+              *duration = diff.count();
             }
             return result;
           }
@@ -358,6 +363,10 @@ struct search_tree
       }
     }
 
+    if (duration != nullptr)
+    {
+      *duration = diff.count();
+    }
     ROS_WARN_STREAM("fail!");
     ROS_DEBUG_STREAM("visited states: " << count);
     ROS_DEBUG_STREAM("max timestep reached: " << max_timestep_reached);

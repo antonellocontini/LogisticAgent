@@ -280,7 +280,7 @@ int RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
 }
 
 
-bool AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
+int AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
 {
   // search vertex u
   bool good = false;
@@ -297,7 +297,8 @@ bool AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost
   if (!good)
   {
     // missing vertex with id u
-    return false;
+		ROS_ERROR_STREAM("Vertex " << u << " does not exists!");
+    return 1;
   }
 
   // search edge (u,v) among vertex u neighbours
@@ -314,28 +315,35 @@ bool AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost
   // edge is already present
   if (!good)
   {
-    return false;
+		ROS_ERROR_STREAM("Edge (" << u << "," << v << ") already exists!");
+    return 2;
   }
 
   // add edge
   uint num_neigh = vertex_web[u_index].num_neigh;
   if (num_neigh > 7)
   {
-    return false;
+		ROS_ERROR_STREAM("Reached edge limit!");
+    return 3;
   }
   vertex_web[u_index].id_neigh[num_neigh] = v;
   vertex_web[u_index].cost[num_neigh] = cost;
   vertex_web[u_index].visited[num_neigh] = false;
   vertex_web[u_index].num_neigh++;
-  return true;
+	// TODO: add direction information
+  return 0;
 }
 
-bool AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
+int AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
 {
-  if (!AddEdge_impl(vertex_web, dimension, u, v, cost))
+	ROS_DEBUG_STREAM("Adding forward edge");
+	int result = AddEdge_impl(vertex_web, dimension, u, v, cost);
+  if (result != 0)
   {
-    return false;
+    return result;
   }
+
+	ROS_DEBUG_STREAM("Adding backward edge");
   return AddEdge_impl(vertex_web, dimension, v, u, cost);
 }
 

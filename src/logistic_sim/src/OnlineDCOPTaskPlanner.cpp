@@ -509,7 +509,7 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
   // set edge list for removal tests
   if (mapname == "icelab_black")
   {
-    edge_list = { { 28, 31, 20 }, { 45, 49, 40 }, { 42, 46, 60 }, { 30, 31, 80 } };
+    edge_list = { { 28, 31, 20 }, { 45, 49, 40 }, { 2, 3, 50 }, { 42, 46, 60 }, { 30, 31, 80 } };
   }
   else if (mapname == "grid")
   {
@@ -822,6 +822,12 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       repair_stats_file << "SUCCESSFULL_SA_REPAIR: " << msg->SUCCESSFULL_SA_REPAIR << "\n";
       repair_stats_file << "SUCCESSFULL_MA_REPAIR: " << msg->SUCCESSFULL_MA_REPAIR << "\n";
       repair_stats_file << "FAILED_REPAIR: " << msg->FAILED_REPAIR << "\n";
+      repair_stats_file << "A* DURATIONS:";
+      for (double d : astar_durations)
+      {
+        repair_stats_file << " " << d;
+      }
+      repair_stats_file << "\n";
       // repair_stats_file << "REPAIRS_PER_ROBOT:\n";
       // for (int i = 0; i < TEAM_SIZE; i++)
       // {
@@ -990,8 +996,10 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     }
   }
   mapf::search_tree test_mapf(map_graph, test_destination, test_mapf_is, other_paths_map);
-  uint time_limit = 15 * 60;
-  std::list<mapf::state> result = test_mapf.astar_search(paths, time_limit);
+  uint time_limit = 5 * 60;
+  double duration;
+  std::list<mapf::state> result = test_mapf.astar_search(paths, time_limit, &duration);
+  astar_durations.push_back(duration);
   // reach recovery configuration with pseudo-dcop search
   // mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
   // recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
