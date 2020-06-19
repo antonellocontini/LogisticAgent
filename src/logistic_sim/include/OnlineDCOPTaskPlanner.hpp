@@ -5,11 +5,15 @@
 namespace onlinedcoptaskplanner
 {
 
-struct edge_removal_plan
+struct edge_modification_plan
 {
   uint from;
   uint to;
   uint timestep;
+  int type; //1 == removal, 0 == addition
+
+  const static int REMOVAL = 1;
+  const static int ADDITION = 0;
 };
 
 class OnlineDCOPTaskPlanner : public onlinetaskplanner::OnlineTaskPlanner
@@ -23,7 +27,7 @@ public:
 protected:
   std::vector<double> astar_durations;
 
-  std::list<edge_removal_plan> edge_list;
+  std::list<edge_modification_plan> edge_list;
 
   bool first_missions_sent = false;
   uint first_valid_timestep = 0;

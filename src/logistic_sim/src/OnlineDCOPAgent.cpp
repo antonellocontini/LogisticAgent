@@ -74,20 +74,29 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
   else if (msg->REPAIR)
   {
-    if (!msg->REMOVED_EDGES.empty())
+    if (!msg->REMOVED_EDGES.empty() || !msg->ADDED_EDGES.empty())
     {
       for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
       {
         int result = RemoveEdge(vertex_web, dimension, e.u, e.v);
         ROS_ERROR_STREAM_COND(result > 0, "Can't remove edge (" << e.u << "," << e.v << ")");
         ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") removed");
-        update_graph();
+        // update_graph();
       }
+
+      for (const logistic_sim::Edge &e : msg->ADDED_EDGES)
+      {
+        int result = AddEdge(vertex_web, dimension, e.u, e.v, 1);
+        ROS_ERROR_STREAM_COND(result > 0, "Can't add edge (" << e.u << "," << e.v << ")");
+        ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") added");
+      }
+      update_graph();
 
       // last robot removes the edges from the token
       if (msg->ID_RECEIVER == TEAM_SIZE - 1)
       {
         token.REMOVED_EDGES.clear();
+        token.ADDED_EDGES.clear();
         token.REPAIR = false;
         token.SINGLE_PLAN_REPAIR = true;
         // reset GOAL_STATUS vector

@@ -509,7 +509,12 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
   // set edge list for removal tests
   if (mapname == "icelab_black")
   {
-    edge_list = { { 28, 31, 20 }, { 45, 49, 40 }, { 2, 3, 50 }, { 42, 46, 60 }, { 30, 31, 80 } };
+    edge_list = { { 28, 31, 20, edge_modification_plan::REMOVAL },
+                  // { 28, 31, 15, edge_modification_plan::ADDITION },
+                  { 45, 49, 40, edge_modification_plan::REMOVAL },
+                  // { 2, 3, 50, edge_modification_plan::REMOVAL },
+                  { 42, 46, 60, edge_modification_plan::REMOVAL },
+                  { 30, 31, 80, edge_modification_plan::REMOVAL } };
   }
   else if (mapname == "grid")
   {
@@ -725,10 +730,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       // simulate edge removal at fixed time steps
       if (EDGE_REMOVAL_TEST)
       {
-        logistic_sim::ChangeEdgeRequest req;
-        req.cost = 0;
-        req.remove = true;
-        req.add = false;
+        logistic_sim::ChangeEdgeRequest req;      
         logistic_sim::ChangeEdgeResponse res;
         uint current_goal_status = *std::max_element(msg->GOAL_STATUS.begin(), msg->GOAL_STATUS.end());
         uint timestep = current_goal_status - first_valid_timestep;
@@ -738,10 +740,23 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
         // std::chrono::duration<double> diff = current_time - last_edge_removal;
         if (first_valid_timestep != 0 && diff.toSec() >= 10.0 && !edge_list.empty())
         {
-          const edge_removal_plan &edge = edge_list.front();
+          const edge_modification_plan &edge = edge_list.front();
           if (timestep >= edge.timestep)
           {
-            ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+            if (edge.type == edge.REMOVAL)
+            {
+              ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+              req.remove = true;
+              req.add = false;
+              req.cost = 0;
+            }
+            else if (edge.type == edge.ADDITION)
+            {
+              ROS_INFO_STREAM("Adding edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+              req.remove = false;
+              req.add = true;
+              req.cost = 1;
+            }
             req.u = edge.from;
             req.v = edge.to;
             change_edge(req, res);
@@ -1142,7 +1157,7 @@ bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, 
   {
     ROS_INFO_STREAM("Requested addition of edge (" << msg.u << "," << msg.v << ")");
     result = AddEdge(vertex_web, dimension, msg.u, msg.v, msg.cost);
-    ROS_ERROR_STREAM_COND(!result, "Failed addition!");
+    ROS_ERROR_STREAM_COND(result > 0, "Failed addition!");
 
     if (result == 0)
     {
