@@ -282,7 +282,7 @@ int RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
 
 int AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
 {
-	ROS_DEBUG_STREAM("adding edge (" << u << "," << v << ")");
+	// ROS_DEBUG_STREAM("adding edge (" << u << "," << v << ")");
   // search vertex u
   bool good = false;
   uint u_index;
@@ -295,7 +295,7 @@ int AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
     }
   }
 
-	ROS_DEBUG_STREAM("u_index: " << u_index);
+	// ROS_DEBUG_STREAM("u_index: " << u_index);
   if (!good)
   {
     // missing vertex with id u
@@ -328,7 +328,7 @@ int AddEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
 		ROS_ERROR_STREAM("Reached edge limit!");
     return 3;
   }
-	ROS_DEBUG_STREAM("Adding to index " << u_index << " edge to vertex " << v);
+	// ROS_DEBUG_STREAM("Adding to index " << u_index << " edge to vertex " << v);
   vertex_web[u_index].id_neigh[num_neigh] = v;
   vertex_web[u_index].cost[num_neigh] = cost;
   vertex_web[u_index].visited[num_neigh] = false;
