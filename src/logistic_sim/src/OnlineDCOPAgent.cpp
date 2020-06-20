@@ -598,6 +598,223 @@ void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPt
 }
 
 
+uint OnlineDCOPAgent::calculate_h_value(const single_agent_node &n, const std::vector<unsigned int> &waypoints,
+                                        const std::vector<std::vector<unsigned int>> &min_hops_matrix)
+{
+  uint result = 0;
+  uint prev_v = n.vertex;
+  for (uint i = n.waypoint; i < waypoints.size(); i++)
+  {
+    result += min_hops_matrix[prev_v][waypoints[i]];
+    prev_v = waypoints[i];
+  }
+  return result;
+  // return min_hops_matrix[n.vertex][waypoints[n.waypoint]];
+}
+
+std::vector<unsigned int> OnlineDCOPAgent::spacetime_astar_dyn_mem(
+    const std::vector<logistic_sim::Path> &other_paths, const std::vector<std::vector<unsigned int>> &graph,
+    const std::vector<unsigned int> &waypoints, const std::vector<std::vector<unsigned int>> &min_hops_matrix,
+    int start_time, std::vector<unsigned int> *last_leg, std::vector<unsigned int> *first_leg)
+{
+  ROS_INFO_STREAM("SPACETIME DIJKSTRA --- WAYPOINTS:");
+  for (int i = 0; i < waypoints.size(); i++)
+  {
+    ROS_INFO_STREAM(" " << waypoints[i]);
+  }
+
+  std::set<single_agent_node> open;
+  std::unordered_set<single_agent_node, sa_node_hash> visited;
+  std::unordered_map<single_agent_node, single_agent_node, sa_node_hash> prev;
+
+  single_agent_node source;
+  source.vertex = waypoints.front();
+  source.timestep = start_time;
+  source.waypoint = 1;
+  source.f = calculate_h_value(source, waypoints, min_hops_matrix);
+
+  open.insert(source);
+
+  while (!open.empty())
+  {
+    const single_agent_node &current_node = *open.begin();
+    visited.insert(current_node);
+
+    single_agent_node next_node;
+    next_node.timestep = current_node.timestep + 1;
+    next_node.waypoint = current_node.waypoint;
+
+    if (current_node.vertex == waypoints[current_node.waypoint])
+    {
+      // check if current node is last goal
+      if (current_node.waypoint + 1 == waypoints.size())
+      {
+        bool good = true;
+        for (int i = 0; i < TEAM_SIZE && good; i++)
+        {
+          if (i != ID_ROBOT && other_paths[i].PATH.size() > current_node.timestep + 1)
+          {
+            for (int j = current_node.timestep; j < other_paths[i].PATH.size(); j++)
+            {
+              if (other_paths[i].PATH[j] == current_node.vertex)
+              {
+                good = false;
+                break;
+              }
+            }
+          }
+        }
+
+        // current node is final node, return path
+        if (good)
+        {
+          std::list<unsigned int> path, first_leg_ls, last_leg_ls;
+          bool is_last_leg = true;
+
+          single_agent_node temp = current_node;
+          auto it = prev.end();
+          while (true)
+          {
+            if (temp.vertex == waypoints[temp.waypoint - 1])
+            {
+              is_last_leg = false;
+            }
+
+            path.push_front(temp.vertex);
+            if (is_last_leg)
+            {
+              last_leg_ls.push_front(temp.vertex);
+            }
+            else
+            {
+              first_leg_ls.push_front(temp.vertex);
+            }
+
+            it = prev.find(temp);
+            if (it != prev.end())
+            {
+              temp = it->second;
+            }
+            else
+            {
+              if (first_leg != nullptr && last_leg != nullptr)
+              {
+                first_leg->clear();
+                last_leg->clear();
+                for (uint v : first_leg_ls)
+                {
+                  first_leg->push_back(v);
+                }
+                for (uint v : last_leg_ls)
+                {
+                  last_leg->push_back(v);
+                }
+              }
+              std::vector<uint> result;
+              for (uint v : path)
+              {
+                result.push_back(v);
+              }
+              return result;
+            }
+          }
+        }
+      }
+      else
+      {
+        next_node.waypoint = current_node.waypoint + 1;
+      }
+    }
+
+    // attesa sul posto
+    next_node.vertex = current_node.vertex;
+    next_node.f = calculate_h_value(next_node, waypoints, min_hops_matrix);
+    if (visited.find(next_node) == visited.end())
+    {
+      bool good = true;
+      for (int i = 0; i < TEAM_SIZE; i++)
+      {
+        if (i != ID_ROBOT)
+        {
+          if (next_node.timestep < other_paths[i].PATH.size())
+          {
+            if (other_paths[i].PATH[next_node.timestep] == current_node.vertex)
+            {
+              // std::cout << "can't stand in " << u << " at time " << time << std::endl;
+              good = false;
+              break;
+            }
+          }
+          else if (!other_paths[i].PATH.empty() /* && still_robots[i] */)
+          {
+            if (other_paths[i].PATH.back() == current_node.vertex)
+            {
+              // std::cout << "can't stand in " << u << " at time " << time << std::endl;
+              good = false;
+              break;
+            }
+          }
+        }
+      }
+
+      if (good)
+      {
+        open.insert(next_node);
+      }
+    }
+
+    // considero i vertici vicini
+    for (uint v : graph[current_node.vertex])
+    {
+      next_node.vertex = v;
+      next_node.f = calculate_h_value(next_node, waypoints, min_hops_matrix);
+
+      if (visited.find(next_node) == visited.end())
+      {
+        bool good = true;
+        for (int i = 0; i < TEAM_SIZE; i++)
+        {
+          if (i != ID_ROBOT)
+          {
+            if (next_node.timestep < other_paths[i].PATH.size())
+            {
+              if (other_paths[i].PATH[next_node.timestep] == next_node.vertex)
+              {
+                // std::cout << "can't go in " << v << " at time " << time << std::endl;
+                good = false;
+                break;
+              }
+              if (other_paths[i].PATH[next_node.timestep] == current_node.vertex && other_paths[i].PATH[current_node.timestep] == next_node.vertex)
+              {
+                // std::cout << "can't go in " << v << " at time " << time << std::endl;
+                good = false;
+                break;
+              }
+            }
+            else if (!other_paths[i].PATH.empty() /* && still_robots[i] */)
+            {
+              if (other_paths[i].PATH.back() == next_node.vertex)
+              {
+                // std::cout << "can't go in " << v << " at time " << time << ", there is a still robot" << std::endl;
+                good = false;
+                break;
+              }
+            }
+          }
+        }
+
+        if (good)
+        {
+          open.insert(next_node);
+        }
+      }
+    }
+  }
+
+  ROS_WARN_STREAM("Can't find path!!!");
+  throw std::string("Can't find path!!!");
+}
+
 }  // namespace onlinedcopagent
 
 int main(int argc, char *argv[])
