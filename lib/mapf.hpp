@@ -255,15 +255,17 @@ struct search_tree
     open.insert(initial_state);
 
     uint count = 0;
-    auto start = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff;
+    auto interval_start = std::chrono::system_clock::now();
+    auto start = interval_start;
+    std::chrono::duration<double> interval_diff, diff;
     while (!open.empty())
     {
       auto end = std::chrono::system_clock::now();
+      interval_diff = end - interval_start;
       diff = end - start;
-      if (diff.count() > 10.0)
+      if (interval_diff.count() > 10.0)
       {
-        start = std::chrono::system_clock::now();
+        interval_start = std::chrono::system_clock::now();
         ROS_DEBUG_STREAM("visited nodes: " << count);
         ROS_DEBUG_STREAM("queue size: " << open.size() << "\n");
       }
