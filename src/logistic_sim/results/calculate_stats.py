@@ -5,12 +5,15 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-def draw_boxplot(name, data, subdir, n_robots):
+def draw_boxplot(name, data, subdir, n_robots, y_min = None, y_max = None):
     fig, ax = plt.subplots()
     lbls = ['robot_'+str(i) for i in range(n_robots)]
-    min_v = np.min(data)
-    max_v = np.max(data)
-    ax.set_ylim(min_v*0.9, max_v*1.1)
+    if y_min is None and y_max is None:
+        min_v = np.min(data)
+        max_v = np.max(data)
+        ax.set_ylim(min_v*0.9, max_v*1.1)
+    else:
+        ax.set_ylim(y_min, y_max)
     ax.boxplot(data, labels=lbls, showmeans=True)
     ax.set_title(name + ' ' + subdir)
     fig.savefig(os.path.join(subdir, name + '_plot.png'))
@@ -124,11 +127,11 @@ def main():
                         times.append(t)
 
             # boxplot
-            draw_boxplot('distances', dsts_col, subdir, robots)
+            draw_boxplot('distances', dsts_col, subdir, robots, 0, 60000)
             draw_boxplot('interferences', ints_col, subdir, robots)
             draw_boxplot('times', times_col, subdir, robots)
-            draw_boxplot('missions', missions_col, subdir, robots)
-            draw_boxplot('tasks', tasks_col, subdir, robots)
+            draw_boxplot('missions', missions_col, subdir, robots, 0, 20)
+            draw_boxplot('tasks', tasks_col, subdir, robots, 0, 30)
 
             # calcolo medie
             mean_distances = calculate_means(tot_distances, experiments)

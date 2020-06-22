@@ -91,57 +91,57 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") added");
       }
       update_graph();
+    }
 
-      // last robot removes the edges from the token
-      if (msg->ID_RECEIVER == TEAM_SIZE - 1)
-      {
-        token.REMOVED_EDGES.clear();
-        token.ADDED_EDGES.clear();
-        token.REPAIR = false;
-        token.SINGLE_PLAN_REPAIR = true;
-        // reset GOAL_STATUS vector
-        token.GOAL_STATUS = std::vector<uint>(TEAM_SIZE, msg->GOAL_STATUS[0]);
-      }
+    // last robot removes the edges from the token
+    if (msg->ID_RECEIVER == TEAM_SIZE - 1)
+    {
+      token.REMOVED_EDGES.clear();
+      token.ADDED_EDGES.clear();
+      token.REPAIR = false;
+      token.SINGLE_PLAN_REPAIR = true;
+      // reset GOAL_STATUS vector
+      token.GOAL_STATUS = std::vector<uint>(TEAM_SIZE, msg->GOAL_STATUS[0]);
+    }
 
-      // if a new home has been assigned, take it
-      if (msg->NEW_HOMES[ID_ROBOT] != -1)
-      {
-        initial_vertex = msg->NEW_HOMES[ID_ROBOT];
-        token.NEW_HOMES[ID_ROBOT] = -1;
-      }
+    // if a new home has been assigned, take it
+    if (msg->NEW_HOMES[ID_ROBOT] != -1)
+    {
+      initial_vertex = msg->NEW_HOMES[ID_ROBOT];
+      token.NEW_HOMES[ID_ROBOT] = -1;
+    }
 
-      // check if current path is good, if it is, no need to replan
-      bool good_path = true;
-      std::vector<uint> trail = msg->TRAILS[ID_ROBOT].PATH;
-      trail.insert(trail.end(), msg->HOME_TRAILS[ID_ROBOT].PATH.begin(), msg->HOME_TRAILS[ID_ROBOT].PATH.end());
-      for (int i = 1; i < trail.size() && good_path; i++)
+    // check if current path is good, if it is, no need to replan
+    bool good_path = true;
+    std::vector<uint> trail = msg->TRAILS[ID_ROBOT].PATH;
+    trail.insert(trail.end(), msg->HOME_TRAILS[ID_ROBOT].PATH.begin(), msg->HOME_TRAILS[ID_ROBOT].PATH.end());
+    for (int i = 1; i < trail.size() && good_path; i++)
+    {
+      uint u = trail[i - 1], v = trail[i];
+      for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
       {
-        uint u = trail[i - 1], v = trail[i];
-        for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)
+        if ((u == e.u && v == e.v) || 
+              (u == e.v && v == e.u))
         {
-          if ((u == e.u && v == e.v) || 
-               (u == e.v && v == e.u))
-          {
-            good_path = false;
-          }
+          good_path = false;
         }
       }
+    }
 
-      // test
-      good_path = false;
+    // test
+    good_path = false;
 
-      if (good_path)
-      {
-        token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
-        ROS_INFO_STREAM("My path is still good, I'm keeping it!");
-      }
-      else
-      {
-        ROS_WARN_STREAM("Path unviable, need to replan");
-        // delete path from token and return to current vertex
-        token.TRAILS[ID_ROBOT].PATH = { current_vertex };
-        token.HOME_TRAILS[ID_ROBOT].PATH.clear();
-      }
+    if (good_path)
+    {
+      token.HAS_REPAIRED_PATH[ID_ROBOT] = true;
+      ROS_INFO_STREAM("My path is still good, I'm keeping it!");
+    }
+    else
+    {
+      ROS_WARN_STREAM("Path unviable, need to replan");
+      // delete path from token and return to current vertex
+      token.TRAILS[ID_ROBOT].PATH = { current_vertex };
+      token.HOME_TRAILS[ID_ROBOT].PATH.clear();
     }
   }
   else if (msg->SINGLE_PLAN_REPAIR)

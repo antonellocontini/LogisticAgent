@@ -512,7 +512,7 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
     edge_list = { { 28, 31, 20, edge_modification_plan::REMOVAL },
                   // { 28, 31, 15, edge_modification_plan::ADDITION },
                   { 45, 49, 40, edge_modification_plan::REMOVAL },
-                  { 2, 3, 50, edge_modification_plan::REMOVAL },
+                  { 0, 1, 50, edge_modification_plan::REMOVAL },
                   { 42, 46, 60, edge_modification_plan::REMOVAL },
                   { 30, 31, 80, edge_modification_plan::REMOVAL } };
   }
@@ -613,6 +613,8 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   else
   {
     edges_mutex.unlock();
+
+    mapf_attempts = 1;
 
     // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
@@ -1021,8 +1023,11 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   temp_token.OBSTACLE_EVENTS++;
   write_statistics(temp_token);
 
+  mapf_attempts = 1;
+
+  ROS_INFO_STREAM("Attempt " << mapf_attempts << "/" << max_mapf_attempts << " to find a path to home configuration");
   mapf::search_tree test_mapf(map_graph, test_destination, test_mapf_is, other_paths_map);
-  uint time_limit = 5 * 60;
+  uint time_limit = 2 * 60;
   double duration;
   std::list<mapf::state> result = test_mapf.astar_search(paths, time_limit, &duration);
   astar_durations.push_back(duration);
@@ -1044,6 +1049,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   last_goal_time = ros::Time::now();
   if (!result.empty())
   {
+    mapf_attempts = 1;
     // insert paths inside token
     for (int i = 0; i < paths.size(); i++)
     {
@@ -1063,7 +1069,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.SINGLE_PLAN_REPAIR = true;
     token.SUCCESSFULL_MA_REPAIR++;
   }
-  else
+  else if (mapf_attempts == max_mapf_attempts)
   {
     std::string log_filename = current_time_filename_str() + ".log";
     ROS_ERROR_STREAM("Could not find a MA path to recovery configuration!!! - shutting down...");
@@ -1075,6 +1081,38 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.OBSTACLE_EVENTS++;
     token.SHUTDOWN = true;
     // getc(stdin);
+  }
+  else
+  {
+    mapf_attempts++;
+    std::vector<std::vector<uint>> waypoints;
+    std::vector<uint> robot_ids;
+    for (int i = 0; i < TEAM_SIZE; i++)
+    {
+      waypoints.push_back(dst_vertex);
+      waypoints[i].push_back(src_vertex);
+      robot_ids.push_back(i);
+    }
+    std::vector<uint> recovery_configuration = local_search_recovery_config(waypoints, robot_ids, {});
+    if (recovery_configuration.empty())
+    {
+      ROS_ERROR_STREAM("Can't find a new home configuration, shutting down...");
+      token.FAILED_REPAIR++;
+      token.OBSTACLE_EVENTS++;
+      token.SHUTDOWN = true;
+    }
+    else
+    {
+      ROS_DEBUG_STREAM("new recovery configuration: " << recovery_configuration);
+      for (int i = 0; i < recovery_configuration.size(); i++)
+      {
+        uint v = recovery_configuration[i];
+        token.NEW_HOMES[i] = v;
+        home_vertex[i] = v;
+      }
+      token.MULTI_PLAN_REPAIR = false;
+      token.REPAIR = true;
+    }
   }
 }
 
@@ -1731,8 +1769,11 @@ std::vector<uint> OnlineDCOPTaskPlanner::create_random_config(
     const std::set<std::vector<uint>, std::function<bool(const std::vector<uint> &, const std::vector<uint> &)>>
         &visited_states)
 {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  // static std::random_device rd;
+  // static std::mt19937 gen(rd());
+  // use fixed seed for testing purposes and reproducibility
+  constexpr unsigned int seed = 5;
+  static std::mt19937 gen(seed);
   bool found = false;
   std::vector<uint> random_config(robot_number);
   while (!found)

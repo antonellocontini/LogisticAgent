@@ -25,6 +25,8 @@ public:
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
 
 protected:
+  uint mapf_attempts, max_mapf_attempts = 5;
+
   std::vector<double> astar_durations;
 
   std::list<edge_modification_plan> edge_list;
