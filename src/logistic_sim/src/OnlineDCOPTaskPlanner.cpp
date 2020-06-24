@@ -621,6 +621,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     edges_mutex.unlock();
 
     mapf_attempts = 1;
+    total_search_duration = 0.0;
 
     // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
@@ -855,7 +856,17 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       {
         repair_stats_file << " " << d;
       }
-      repair_stats_file << "\n";
+      repair_stats_file << "\n# ATTEMPTS: ";
+      for (uint a : astar_attempts)
+      {
+        repair_stats_file << " " << a;
+      }
+
+      repair_stats_file << "\nA* TIMESTEPS: ";
+      for (uint a : astar_timesteps)
+      {
+        repair_stats_file << " " << a;
+      }
       // repair_stats_file << "REPAIRS_PER_ROBOT:\n";
       // for (int i = 0; i < TEAM_SIZE; i++)
       // {
@@ -1027,7 +1038,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // before starting MAPF search write current stats in file
   logistic_sim::Token temp_token = token;
   temp_token.OBSTACLE_EVENTS++;
-  write_statistics(temp_token);
+  mapf_attempts--;
+  if (mapf_attempts == 0)
+  {
+    write_statistics(temp_token);
+  }
+  else
+  {
+    write_statistics(temp_token, true);
+  }
+  mapf_attempts++;
 
   // mapf_attempts = 1;
 
@@ -1036,7 +1056,9 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   uint time_limit = 1 * 30;
   double duration;
   std::list<mapf::state> result = test_mapf.astar_search(paths, time_limit, &duration);
-  astar_durations.push_back(duration);
+  total_search_duration += duration;
+  uint current_goal_status = *std::max_element(msg->GOAL_STATUS.begin(), msg->GOAL_STATUS.end());
+  last_mapf_timestep = current_goal_status - first_valid_timestep;
   // reach recovery configuration with pseudo-dcop search
   // mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
   // recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
@@ -1055,6 +1077,10 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   last_goal_time = ros::Time::now();
   if (!result.empty())
   {
+    astar_durations.push_back(total_search_duration);
+    astar_attempts.push_back(mapf_attempts);
+    
+    astar_timesteps.push_back(last_mapf_timestep);
     previous_attempts_configs.clear();
     mapf_attempts = 1;
     // insert paths inside token
@@ -1075,6 +1101,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.MULTI_PLAN_REPAIR = false;
     token.SINGLE_PLAN_REPAIR = true;
     token.SUCCESSFULL_MA_REPAIR++;
+    // write_statistics(token, true);
   }
   else if (mapf_attempts == max_mapf_attempts)
   {
@@ -1086,11 +1113,15 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     of.close();
     token.FAILED_REPAIR++;
     token.OBSTACLE_EVENTS++;
+    write_statistics(token, true);
     token.SHUTDOWN = true;
     // getc(stdin);
   }
   else
   {
+    logistic_sim::Token temp_token = token;
+    temp_token.OBSTACLE_EVENTS++;
+    write_statistics(temp_token, true);
     mapf_attempts++;
     previous_attempts_configs.push_back(test_destination);
     std::vector<std::vector<uint>> waypoints;
@@ -1393,7 +1424,7 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *home
   return true;
 }
 
-void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg)
+void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg, bool consider_current_search)
 {
   boost::filesystem::path results_directory("results");
   if (!boost::filesystem::exists(results_directory))
@@ -1449,7 +1480,31 @@ void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg)
   {
     repair_stats_file << " " << d;
   }
-  repair_stats_file << "\n";
+  if (consider_current_search)
+  {
+    repair_stats_file << " " << total_search_duration;
+  }
+
+  repair_stats_file << "\n# ATTEMPTS: ";
+  for (uint a : astar_attempts)
+  {
+    repair_stats_file << " " << a;
+  }
+  if (consider_current_search)
+  {
+    repair_stats_file << " " << mapf_attempts;
+  }
+
+  repair_stats_file << "\nA* TIMESTEPS: ";
+  for (uint a : astar_timesteps)
+  {
+    repair_stats_file << " " << a;
+  }
+  if (consider_current_search)
+  {
+    repair_stats_file << " " << last_mapf_timestep;
+  }
+  
   // repair_stats_file << "REPAIRS_PER_ROBOT:\n";
   // for (int i = 0; i < TEAM_SIZE; i++)
   // {

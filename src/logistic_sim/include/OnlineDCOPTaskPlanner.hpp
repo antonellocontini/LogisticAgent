@@ -27,10 +27,13 @@ public:
 protected:
   std::mt19937 gen;
 
+  double total_search_duration = 0.0;
+  uint last_mapf_timestep;
   uint mapf_attempts, max_mapf_attempts = 30;
   std::vector<std::vector<uint> > previous_attempts_configs;
 
   std::vector<double> astar_durations;
+  std::vector<uint> astar_attempts, astar_timesteps;
 
   std::list<edge_modification_plan> edge_list;
 
@@ -52,7 +55,7 @@ protected:
   std::vector<bool> _check_conflict_free_impl(uint task_endpoint, std::vector<uint> *homes = nullptr);
   bool check_conflict_free_property(std::vector<uint> *homes = nullptr, double *reachability_factor = nullptr, bool print = true);
 
-  void write_statistics(const logistic_sim::Token &msg);
+  void write_statistics(const logistic_sim::Token &msg, bool consider_current_search = false);
 
   // check if a configuration is good for recovery
   bool check_valid_recovery_configuration(const std::vector<uint> &configuration
