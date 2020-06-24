@@ -167,7 +167,10 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         {
           for (uint v : task_waypoints.front())
           {
-            waypoints.push_back(v);
+            if (v == src_vertex || std::find(dsts_vertex.begin(), dsts_vertex.end(), v) != dsts_vertex.end())
+            {
+              waypoints.push_back(v);
+            }
           }
         }
         // add home vertex to waypoints

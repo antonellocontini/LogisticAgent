@@ -25,7 +25,10 @@ public:
   void token_callback(const logistic_sim::TokenConstPtr &msg) override;
 
 protected:
-  uint mapf_attempts, max_mapf_attempts = 5;
+  std::mt19937 gen;
+
+  uint mapf_attempts, max_mapf_attempts = 30;
+  std::vector<std::vector<uint> > previous_attempts_configs;
 
   std::vector<double> astar_durations;
 

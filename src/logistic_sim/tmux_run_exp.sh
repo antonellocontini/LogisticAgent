@@ -171,7 +171,7 @@ function set_footprints {
 # echo ""
 # sleep 1
 
-for i in $(seq 1 10)
+for i in $(seq 2 2)
 do
 	MISSIONS_FILE="$i.txt"
 	echo "MISSIONS_FILE:" "$MISSIONS_FILE"
