@@ -1102,12 +1102,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
       robot_ids.push_back(i);
     }
     std::vector<uint> recovery_configuration = local_search_recovery_config(waypoints, robot_ids, {});
-    if (recovery_configuration.empty())
+    if (recovery_configuration.empty() && mapf_attempts == max_mapf_attempts)
     {
       ROS_ERROR_STREAM("Can't find a new home configuration, shutting down...");
       token.FAILED_REPAIR++;
       token.OBSTACLE_EVENTS++;
       token.SHUTDOWN = true;
+    }
+    else if (recovery_configuration.empty())
+    {
+      mapf_attempts++;
     }
     else
     {
@@ -1275,7 +1279,7 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
     destinations = home_vertex;
   }
   int found_count = 0;
-  std::vector<bool> result(TEAM_SIZE);
+  std::vector<bool> result(TEAM_SIZE, false);
   std::map<uint, conflict_free_state> visited;
   std::map<uint, conflict_free_state> open;
 
@@ -1303,10 +1307,13 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
     {
       int pos = it - destinations.begin();
       // ROS_DEBUG_STREAM(pos);
-      result[pos] = true;
-      found_count++;
-      if (found_count == TEAM_SIZE)
-        return result;
+      if (result[pos] == false)
+      {
+        result[pos] = true;
+        found_count++;
+        if (found_count == TEAM_SIZE)
+          return result;
+      }
     }
     else
     {
@@ -1332,6 +1339,15 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
 bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *homes, double *reachability_factor,
                                                          bool print)
 {
+  std::vector<uint> destinations;
+  if (homes != nullptr)
+  {
+    destinations = *homes;
+  }
+  else
+  {
+    destinations = home_vertex;
+  }
   uint reached_count = 0, total_count = 0;
   std::vector<bool> property_validity(TEAM_SIZE, true);
   std::vector<uint> task_endpoints = dst_vertex;
@@ -1349,10 +1365,10 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *home
       bool r = result[i];
       if (print)
       {
-        ROS_DEBUG_STREAM_COND(r, " Y");
-        ROS_DEBUG_STREAM_COND(!r, " N");
+        ROS_DEBUG_STREAM_COND(r, " Y to " << destinations[i]);
+        ROS_DEBUG_STREAM_COND(!r, " N to " << destinations[i]);
       }
-      if (!r)
+      if (r == false)
       {
         property_validity[i] = false;
       }
@@ -1369,8 +1385,10 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *home
   }
   for (bool r : property_validity)
   {
-    if (!r)
+    if (r == false)
+    {
       return false;
+    }
   }
   return true;
 }
@@ -1856,6 +1874,8 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
     it++;
   }
 
+  starting_configuration = create_random_config(valid_vertices, robot_number, {});
+
   // choose a random permutation of the starting configuration
   {
     std::vector<uint> temp_config = starting_configuration, new_config;
@@ -1889,7 +1909,6 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
       cmp_function),
       unvisited_states(cmp_function);
 
-  // starting_configuration = create_random_config(valid_vertices, robot_number, visited_states);
 
   std::vector<uint> current_configuration = starting_configuration;
   double time_limit = 1 * 60;
@@ -1964,7 +1983,7 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
             best_config = c;
           }
 
-          if (std::find(previous_attempts_configs.begin(), previous_attempts_configs.end(), c) ==
+          if (found && std::find(previous_attempts_configs.begin(), previous_attempts_configs.end(), c) ==
               previous_attempts_configs.end())
           {
             if (search_duration != nullptr)
@@ -1973,7 +1992,7 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
             }
             ROS_DEBUG_STREAM("# of restarts: " << restart_count << "\tmax_factor: " << max_factor
                                                << "\t# of visited states: " << visited_count);
-            return current_configuration;
+            return c;
           }
         }
       }
