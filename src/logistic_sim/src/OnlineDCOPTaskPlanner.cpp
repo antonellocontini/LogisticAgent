@@ -520,7 +520,36 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
   }
   else if (mapname == "grid")
   {
-    edge_list = { { 11, 16, 5 }, { 13, 18, 10 }, { 7, 12, 15 }, { 7, 8, 20 }, { 15, 16, 25 }, { 13, 14, 30 } };
+    if (TEAM_SIZE == 6 || TEAM_SIZE == 2)
+    {
+      edge_list = { { 11, 16, 5, edge_modification_plan::REMOVAL },
+                    { 13, 18, 10, edge_modification_plan::REMOVAL },
+                    { 7, 12, 15, edge_modification_plan::REMOVAL },
+                    { 7, 8, 20, edge_modification_plan::REMOVAL },
+                    { 2, 7, 23, edge_modification_plan::REMOVAL},
+                    { 1, 2, 23, edge_modification_plan::REMOVAL},
+                    { 2, 3, 23, edge_modification_plan::REMOVAL},
+                    { 15, 16, 25, edge_modification_plan::REMOVAL },
+                    { 13, 14, 30, edge_modification_plan::REMOVAL } };
+    }
+    else if (TEAM_SIZE == 4)
+    {
+      edge_list = { { 11, 16, 5, edge_modification_plan::REMOVAL },
+                    { 13, 18, 10, edge_modification_plan::REMOVAL },
+                    { 7, 12, 15, edge_modification_plan::REMOVAL },
+                    { 7, 8, 20, edge_modification_plan::REMOVAL },
+                    { 1, 6, 23, edge_modification_plan::REMOVAL},
+                    { 1, 2, 23, edge_modification_plan::REMOVAL},
+                    { 0, 1, 23, edge_modification_plan::REMOVAL},
+                    { 15, 16, 25, edge_modification_plan::REMOVAL },
+                    { 13, 14, 30, edge_modification_plan::REMOVAL } };
+    }
+    else
+    {
+      edge_list = {};
+    }
+    
+    
   }
   else
   {
@@ -748,28 +777,36 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
         // std::chrono::duration<double> diff = current_time - last_edge_removal;
         if (first_valid_timestep != 0 && diff.toSec() >= 10.0 && !edge_list.empty())
         {
-          const edge_modification_plan &edge = edge_list.front();
-          if (timestep >= edge.timestep)
+          for (auto it = edge_list.begin(); it != edge_list.end(); )
           {
-            if (edge.type == edge.REMOVAL)
+            const edge_modification_plan &edge = *it;
+            if (timestep >= edge.timestep)
             {
-              ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
-              req.remove = true;
-              req.add = false;
-              req.cost = 0;
+              if (edge.type == edge.REMOVAL)
+              {
+                ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+                req.remove = true;
+                req.add = false;
+                req.cost = 0;
+              }
+              else if (edge.type == edge.ADDITION)
+              {
+                ROS_INFO_STREAM("Adding edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+                req.remove = false;
+                req.add = true;
+                req.cost = 1;
+              }
+              req.u = edge.from;
+              req.v = edge.to;
+              change_edge(req, res);
+              last_edge_removal = current_time;
+              // edge_list.pop_front();
+              it = edge_list.erase(it);
             }
-            else if (edge.type == edge.ADDITION)
+            else
             {
-              ROS_INFO_STREAM("Adding edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
-              req.remove = false;
-              req.add = true;
-              req.cost = 1;
+              it++;
             }
-            req.u = edge.from;
-            req.v = edge.to;
-            change_edge(req, res);
-            last_edge_removal = current_time;
-            edge_list.pop_front();
           }
         }
       }
@@ -1450,7 +1487,7 @@ void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg, boo
     do
     {
       filename.str("");
-      filename << conf_dir_name.str() << "/" << run_number << ".csv";
+      filename << conf_dir_name.str() << "/" << run_number << ".temp.csv";
       check_new = std::ifstream(filename.str());
       run_number++;
     } while (check_new);
@@ -1458,7 +1495,7 @@ void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg, boo
   }
   else
   {
-    filename << conf_dir_name.str() << "/" << task_set_file << ".csv";
+    filename << conf_dir_name.str() << "/" << task_set_file << ".temp.csv";
   }
 
   ofstream stats(filename.str());
