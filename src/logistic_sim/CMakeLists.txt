@@ -57,6 +57,7 @@ add_message_files(
   Edge.msg
   Task.msg
   TaskRequest.msg
+  MAPDState.msg
   Token.msg
   Mission.msg
   Path.msg

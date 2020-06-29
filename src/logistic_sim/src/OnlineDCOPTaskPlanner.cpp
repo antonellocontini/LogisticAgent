@@ -520,7 +520,36 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
   }
   else if (mapname == "grid")
   {
-    edge_list = { { 11, 16, 5 }, { 13, 18, 10 }, { 7, 12, 15 }, { 7, 8, 20 }, { 15, 16, 25 }, { 13, 14, 30 } };
+    if (TEAM_SIZE == 6 || TEAM_SIZE == 2)
+    {
+      edge_list = { { 11, 16, 5, edge_modification_plan::REMOVAL },
+                    { 13, 18, 10, edge_modification_plan::REMOVAL },
+                    { 7, 12, 15, edge_modification_plan::REMOVAL },
+                    { 7, 8, 20, edge_modification_plan::REMOVAL },
+                    { 2, 7, 23, edge_modification_plan::REMOVAL},
+                    { 1, 2, 23, edge_modification_plan::REMOVAL},
+                    { 2, 3, 23, edge_modification_plan::REMOVAL},
+                    { 15, 16, 25, edge_modification_plan::REMOVAL },
+                    { 13, 14, 30, edge_modification_plan::REMOVAL } };
+    }
+    else if (TEAM_SIZE == 4)
+    {
+      edge_list = { { 11, 16, 5, edge_modification_plan::REMOVAL },
+                    { 13, 18, 10, edge_modification_plan::REMOVAL },
+                    { 7, 12, 15, edge_modification_plan::REMOVAL },
+                    { 7, 8, 20, edge_modification_plan::REMOVAL },
+                    { 1, 6, 23, edge_modification_plan::REMOVAL},
+                    { 1, 2, 23, edge_modification_plan::REMOVAL},
+                    { 0, 1, 23, edge_modification_plan::REMOVAL},
+                    { 15, 16, 25, edge_modification_plan::REMOVAL },
+                    { 13, 14, 30, edge_modification_plan::REMOVAL } };
+    }
+    else
+    {
+      edge_list = {};
+    }
+    
+    
   }
   else
   {
@@ -621,6 +650,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     edges_mutex.unlock();
 
     mapf_attempts = 1;
+    total_search_duration = 0.0;
 
     // ROS_INFO_STREAM("TODO DCOP TOKEN");
     token.HEADER.seq += 1;
@@ -747,28 +777,36 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
         // std::chrono::duration<double> diff = current_time - last_edge_removal;
         if (first_valid_timestep != 0 && diff.toSec() >= 10.0 && !edge_list.empty())
         {
-          const edge_modification_plan &edge = edge_list.front();
-          if (timestep >= edge.timestep)
+          for (auto it = edge_list.begin(); it != edge_list.end(); )
           {
-            if (edge.type == edge.REMOVAL)
+            const edge_modification_plan &edge = *it;
+            if (timestep >= edge.timestep)
             {
-              ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
-              req.remove = true;
-              req.add = false;
-              req.cost = 0;
+              if (edge.type == edge.REMOVAL)
+              {
+                ROS_INFO_STREAM("Removing edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+                req.remove = true;
+                req.add = false;
+                req.cost = 0;
+              }
+              else if (edge.type == edge.ADDITION)
+              {
+                ROS_INFO_STREAM("Adding edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
+                req.remove = false;
+                req.add = true;
+                req.cost = 1;
+              }
+              req.u = edge.from;
+              req.v = edge.to;
+              change_edge(req, res);
+              last_edge_removal = current_time;
+              // edge_list.pop_front();
+              it = edge_list.erase(it);
             }
-            else if (edge.type == edge.ADDITION)
+            else
             {
-              ROS_INFO_STREAM("Adding edge (" << edge.from << "," << edge.to << ") at timestep " << timestep);
-              req.remove = false;
-              req.add = true;
-              req.cost = 1;
+              it++;
             }
-            req.u = edge.from;
-            req.v = edge.to;
-            change_edge(req, res);
-            last_edge_removal = current_time;
-            edge_list.pop_front();
           }
         }
       }
@@ -855,7 +893,17 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       {
         repair_stats_file << " " << d;
       }
-      repair_stats_file << "\n";
+      repair_stats_file << "\n# ATTEMPTS: ";
+      for (uint a : astar_attempts)
+      {
+        repair_stats_file << " " << a;
+      }
+
+      repair_stats_file << "\nA* TIMESTEPS: ";
+      for (uint a : astar_timesteps)
+      {
+        repair_stats_file << " " << a;
+      }
       // repair_stats_file << "REPAIRS_PER_ROBOT:\n";
       // for (int i = 0; i < TEAM_SIZE; i++)
       // {
@@ -1027,7 +1075,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   // before starting MAPF search write current stats in file
   logistic_sim::Token temp_token = token;
   temp_token.OBSTACLE_EVENTS++;
-  write_statistics(temp_token);
+  mapf_attempts--;
+  if (mapf_attempts == 0)
+  {
+    write_statistics(temp_token);
+  }
+  else
+  {
+    write_statistics(temp_token, true);
+  }
+  mapf_attempts++;
 
   // mapf_attempts = 1;
 
@@ -1036,7 +1093,9 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   uint time_limit = 1 * 30;
   double duration;
   std::list<mapf::state> result = test_mapf.astar_search(paths, time_limit, &duration);
-  astar_durations.push_back(duration);
+  total_search_duration += duration;
+  uint current_goal_status = *std::max_element(msg->GOAL_STATUS.begin(), msg->GOAL_STATUS.end());
+  last_mapf_timestep = current_goal_status - first_valid_timestep;
   // reach recovery configuration with pseudo-dcop search
   // mapd_time::search_tree recovery_test_st(map_graph, recovery_waypoints, test_is);
   // recovery_test_st.dcop_search(paths, home_paths, other_paths, false);
@@ -1055,6 +1114,10 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
   last_goal_time = ros::Time::now();
   if (!result.empty())
   {
+    astar_durations.push_back(total_search_duration);
+    astar_attempts.push_back(mapf_attempts);
+    
+    astar_timesteps.push_back(last_mapf_timestep);
     previous_attempts_configs.clear();
     mapf_attempts = 1;
     // insert paths inside token
@@ -1075,6 +1138,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.MULTI_PLAN_REPAIR = false;
     token.SINGLE_PLAN_REPAIR = true;
     token.SUCCESSFULL_MA_REPAIR++;
+    // write_statistics(token, true);
   }
   else if (mapf_attempts == max_mapf_attempts)
   {
@@ -1086,11 +1150,15 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     of.close();
     token.FAILED_REPAIR++;
     token.OBSTACLE_EVENTS++;
+    write_statistics(token, true);
     token.SHUTDOWN = true;
     // getc(stdin);
   }
   else
   {
+    logistic_sim::Token temp_token = token;
+    temp_token.OBSTACLE_EVENTS++;
+    write_statistics(temp_token, true);
     mapf_attempts++;
     previous_attempts_configs.push_back(test_destination);
     std::vector<std::vector<uint>> waypoints;
@@ -1102,12 +1170,16 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
       robot_ids.push_back(i);
     }
     std::vector<uint> recovery_configuration = local_search_recovery_config(waypoints, robot_ids, {});
-    if (recovery_configuration.empty())
+    if (recovery_configuration.empty() && mapf_attempts == max_mapf_attempts)
     {
       ROS_ERROR_STREAM("Can't find a new home configuration, shutting down...");
       token.FAILED_REPAIR++;
       token.OBSTACLE_EVENTS++;
       token.SHUTDOWN = true;
+    }
+    else if (recovery_configuration.empty())
+    {
+      mapf_attempts++;
     }
     else
     {
@@ -1275,7 +1347,7 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
     destinations = home_vertex;
   }
   int found_count = 0;
-  std::vector<bool> result(TEAM_SIZE);
+  std::vector<bool> result(TEAM_SIZE, false);
   std::map<uint, conflict_free_state> visited;
   std::map<uint, conflict_free_state> open;
 
@@ -1303,10 +1375,13 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
     {
       int pos = it - destinations.begin();
       // ROS_DEBUG_STREAM(pos);
-      result[pos] = true;
-      found_count++;
-      if (found_count == TEAM_SIZE)
-        return result;
+      if (result[pos] == false)
+      {
+        result[pos] = true;
+        found_count++;
+        if (found_count == TEAM_SIZE)
+          return result;
+      }
     }
     else
     {
@@ -1332,6 +1407,15 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
 bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *homes, double *reachability_factor,
                                                          bool print)
 {
+  std::vector<uint> destinations;
+  if (homes != nullptr)
+  {
+    destinations = *homes;
+  }
+  else
+  {
+    destinations = home_vertex;
+  }
   uint reached_count = 0, total_count = 0;
   std::vector<bool> property_validity(TEAM_SIZE, true);
   std::vector<uint> task_endpoints = dst_vertex;
@@ -1349,10 +1433,10 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *home
       bool r = result[i];
       if (print)
       {
-        ROS_DEBUG_STREAM_COND(r, " Y");
-        ROS_DEBUG_STREAM_COND(!r, " N");
+        ROS_DEBUG_STREAM_COND(r, " Y to " << destinations[i]);
+        ROS_DEBUG_STREAM_COND(!r, " N to " << destinations[i]);
       }
-      if (!r)
+      if (r == false)
       {
         property_validity[i] = false;
       }
@@ -1369,13 +1453,15 @@ bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *home
   }
   for (bool r : property_validity)
   {
-    if (!r)
+    if (r == false)
+    {
       return false;
+    }
   }
   return true;
 }
 
-void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg)
+void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg, bool consider_current_search)
 {
   boost::filesystem::path results_directory("results");
   if (!boost::filesystem::exists(results_directory))
@@ -1401,7 +1487,7 @@ void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg)
     do
     {
       filename.str("");
-      filename << conf_dir_name.str() << "/" << run_number << ".csv";
+      filename << conf_dir_name.str() << "/" << run_number << ".temp.csv";
       check_new = std::ifstream(filename.str());
       run_number++;
     } while (check_new);
@@ -1409,7 +1495,7 @@ void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg)
   }
   else
   {
-    filename << conf_dir_name.str() << "/" << task_set_file << ".csv";
+    filename << conf_dir_name.str() << "/" << task_set_file << ".temp.csv";
   }
 
   ofstream stats(filename.str());
@@ -1431,7 +1517,31 @@ void OnlineDCOPTaskPlanner::write_statistics(const logistic_sim::Token &msg)
   {
     repair_stats_file << " " << d;
   }
-  repair_stats_file << "\n";
+  if (consider_current_search)
+  {
+    repair_stats_file << " " << total_search_duration;
+  }
+
+  repair_stats_file << "\n# ATTEMPTS: ";
+  for (uint a : astar_attempts)
+  {
+    repair_stats_file << " " << a;
+  }
+  if (consider_current_search)
+  {
+    repair_stats_file << " " << mapf_attempts;
+  }
+
+  repair_stats_file << "\nA* TIMESTEPS: ";
+  for (uint a : astar_timesteps)
+  {
+    repair_stats_file << " " << a;
+  }
+  if (consider_current_search)
+  {
+    repair_stats_file << " " << last_mapf_timestep;
+  }
+  
   // repair_stats_file << "REPAIRS_PER_ROBOT:\n";
   // for (int i = 0; i < TEAM_SIZE; i++)
   // {
@@ -1856,6 +1966,8 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
     it++;
   }
 
+  starting_configuration = create_random_config(valid_vertices, robot_number, {});
+
   // choose a random permutation of the starting configuration
   {
     std::vector<uint> temp_config = starting_configuration, new_config;
@@ -1889,7 +2001,6 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
       cmp_function),
       unvisited_states(cmp_function);
 
-  // starting_configuration = create_random_config(valid_vertices, robot_number, visited_states);
 
   std::vector<uint> current_configuration = starting_configuration;
   double time_limit = 1 * 60;
@@ -1964,7 +2075,7 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
             best_config = c;
           }
 
-          if (std::find(previous_attempts_configs.begin(), previous_attempts_configs.end(), c) ==
+          if (found && std::find(previous_attempts_configs.begin(), previous_attempts_configs.end(), c) ==
               previous_attempts_configs.end())
           {
             if (search_duration != nullptr)
@@ -1973,7 +2084,7 @@ std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std:
             }
             ROS_DEBUG_STREAM("# of restarts: " << restart_count << "\tmax_factor: " << max_factor
                                                << "\t# of visited states: " << visited_count);
-            return current_configuration;
+            return c;
           }
         }
       }
