@@ -139,10 +139,10 @@ protected:
     bool reached_home = false;
 
     // TODO: read from parameter file (see task planners)
-    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}, {"icelab_black", 2}, {"model5", 6}};
+    std::map<std::string, uint> map_src = {{"model6", 13}, {"grid", 7}, {"icelab", 22}, {"icelab_black", 2}, {"model5", 6}, {"test_kairos", 5}};
     std::map<std::string, std::vector<uint>> map_dsts = {{"model6", {18, 23, 28}}, {"grid", {16, 17, 18}},
                                                          {"icelab", {10, 13, 16}}, {"icelab_black", {26, 33, 42}},
-                                                         {"model5", {11, 16, 21}}};
+                                                         {"model5", {11, 16, 21}}, {"test_kairos", {3,3,3}}};
     
     // here are kept pickup and delivery vertices
     uint src_vertex;

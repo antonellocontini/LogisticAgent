@@ -122,7 +122,8 @@ public:
   std::map<std::string, std::vector<uint>> map_homes = { { "model6", { 0, 1, 2, 3, 4, 5 } },
                                                          { "grid", { 1, 2, 3, 21, 22, 23 } },
                                                          { { "icelab" }, { 0, 1, 2, 26, 27, 28 } },
-                                                         { "model5", { 0, 1, 2, 25, 26, 27 } } };
+                                                         { "model5", { 0, 1, 2, 25, 26, 27 } },
+                                                         { "test_kairos", { 0, 0, 0, 0, 0, 0 } } };
   uint src_vertex;
   std::vector<uint> dst_vertex;
   std::vector<uint> home_vertex;
