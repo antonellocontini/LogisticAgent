@@ -78,4 +78,5 @@ def aggregate_runs(dir):
 a = aggregate_runs(sys.argv[1])
 print('avgsum_attempts', a['avgsum_attempts'])
 print('avgsum_durations', a['avgsum_durations'])
+print('avg_ma_repairs', a['avg_ma_repairs'])
 # print(avg_data(read_repair_stats_file(sys.argv[1])))

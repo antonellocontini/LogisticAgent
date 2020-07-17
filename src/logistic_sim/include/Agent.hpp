@@ -148,6 +148,7 @@ protected:
     uint src_vertex;
     std::vector<uint> dsts_vertex;
 
+    bool interactive_mode;
 public:
   Agent()
   {

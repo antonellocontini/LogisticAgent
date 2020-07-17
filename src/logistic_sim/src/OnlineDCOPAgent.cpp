@@ -368,7 +368,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
         }
       }
 
-      if (can_exit)
+      if (can_exit && !interactive_mode)
       {
         c_print("Finiti tutti i task, esco!", magenta, P);
         token.SHUTDOWN = true;

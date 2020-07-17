@@ -50,6 +50,10 @@ The `GEN` parameter sets how the tasks are generated:
 * `file` reads the tasks from the file specified in the `MISSIONS_FILE` parameter, this file must be contained in the `missions` directory
 * `null` does not create tasks, they must be provided calling the `AddMissions` service
 
+An example for the `AddMissions` service:
+`rosservice call /add_missions "[{DSTS:[42]},{DSTS:[26,42]}]"`
+In this example two missions are inserted, one with a single delivery location and one with two delivery locations
+
 The `NROBOTS` parameter sets the number of robots to run in the simulation, currently only configurations of 2, 4 or 6 robots are defined, but different ones can be made in the `params/initial_poses.txt` file. This file contains the starting positions of the robots for each map.
 
 ## Debugging

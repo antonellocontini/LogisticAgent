@@ -1,6 +1,8 @@
 #!/bin/bash
 
+USE_KAIROS_SIM=false
 USE_KAIROS=false
+INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=icelab_black
 NROBOTS=6
@@ -12,12 +14,13 @@ NAV=ros
 SPEEDUP=3.0
 CAPACITY=3
 TP_NAME=OnlineDCOPTaskPlanner
-GEN=file
+GEN=null
+#GEN=file
 DEBUG=false
 MISSIONS_FILE=1.txt
 NRUNS=1
 
-if [ "$USE_KAIROS" = "true" ]; then
+if [ "$USE_KAIROS_SIM" = "true" ]; then
 	NROBOTS=1	# only one kairos supported
 fi
 
@@ -83,13 +86,15 @@ function launch_robots {
 	n=$(( NROBOTS - 1 ))
 	for i in $(seq 0 $n); do
 		tmux selectp -t $SESSION:1.$i
-		if [ "$LOC" = "AMCL" ]; then
-			tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
-		else
-			tmux send-keys "roslaunch logistic_sim robot_fake_loc.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
+		if [ "$USE_KAIROS" = "false" ]; then
+			if [ "$LOC" = "AMCL" ]; then
+				tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
+			else
+				tmux send-keys "roslaunch logistic_sim robot_fake_loc.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
+			fi
+			echo "Robot $i launched"
+			sleep 1
 		fi
-		echo "Robot $i launched"
-		sleep 1
 	done
 	tmux select-layout tiled
 
@@ -120,7 +125,7 @@ function launch_agents {
 	echo "Launching agents..."
 	for i in $(seq 0 $n); do
 		tmux selectp -t $SESSION:2.$i
-		tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$i robot_name:=robot_$i agent_name:=patrol_robot$i --wait" C-m
+		tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$i robot_name:=robot_$i agent_name:=patrol_robot$i interactive_mode:=$INTERACTIVE_MODE --wait" C-m
 	done
 	# if [ $DEBUG = true ] ; then
 	# 	echo "Debug mode activated, running into gdb..."
@@ -156,7 +161,7 @@ function set_footprints {
 # prepare_tmux
 # launch_ros
 
-# if [ "$USE_KAIROS" = "true" ]; then
+# if [ "$USE_KAIROS_SIM" = "true" ]; then
 # 	launch_kairos_sim
 # 	launch_kairos_planner_agents
 # else

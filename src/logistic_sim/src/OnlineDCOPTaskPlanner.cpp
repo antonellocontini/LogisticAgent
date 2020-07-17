@@ -10,7 +10,7 @@
 #include "mapd_time_test.hpp"
 #include "mapf.hpp"
 
-#define EDGE_REMOVAL_TEST true
+#define EDGE_REMOVAL_TEST false
 
 namespace onlinedcoptaskplanner
 {
