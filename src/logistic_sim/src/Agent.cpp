@@ -60,6 +60,11 @@ void Agent::init(int argc, char **argv)
 
     /* Define Starting Vertex/Position (Launch File Parameters) */
 
+    // if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
+    // {
+    //     ros::console::notifyLoggerLevelsChanged();
+    // }
+
     ros::init(argc, argv, "patrol_agent"); // will be replaced by __name:=XXXXXX
     ros::NodeHandle nh;
 

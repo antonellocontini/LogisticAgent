@@ -390,6 +390,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
 
   if (equal_status && still)
   {
+    //ROS_INFO_STREAM("all reached the goal");
     // if new missions are avaiable they must be allocated
     // it's essential that robots are synchronized in terms of goal
     // otherwise paths would not be synched and the planning would not be valid
@@ -401,14 +402,14 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
         first_to_see_equal = true;
     }
 
-    if (msg->NEED_REPAIR && first_to_see_equal)
+    if (msg->NEED_REPAIR && (first_to_see_equal || TEAM_SIZE == 1))
     {
       // start the plan repair phase
       token.NEED_REPAIR = false;
       token.REPAIR = true;
       token.ID_RECEIVER = 0;
     }
-    else if (msg->NEW_MISSIONS_AVAILABLE && first_to_see_equal)
+    else if (msg->NEW_MISSIONS_AVAILABLE && (first_to_see_equal || TEAM_SIZE == 1))
     {
       token.ALLOCATE = true;
 
@@ -435,7 +436,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
       }
       else
       {
-        c_print("[ WARN]Don't know what to do!!!", yellow, P);
+        c_print("[ WARN] Don't know what to do!!!", yellow, P);
         next_vertex = current_vertex;
       }
 
