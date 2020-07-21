@@ -981,6 +981,7 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
     home_vertex.push_back(v);
     // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
   }
+  ROS_INFO_STREAM("Map endpoints setted");
 }
 
 void TaskPlanner::calculate_aggregation_paths()
@@ -992,6 +993,7 @@ void TaskPlanner::calculate_aggregation_paths()
     dijkstra(src_vertex, dst, result, result_size, vertex_web, dimension);
     paths.push_back(std::vector<uint>(result, result + result_size));
   }
+  ROS_INFO_STREAM("Aggregation paths calculated");
 }
 
 void TaskPlanner::build_map_graph()

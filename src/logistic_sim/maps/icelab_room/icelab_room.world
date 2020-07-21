@@ -1,0 +1,24 @@
+include "../kairos.inc"
+include "../hokuyo.inc"
+include "../crobot.inc"
+include "../floorplan.inc"
+include "../cpoint.inc"
+
+window( 
+  size   [ 460 460 1 ]         
+  rotate [ 0.000 0.000 ]    
+  center [ 0.0 0.0 ]   
+  scale 10.0
+  show_data 1
+)
+
+floorplan (
+  size [99.200 99.200 0.000] 
+  pose [-0.4 -0.4 0.000 0.000]
+  bitmap "icelab_room.pgm"
+)
+
+#kairos( pose [ 15.44  3.22  0  0 ]   name "robot8"  color "blue")
+
+include "point.inc"
+include "robots.inc"
