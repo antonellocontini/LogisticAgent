@@ -5,7 +5,7 @@ edgeList = fscanf(fileID,'%d %d',[2 Inf]);
 fclose(fileID);
 edgeList = edgeList';
 edgeList = edgeList + 1;
-m = sparse(edgeList(:,1), edgeList(:,2), round(sqrt((x(edgeList(:,1)) - x(edgeList(:,2))).^2 + (y(edgeList(:,1)) - y(edgeList(:,2))).^2)), numV, numV);
+m = sparse(edgeList(:,1), edgeList(:,2), round(sqrt( (x(edgeList(:,1)) - x(edgeList(:,2))).^2 + (y(edgeList(:,1)) - y(edgeList(:,2))).^2 )), numV, numV);
 %fprintf('%d\n%d\n%d\n0\n\n', [r,y,x]');
 
 fileID = fopen('graph.txt','w');
