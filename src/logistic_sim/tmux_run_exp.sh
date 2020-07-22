@@ -2,6 +2,7 @@
 
 USE_KAIROS_SIM=true
 USE_KAIROS=false
+KAIROS_NAME=rbkairos
 INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=icelab_room
@@ -70,7 +71,7 @@ function launch_kairos_sim {
 function launch_kairos_planner_agents {
 	tmux selectw -t $SESSION:1
 	tmux selectp -t $SESSION:1.0
-	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG mapname:=$MAP gen_type:=$GEN --wait" C-m
+	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG robot_name:=$KAIROS_NAME agent_name:=patrol_rbkairos mapname:=$MAP gen_type:=$GEN --wait" C-m
 }
 
 function launch_stage {
