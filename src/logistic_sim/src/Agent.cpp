@@ -125,9 +125,10 @@ void Agent::init(int argc, char **argv)
     }
     else
     {
-        // TODO: generalizzare nome topic per kairos
-        sprintf(string1, "robot_%d/odom", ID_ROBOT);
-        sprintf(string2, "robot_%d/cmd_vel", ID_ROBOT);
+        sprintf(string1, "%s/odom", robotname.c_str());
+        sprintf(string2, "%s/cmd_vel", robotname.c_str());
+        // sprintf(string1, "robot_%d/odom", ID_ROBOT);
+        // sprintf(string2, "robot_%d/cmd_vel", ID_ROBOT);
         // TEAM_SIZE = ID_ROBOT + 1;
     }
 

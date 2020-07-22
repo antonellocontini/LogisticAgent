@@ -10,8 +10,10 @@
   <arg name="missions_file" default="1.txt"/>
   <arg name="debug_mode" default="false"/>
   <arg name="gdb_file" default=""/>
+  <arg name="robot_order" default="0" />
   <arg name="robot_name" default="rbkairos" />
   <arg name="agent_name" default="patrol_rbkairos" />
+  <arg name="interactive_mode" default="false" />
 
   <!-- for now included in tmux script -->
   <!-- <include file="$(find rbkairos_sim_bringup)/launch/rbkairos_complete.launch">
@@ -40,9 +42,10 @@
     <arg name="robots_capacity" value="$(arg robots_capacity)" />
     <arg name="debug_mode" value="$(arg debug_mode)" />
     <arg name="gdb_file" value="$(arg gdb_file)" />
-    <arg name="robot_order" value="0" />
+    <arg name="robot_order" value="$(arg robot_order)" />
     <arg name="robot_name" value="$(arg robot_name)" />
     <arg name="agent_name" value="$(arg agent_name)" />
     <arg name="map_frame" value="rbkairos_map" />
+    <arg name="interactive_mode" value="$(arg interactive_mode)" />
   </include>
 </launch>

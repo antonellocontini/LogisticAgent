@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#ROS_MASTER_URI=
 USE_KAIROS_SIM=true
 USE_KAIROS=false
 KAIROS_NAME=rbkairos
@@ -48,12 +49,14 @@ function prepare_tmux {
 function launch_ros {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roscore &" C-m
-	echo "Launching roscore..."
-	until rostopic list &> /dev/null; do sleep 1; done
-	echo "Setting ROS parameters..."
-	tmux send-keys "rosparam set /use_sim_time True" C-m
-	tmux send-keys "rosparam set /navigation_module $NAV" C-m
+	if [ "$USE_KAIROS" = "false" ]; then
+		tmux send-keys "roscore &" C-m
+		echo "Launching roscore..."
+	fi
+		until rostopic list &> /dev/null; do sleep 1; done
+		echo "Setting ROS parameters..."
+		tmux send-keys "rosparam set /use_sim_time True" C-m
+		tmux send-keys "rosparam set /navigation_module $NAV" C-m
 	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
 	IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
 	tmux send-keys "./setinitposes.py $MAP 	\"$IPOSES\"" C-m
@@ -71,15 +74,17 @@ function launch_kairos_sim {
 function launch_kairos_planner_agents {
 	tmux selectw -t $SESSION:1
 	tmux selectp -t $SESSION:1.0
-	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG robot_name:=$KAIROS_NAME agent_name:=patrol_$KAIROS_NAME mapname:=$MAP gen_type:=$GEN --wait" C-m
+	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG robot_name:=$KAIROS_NAME agent_name:=patrol_$KAIROS_NAME mapname:=$MAP gen_type:=$GEN robot_order:=0 interactive_mode:=$INTERACTIVE_MODE --wait" C-m
 }
 
 function launch_stage {
-	tmux selectw -t $SESSION:0
-	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP --wait" C-m
-	echo "Launching Stage..."
-	sleep 3
+	if [ "$USE_KAIROS" = "false" ]; then 
+		tmux selectw -t $SESSION:0
+		tmux selectp -t $SESSION:0.0
+		tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP --wait" C-m
+		echo "Launching Stage..."
+		sleep 3
+	fi
 }
 
 function launch_robots {
