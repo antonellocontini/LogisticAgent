@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USE_KAIROS_SIM=false
+USE_KAIROS_SIM=true
 USE_KAIROS=false
 INTERACTIVE_MODE=true
 SESSION=log_sim
@@ -62,7 +62,7 @@ function launch_ros {
 function launch_kairos_sim {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_black/icelab_black.yaml' gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab.world' x_init_pose_robot_a:=5.44 y_init_pose_robot_a:=3.22 --wait" C-m
+	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 --wait" C-m
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
 }
@@ -70,7 +70,7 @@ function launch_kairos_sim {
 function launch_kairos_planner_agents {
 	tmux selectw -t $SESSION:1
 	tmux selectp -t $SESSION:1.0
-	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG --wait" C-m
+	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG mapname:=$MAP gen_type:=$GEN --wait" C-m
 }
 
 function launch_stage {

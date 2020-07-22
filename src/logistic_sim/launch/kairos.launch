@@ -6,6 +6,7 @@
   <arg name="agents_type" default="OnlineAgent"/>
   <arg name="robots_capacity" default="3"/>
   <arg name="gen_type" default="file"/>
+  <arg name="mapname" default="icelab_room" />
   <arg name="missions_file" default="1.txt"/>
   <arg name="debug_mode" default="false"/>
   <arg name="gdb_file" default=""/>
@@ -21,7 +22,7 @@
   </include> -->
 
   <include file="$(find logistic_sim)/launch/task_planner.launch">
-    <arg name="mapname" value="icelab_black"/>
+    <arg name="mapname" value="$(arg mapname)"/>
     <arg name="planner_type" value="$(arg planner_type)"/>
     <arg name="agents_type" value="$(arg agents_type)"/>
     <arg name="agents_number" value="1"/>
@@ -33,7 +34,7 @@
   </include>
 
   <include file="$(find logistic_sim)/launch/agent.launch">
-    <arg name="mapname" value="icelab_black" />
+    <arg name="mapname" value="$(arg mapname)" />
     <arg name="agents_type" value="$(arg agents_type)" />
     <arg name="agents_number" value="1" />
     <arg name="robots_capacity" value="$(arg robots_capacity)" />
