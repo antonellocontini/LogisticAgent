@@ -86,6 +86,7 @@ void Agent::init(int argc, char **argv)
         ros::shutdown();
         exit(-1);
     }
+    ROS_INFO_STREAM("initial_pos list read correctly");
 
     int value = ID_ROBOT;
     if (value == -1)
@@ -282,12 +283,13 @@ void Agent::ready()
 
     ac = new MoveBaseClient(move_base, true);
 
+    ROS_INFO_STREAM("Connecting to move_base action server at " << move_base);
     // wait for the action server to come up
     while (!ac->waitForServer(ros::Duration(5.0)))
     {
-        c_print("Waiting for the move_base action server to come up", red, P);
+        ROS_WARN_STREAM("Waiting for the move_base action server to come up");
     }
-    c_print("Connected with move_base action server", green, P);
+    ROS_INFO_STREAM("Connected with move_base action server");
 
     ros::Rate loop_rate(1);
     while (initialize)

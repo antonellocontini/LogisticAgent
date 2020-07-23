@@ -277,7 +277,7 @@ void OnlineTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
       ros::NodeHandle nh;
       nh.setParam("/simulation_running", "false");
       ros::shutdown();
-      int cmd_result = system("./stop_experiment.sh");
+      //int cmd_result = system("./stop_experiment.sh");
     }
   }
 

@@ -1,9 +1,10 @@
 #!/bin/bash
 
-#ROS_MASTER_URI=
-USE_KAIROS_SIM=true
-USE_KAIROS=false
-KAIROS_NAME=rbkairos
+ROS_MASTER_URI=http://SXLSK-190911AA:11311
+USE_KAIROS_SIM=false
+USE_KAIROS=true
+#KAIROS_NAME=rbkairos
+KAIROS_NAME=robot
 INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=icelab_room
@@ -18,7 +19,7 @@ CAPACITY=3
 TP_NAME=OnlineDCOPTaskPlanner
 GEN=null
 #GEN=file
-DEBUG=false
+DEBUG=true
 MISSIONS_FILE=1.txt
 NRUNS=1
 
@@ -29,7 +30,8 @@ fi
 function prepare_tmux {
 	n=$(( NROBOTS - 1 ))
 	tmux -2 new-session -d -s $SESSION
-	tmux bind-key X run-shell "./stop_experiment.sh" \\\; kill-session
+	#tmux bind-key X run-shell "./stop_experiment.sh" \\\; kill-session
+	tmux bind-key X kill-session
 	tmux splitw -h
 	tmux new-window -t $SESSION:1 -n 'Robots'
 	for i in $(seq 0 $n); do
@@ -55,7 +57,9 @@ function launch_ros {
 	fi
 		until rostopic list &> /dev/null; do sleep 1; done
 		echo "Setting ROS parameters..."
+	if [ "$USE_KAIROS" = "false" ]; then
 		tmux send-keys "rosparam set /use_sim_time True" C-m
+	fi
 		tmux send-keys "rosparam set /navigation_module $NAV" C-m
 	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
 	IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
@@ -126,6 +130,14 @@ function launch_taskplanner {
 	sleep 5
 }
 
+function launch_real_kairos_agent {
+	tmux selectw -t $SESSION:2
+	echo "Launching agent..."
+	tmux selectp -t $SESSION:2.$i
+	tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$i robot_name:=$KAIROS_NAME agent_name:=patrol_robot$i interactive_mode:=$INTERACTIVE_MODE --wait" C-m
+	tmux select-layout tiled
+}
+
 function launch_agents {
 	tmux selectw -t $SESSION:2
 	echo "Launching agents..."
@@ -174,7 +186,11 @@ else
 	launch_stage
 	launch_robots
 	launch_taskplanner
-	launch_agents
+	if [ "$USE_KAIROS" = "true" ]; then
+		launch_real_kairos_agent
+	else
+		launch_agents
+	fi
 	set_footprints
 fi
 date
