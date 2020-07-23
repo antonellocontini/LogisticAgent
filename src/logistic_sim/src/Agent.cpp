@@ -386,7 +386,27 @@ void Agent::sendGoal(int next_vertex)
     //Define Goal:
     move_base_msgs::MoveBaseGoal goal;
     //Send the goal to the robot (Global Map)
-    geometry_msgs::Quaternion angle_quat = tf::createQuaternionMsgFromYaw(0.0);
+    geometry_msgs::Quaternion angle_quat;
+    if (current_vertex < 0)
+    {
+        angle_quat = tf::createQuaternionMsgFromYaw(0.0);
+    }
+    else
+    {
+        double current_x = vertex_web[current_vertex].x;
+        double current_y = vertex_web[current_vertex].y;
+        double delta_x = target_x - current_x;
+        double delta_y = target_y - current_y;
+        double theta = atan2(delta_y, delta_x);
+        if (abs(delta_x) < 0.01 || abs(delta_y) < 0.01)
+        {
+            angle_quat = tf::createQuaternionMsgFromYaw(0.0);
+        }
+        else
+        {
+            angle_quat = tf::createQuaternionMsgFromYaw(theta);
+        }
+    }
     // goal.target_pose.header.frame_id = "map";
     goal.target_pose.header.frame_id = mapframe;
     goal.target_pose.header.stamp = ros::Time::now();
