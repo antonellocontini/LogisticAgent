@@ -148,6 +148,9 @@ protected:
     uint src_vertex;
     std::vector<uint> dsts_vertex;
 
+    // here orientation goal for specific vertices can be defined
+    std::map<uint, double> vertex_theta;
+
     bool interactive_mode;
 public:
   Agent()
