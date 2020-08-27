@@ -183,26 +183,51 @@ void Agent::set_map_endpoints(ros::NodeHandle &nh)
   else
   {
     ROS_ERROR_STREAM("Can't read param /src_vertex!!!");
-    ROS_ERROR_STREAM("Currently this parameter is set by task planner launch file");
+    // ROS_ERROR_STREAM("Currently this parameter is set by task planner launch file");
     ros::shutdown();
+  }
+
+  XmlRpc::XmlRpcValue src_theta;
+  if (nh.getParam("/src_theta", src_theta))
+  {
+    ROS_ASSERT(src_theta.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    XmlRpc::XmlRpcValue v = src_theta[0];
+    ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeDouble);
+    vertex_theta[src_vertex] = static_cast<double>(v);
+    ROS_INFO_STREAM("src_vertex: " << src_vertex);
   }
 
   if (nh.getParam("/dst_vertex", dst))
   {
     ROS_ASSERT(dst.getType() == XmlRpc::XmlRpcValue::TypeArray);
     dsts_vertex.clear();
+    XmlRpc::XmlRpcValue dst_theta;
+    bool have_orientation = nh.getParam("/dst_theta", dst_theta);
+    if (have_orientation)
+    {
+      ROS_ASSERT(dst_theta.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    }
+
     for (int i = 0; i < dst.size(); i++)
     {
       XmlRpc::XmlRpcValue v = dst[i];
       ROS_ASSERT(v.getType() == XmlRpc::XmlRpcValue::TypeInt);
-      dsts_vertex.push_back((int)v);
-      ROS_INFO_STREAM("dst_vertex: " << (int)v);
+      int d = static_cast<int>(v);
+      dsts_vertex.push_back(d);
+      ROS_INFO_STREAM("dst_vertex: " << d);
+
+      if (have_orientation)
+      {
+        XmlRpc::XmlRpcValue theta = dst_theta[i];
+        ROS_ASSERT(theta.getType() == XmlRpc::XmlRpcValue::TypeDouble);
+        vertex_theta[d] = static_cast<double>(theta);
+      }
     }
   }
   else
   {
     ROS_ERROR_STREAM("Can't read param /dst_vertex!!!");
-    ROS_ERROR_STREAM("Currently this parameter is set by task planner launch file");
+    // ROS_ERROR_STREAM("Currently this parameter is set by task planner launch file");
     ros::shutdown();
   }
 }
@@ -387,7 +412,12 @@ void Agent::sendGoal(int next_vertex)
     move_base_msgs::MoveBaseGoal goal;
     //Send the goal to the robot (Global Map)
     geometry_msgs::Quaternion angle_quat;
-    if (current_vertex < 0)
+    auto it = vertex_theta.find(next_vertex);
+    if (it != vertex_theta.end())
+    {
+      angle_quat = tf::createQuaternionMsgFromYaw(it->second);
+    }
+    else if (current_vertex < 0)
     {
         angle_quat = tf::createQuaternionMsgFromYaw(0.0);
     }
@@ -398,7 +428,8 @@ void Agent::sendGoal(int next_vertex)
         double delta_x = target_x - current_x;
         double delta_y = target_y - current_y;
         double theta = atan2(delta_y, delta_x);
-        if (abs(delta_x) < 0.01 || abs(delta_y) < 0.01)
+        double dist = sqrt(delta_x*delta_x + delta_y*delta_y);
+        if (abs(dist) < 0.01)
         {
             angle_quat = tf::createQuaternionMsgFromYaw(0.0);
         }
