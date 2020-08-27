@@ -37,11 +37,11 @@ Inside `src/logistic_sim` directory run `./run_exp.sh` to start the simulation. 
 Inside the script there are many parameters that can be configured:
 
 The `ALG` parameter sets which agents algorithm to run:
-* `OnlineAgent` implements the online allocation and planning algorithm
+* `OnlineDCOPAgent` implements the online allocation and planning algorithm
 * `OnlineCentralizedAgent` is used in conjunction with two different centralized approaches (one with optimal allocation and the other with a greedy strategy)
 
 The `TP_NAME` parameter sets the task planner:
-* `OnlineTaskPlanner` must be used together with `OnlineAgent`
+* `OnlineDCOPTaskPlanner` must be used together with `OnlineDCOPAgent`
 * `OnlineGlobalTaskPlanner` and `OnlineGreedyTaskPlanner` must be used with `OnlineCentralizedAgent` and they implements the two approaches aforementioned.
 
 The `GEN` parameter sets how the tasks are generated:
@@ -55,6 +55,15 @@ An example for the `AddMissions` service:
 In this example two missions are inserted, one with a single delivery location and one with two delivery locations
 
 The `NROBOTS` parameter sets the number of robots to run in the simulation, currently only configurations of 2, 4 or 6 robots are defined, but different ones can be made in the `params/initial_poses.txt` file. This file contains the starting positions of the robots for each map.
+
+In this moment only the `icelab_black`,`icelab_room`,`grid` and `model5` maps are working.
+
+## RB-KAIROS
+If you want to use the kairos simulator the `USE_KAIROS_SIM` flag must be set to `true`.
+To use the kairos simulator its packages must be installed, instructions can be found [here](https://github.com/RobotnikAutomation/rbkairos_sim).
+
+If you want to use the real robot then the `USE_KAIROS` flag must be set to `true`.
+In this case the `ROS_MASTER_URI` must be set to the robot's one, because roscore runs on the robot.
 
 ## Debugging
 If the `DEBUG` flag is set to `True` the agents and the task planner will run inside gdb. Custom gdb commands can be given to the robots and the taskplanner by creating specific named files inside the `src/logistic_sim` directory:
