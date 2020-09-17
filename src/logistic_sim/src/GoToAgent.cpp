@@ -154,8 +154,8 @@ void GoToAgent::init(int argc, char **argv)
   // }
 
   // c_print("End of initialization, reading parameters", green, P);
-  ROS_INFO_STREAM("Advertising goto_pos service to " + ros::this_node::getName() +  "/goto_pos");
-  goto_pos_service = nh.advertiseService(ros::this_node::getName() +  "/goto_pos", &GoToAgent::goto_pos, this);
+  ROS_INFO_STREAM("Advertising goto_pos service to " + ros::this_node::getName() + "/goto_pos");
+  goto_pos_service = nh.advertiseService(ros::this_node::getName() + "/goto_pos", &GoToAgent::goto_pos, this);
   if (!goto_pos_service)
   {
     ROS_ERROR_STREAM("Can't create goto_pos service");
@@ -163,6 +163,17 @@ void GoToAgent::init(int argc, char **argv)
   else
   {
     ROS_INFO_STREAM("goto_pos service advertised successfully");
+  }
+
+  ROS_INFO_STREAM("Advertising cancel_goto service to " + ros::this_node::getName() + "/cancel_goto");
+  cancel_goto_service = nh.advertiseService(ros::this_node::getName() + "/cancel_goto", &GoToAgent::cancel_goto, this);
+  if (!cancel_goto_service)
+  {
+    ROS_ERROR_STREAM("Can't create cancel_goto service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("cancel_goto service advertised successfully");
   }
 }
 
@@ -222,6 +233,7 @@ void GoToAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 
 bool GoToAgent::goto_pos(logistic_sim::GoToPos::Request &msg, logistic_sim::GoToPos::Response &res)
 {
+  ROS_INFO("Sending goal to position (%f,%f) orientation %f",msg.x, msg.y, msg.theta);
   // Define Goal:
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = mapframe;
@@ -234,6 +246,39 @@ bool GoToAgent::goto_pos(logistic_sim::GoToPos::Request &msg, logistic_sim::GoTo
                boost::bind(&Agent::goalFeedbackCallback, this, _1));
   res.response = true;
   return true;
+}
+
+bool GoToAgent::cancel_goto(logistic_sim::CancelGoTo::Request &msg, logistic_sim::CancelGoTo::Response &res)
+{
+  goal_canceled_by_user = true;
+  ac->cancelGoal();
+  res.response = true;
+  return true;
+}
+
+void GoToAgent::goalDoneCallback(const actionlib::SimpleClientGoalState &state,
+                                 const move_base_msgs::MoveBaseResultConstPtr &result)
+{
+  if (state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED)
+  {
+    ROS_INFO("Goal reached ...");
+    goal_complete = true;
+    goal_success = true;
+  }
+  else
+  {
+    aborted_count++;
+    ROS_INFO("CANCELLED or ABORTED...");  // tentar voltar a enviar goal..
+    if (!goal_canceled_by_user)
+    {
+      ROS_WARN("Goal not cancelled by user...");
+    }
+    else
+    {
+      ROS_INFO("Goal cancelled by user");
+      goal_canceled_by_user = false;
+    }
+  }
 }
 
 }  // namespace onlineagent

@@ -40,6 +40,7 @@
 
 #include "Agent.hpp"
 #include "logistic_sim/GoToPos.h"
+#include "logistic_sim/CancelGoTo.h"
 
 namespace gotoagent
 {
@@ -53,8 +54,11 @@ const std::string PS_path = ros::package::getPath("logistic_sim"); // D.Portugal
 class GoToAgent : public agent::Agent
 {
 protected:
-  ros::ServiceServer goto_pos_service;
+  ros::ServiceServer goto_pos_service, cancel_goto_service;
   bool goto_pos(logistic_sim::GoToPos::Request &msg, logistic_sim::GoToPos::Response &res);
+  bool cancel_goto(logistic_sim::CancelGoTo::Request &msg, logistic_sim::CancelGoTo::Response &res);
+  void goalDoneCallback(const actionlib::SimpleClientGoalState &state,
+                        const move_base_msgs::MoveBaseResultConstPtr &result) override;
 public:
 
   void init(int argc, char **argv) override;

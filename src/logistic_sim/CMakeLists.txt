@@ -72,6 +72,7 @@ add_service_files(
    ChangeEdge.srv
    GoToPos.srv
    GoToVertex.srv
+   CancelGoTo.srv
 )
 
 ## Generate actions in the 'action' folder
