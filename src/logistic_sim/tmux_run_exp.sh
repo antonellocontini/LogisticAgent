@@ -115,7 +115,9 @@ function launch_robots {
 
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
-	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=true --wait" C-m
+	if [ -n "$TP_NAME" ]; then
+		tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=true --wait" C-m
+	fi
 	# if [ $DEBUG = true ] ; then
 	# 	if [ -f "commands_taskplanner.txt" ] ; then
 	# 		echo "Debug mode activated, gdb commands from file..."

@@ -70,6 +70,8 @@ add_service_files(
    RobotReady.srv
    AddMissions.srv
    ChangeEdge.srv
+   GoToPos.srv
+   GoToVertex.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -160,6 +162,12 @@ add_executable(OnlineCentralizedAgent src/OnlineCentralizedAgent.cpp)
 add_dependencies(OnlineCentralizedAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(OnlineCentralizedAgent Agent algorithmsLib ${catkin_LIBRARIES})
+
+## Declare a cpp executable 
+add_executable(GoToAgent src/GoToAgent.cpp)
+add_dependencies(GoToAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(GoToAgent Agent algorithmsLib ${catkin_LIBRARIES})
 
 ##################
 ## TaskPlanners ##
