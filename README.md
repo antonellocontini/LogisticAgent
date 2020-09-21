@@ -60,10 +60,21 @@ In this moment only the `icelab_black`,`icelab_room`,`grid` and `model5` maps ar
 
 ## RB-KAIROS
 If you want to use the kairos simulator the `USE_KAIROS_SIM` flag must be set to `true`.
+The simulator packages are already included in this repository, however there are some external dependencies.
+To install the dependencies, run the following command from the workspace root:
+`rosdep install --from-paths src --ignore-src -r -y`
 To use the kairos simulator its packages must be installed, instructions can be found [here](https://github.com/RobotnikAutomation/rbkairos_sim).
 
 If you want to use the real robot then the `USE_KAIROS` flag must be set to `true`.
 In this case the `ROS_MASTER_URI` must be set to the robot's one, because roscore runs on the robot.
+
+## GotoAgent
+The GotoAgent is a simple agent that can be used to give simple goto commands to a mobile base.
+Inside the `logistic_sim` package there is a `run_goto.sh` script that can be used to run this agent with the Kairos simulator.
+The script has a subset of the parameters found in the other script.
+There are two new variables, `X_INIT_POS` and `Y_INIT_POS` which define the initial position of the Kairos.
+In this case the `MAP` variable refers to one of the maps defined inside the `models` and `worlds` directories of the `rbkairos_gazebo` package.
+There is only one map called `icelab_room`, but its possible to create new ones.
 
 ## Debugging
 If the `DEBUG` flag is set to `True` the agents and the task planner will run inside gdb. Custom gdb commands can be given to the robots and the taskplanner by creating specific named files inside the `src/logistic_sim` directory:

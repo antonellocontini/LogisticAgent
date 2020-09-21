@@ -287,8 +287,11 @@ int main(int argc, char *argv[])
 {
   gotoagent::GoToAgent GA;
   GA.init(argc, argv);
-  c_print("@ GOTO", green);
-  sleep(3);
-  GA.run();
+  if (ros::ok())
+  {
+    c_print("@ GOTO", green);
+    sleep(3);
+    GA.run();
+  }
   return 0;
 }
