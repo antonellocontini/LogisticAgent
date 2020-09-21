@@ -71,7 +71,7 @@ function launch_ros {
 function launch_kairos_sim {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='/home/antonello/rbkairos_workspace/src/rbkairos_sim/rbkairos_gazebo/worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 --wait" C-m
+	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='$(find rbkairos_gazebo)/worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 --wait" C-m
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
 }
