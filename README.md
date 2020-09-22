@@ -71,10 +71,21 @@ In this case the `ROS_MASTER_URI` must be set to the robot's one, because roscor
 ## GotoAgent
 The GotoAgent is a simple agent that can be used to give simple goto commands to a mobile base.
 Inside the `logistic_sim` package there is a `run_goto.sh` script that can be used to run this agent with the Kairos simulator.
+
 The script has a subset of the parameters found in the other script.
 There are two new variables, `X_INIT_POS` and `Y_INIT_POS` which define the initial position of the Kairos.
 In this case the `MAP` variable refers to one of the maps defined inside the `models` and `worlds` directories of the `rbkairos_gazebo` package.
 There is only one map called `icelab_room`, but its possible to create new ones.
+
+### How to use
+The agent offers a ROS service called `goto_pos`, which accept a message that takes in input the (x,y) coordinates that the robots must reach and the desired orientation angle in radians.
+`rosservice` can be used to call this service and give commands to the mobile base.
+
+`rosservice call /patrol_rbkairos/goto_pos "x: 0.18 y: -13.5 theta: -1.57"`
+
+There is also a `cancel_goto` service that can be used to cancel the last goal given to the robot.
+
+`rosservice call /patrol_rbkairos/cancel_goto`
 
 ## Debugging
 If the `DEBUG` flag is set to `True` the agents and the task planner will run inside gdb. Custom gdb commands can be given to the robots and the taskplanner by creating specific named files inside the `src/logistic_sim` directory:
