@@ -71,6 +71,8 @@ In this case the `ROS_MASTER_URI` must be set to the robot's one, because roscor
 ## GotoAgent
 The GotoAgent is a simple agent that can be used to give simple goto commands to a mobile base.
 Inside the `logistic_sim` package there is a `run_goto.sh` script that can be used to run this agent with the Kairos simulator.
+Because this script uses the Kairos simulator, before running it for the first time its dependencies must be installed by running this command from the workspace root:
+`rosdep install --from-paths src --ignore-src -r -y`
 
 The script has a subset of the parameters found in the other script.
 There are two new variables, `X_INIT_POS` and `Y_INIT_POS` which define the initial position of the Kairos.
