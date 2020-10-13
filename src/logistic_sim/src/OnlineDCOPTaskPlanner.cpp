@@ -1211,6 +1211,22 @@ void OnlineDCOPTaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
   }
 }
 
+
+void OnlineDCOPTaskPlanner::advertise_remove_vertex_service(ros::NodeHandle &nh)
+{
+  ROS_DEBUG_STREAM("Advertising remove_vertex service");
+  remove_vertex_service = nh.advertiseService("remove_vertex", &OnlineDCOPTaskPlanner::remove_vertex, this);
+  if (!remove_vertex_service)
+  {
+    ROS_ERROR_STREAM("Can't create remove_vertex service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("remove_vertex service advertised successfully");
+  }
+}
+
+
 void OnlineDCOPTaskPlanner::print_graph()
 {
   std::ofstream test("test-map.graph");
@@ -1238,6 +1254,45 @@ std::vector<std::vector<unsigned int>> OnlineDCOPTaskPlanner::build_graph()
 
   return result;
 }
+
+bool OnlineDCOPTaskPlanner::remove_vertex(logistic_sim::RemoveVertex::Request &msg, logistic_sim::RemoveVertex::Response &res)
+{
+  int result;
+  std::string time_str = current_time_str();
+  ROS_INFO_STREAM("Requested remotion of vertex " << msg.vertex_id);
+  log_ss << time_str << "\t"
+         << "Requested remotion of vertex " << msg.vertex_id
+         << "\n";
+
+  uint vertex_id = msg.vertex_id;
+  for (int i = 0; i < vertex_web[vertex_id].num_neigh; i++)
+  {
+    uint neigh_vertex_id = vertex_web[vertex_id].id_neigh[i];
+    ROS_INFO_STREAM("Requested remotion of edge (" << vertex_id << "," << neigh_vertex_id << ")");
+    result = RemoveEdge(vertex_web, dimension, vertex_id, neigh_vertex_id);
+    ROS_ERROR_STREAM_COND(result > 0, "Failed remotion!");
+    if (result == 0)
+    {
+      edges_mutex.lock();
+
+      logistic_sim::Edge e;
+      e.u = vertex_id;
+      e.v = neigh_vertex_id;
+      removed_edges.push_back(e);
+
+      edges_mutex.unlock();
+
+      res.result = true;
+      return true;
+    }
+    else
+    {
+      res.result = false;
+      return false;
+    }
+  }
+}
+
 
 bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res)
 {

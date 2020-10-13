@@ -473,6 +473,7 @@ void TaskPlanner::init(int argc, char **argv)
   advertise_robot_ready_service(nh);
   advertise_add_missions_service(nh);
   advertise_change_edge_service(nh);
+  advertise_remove_vertex_service(nh);
   initialize_amcl_callbacks(nh);
   generate_missions();
   initialize_stats_structure();
@@ -1030,6 +1031,12 @@ void TaskPlanner::advertise_add_missions_service(ros::NodeHandle &nh)
     ROS_INFO_STREAM("add_missions service advertised successfully");
   }
   ros::spinOnce();
+}
+
+
+void TaskPlanner::advertise_remove_vertex_service(ros::NodeHandle &nh)
+{
+
 }
 
 

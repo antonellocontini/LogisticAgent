@@ -1,6 +1,7 @@
 #pragma once
 #include "OnlineTaskPlanner.hpp"
 #include "logistic_sim/ChangeEdge.h"
+#include "logistic_sim/RemoveVertex.h"
 
 namespace onlinedcoptaskplanner
 {
@@ -47,6 +48,10 @@ protected:
   void print_graph();   // for test
   void advertise_change_edge_service(ros::NodeHandle &nh) override;
   bool change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res);
+
+  ros::ServiceServer remove_vertex_service;
+  void advertise_remove_vertex_service(ros::NodeHandle &nh) override;
+  bool remove_vertex(logistic_sim::RemoveVertex::Request &msg, logistic_sim::RemoveVertex::Response &res);
 
   // edges that must be removed in the next token cycle
   std::vector<logistic_sim::Edge> removed_edges, added_edges;
