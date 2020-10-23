@@ -17,6 +17,12 @@ struct edge_modification_plan
   const static int ADDITION = 0;
 };
 
+struct vertex_modification_plan
+{
+  uint vertex_id;
+  uint timestep;
+};
+
 class OnlineDCOPTaskPlanner : public onlinetaskplanner::OnlineTaskPlanner
 {
 public:
@@ -38,11 +44,14 @@ protected:
 
   std::list<edge_modification_plan> edge_list;
 
+  std::list<vertex_modification_plan> vertex_list;
+
   bool first_missions_sent = false;
   uint first_valid_timestep = 0;
 
   // std::chrono::system_clock::time_point last_edge_removal;
   ros::Time last_edge_removal;
+  ros::Time last_vertex_removal;
 
   ros::ServiceServer change_edge_service;
   void print_graph();   // for test

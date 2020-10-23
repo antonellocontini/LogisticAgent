@@ -89,13 +89,13 @@ void print_coalition(const t_coalition &coalition)
 ostream &operator<<(ostream &os, const MonitorData &md)
 {
   os << md.tot_distance << "," << md.interference_num << "," << md.completed_missions << "," << md.completed_tasks
-     << "," << md.total_time;
+     << "," << md.total_time << "," << md.total_steps;
   return os;
 }
 
 ostream &operator<<(ostream &os, const vector<MonitorData> &v)
 {
-  os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS,COMPLETED_TASKS,TOTAL_TIME" << endl;
+  os << "ID_ROBOT,TOT_DISTANCE,INTERFERENCE_NUM,COMPLETED_MISSIONS,COMPLETED_TASKS,TOTAL_TIME,TOTAL_STEPS" << endl;
   for (int i = 0; i < v.size(); i++)
   {
     os << i << "," << v[i] << endl;

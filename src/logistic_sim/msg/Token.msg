@@ -47,6 +47,7 @@ uint32[]    INTERFERENCE_COUNTER
 uint32[]    MISSIONS_COMPLETED
 uint32[]    TASKS_COMPLETED
 float32[]   TOTAL_DISTANCE
+uint32[]    TOTAL_STEPS
 # statistics for repair variants
 uint32      OBSTACLE_EVENTS
 uint32      SUCCESSFULL_SA_REPAIR

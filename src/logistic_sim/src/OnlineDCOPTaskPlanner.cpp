@@ -11,6 +11,7 @@
 #include "mapf.hpp"
 
 #define EDGE_REMOVAL_TEST false
+#define VERTEX_REMOVAL_TEST true
 
 namespace onlinedcoptaskplanner
 {
@@ -517,6 +518,13 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
                   { 0, 1, 50, edge_modification_plan::REMOVAL },
                   { 42, 46, 60, edge_modification_plan::REMOVAL },
                   { 30, 31, 80, edge_modification_plan::REMOVAL } };
+    /*vertex_list = { {38, 20},
+                    {7, 40},
+                    {52, 50} };*/
+    vertex_list = { {47, 20},
+                    {48, 40},
+                    {28, 50},
+                    {7, 60} };
   }
   else if (mapname == "grid")
   {
@@ -810,6 +818,41 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
           }
         }
       }
+
+      // simulate edge removal at fixed time steps
+      if (VERTEX_REMOVAL_TEST)
+      {
+        logistic_sim::RemoveVertexRequest req;
+        logistic_sim::RemoveVertexResponse res;
+        uint current_goal_status = *std::max_element(msg->GOAL_STATUS.begin(), msg->GOAL_STATUS.end());
+        uint timestep = current_goal_status - first_valid_timestep;
+        // auto current_time = std::chrono::system_clock::now();
+        ros::Time current_time = ros::Time::now();
+        ros::Duration diff = current_time - last_vertex_removal;
+        // std::chrono::duration<double> diff = current_time - last_edge_removal;
+        if (first_valid_timestep != 0 && diff.toSec() >= 10.0 && !vertex_list.empty())
+        {
+          for (auto it = vertex_list.begin(); it != vertex_list.end(); )
+          {
+            const vertex_modification_plan &vertex = *it;
+            if (timestep >= vertex.timestep)
+            {
+              
+              ROS_INFO_STREAM("Removing vertex (" << vertex.vertex_id << ") at timestep " << timestep);
+              req.vertex_id = vertex.vertex_id;
+              
+              remove_vertex(req, res);
+              last_vertex_removal = current_time;
+              // edge_list.pop_front();
+              it = vertex_list.erase(it);
+            }
+            else
+            {
+              it++;
+            }
+          }
+        }
+      }
       // if (!first_missions_sent)
       // {
       //   first_valid_timestep = msg->GOAL_STATUS[0];
@@ -833,6 +876,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       robots_data[i].completed_tasks = token.TASKS_COMPLETED[i];
       robots_data[i].tot_distance = token.TOTAL_DISTANCE[i];
       robots_data[i].total_time = (ros::Time::now() - start_time).sec;
+      robots_data[i].total_steps = token.TOTAL_STEPS[i];
     }
 
     // at shutdown stats must be written on disk

@@ -54,6 +54,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
     token.MISSIONS_COMPLETED.push_back(0);
     token.TASKS_COMPLETED.push_back(0);
     token.TOTAL_DISTANCE.push_back(0.0f);
+    token.TOTAL_STEPS.push_back(0);
     token.X_POS.push_back(0.0);
     token.Y_POS.push_back(0.0);
     token.GOAL_STATUS.push_back(0);
@@ -342,6 +343,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
       }
     }
     token.TOTAL_DISTANCE[ID_ROBOT] += edge_length;
+    token.TOTAL_STEPS[ID_ROBOT] += 1;
 
     if (token.TRAILS[ID_ROBOT].PATH.size() > 1)
     {
@@ -367,7 +369,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
           break;
         }
       }
-
+      
       if (can_exit && !interactive_mode)
       {
         c_print("Finiti tutti i task, esco!", magenta, P);
