@@ -83,7 +83,12 @@ There is only one map called `icelab_room`, but its possible to create new ones.
 The agent offers a ROS service called `goto_pos`, which accept a message that takes in input the (x,y) coordinates that the robots must reach and the desired orientation angle in radians.
 `rosservice` can be used to call this service and give commands to the mobile base.
 
-`rosservice call /patrol_rbkairos/goto_pos "x: 0.18 y: -13.5 theta: -1.57"`
+```
+rosservice call /patrol_rbkairos/goto_pos "x: 0.18
+y: -13.5
+theta: -1.57"
+```
+N.B. do not copy this command
 
 There is also a `cancel_goto` service that can be used to cancel the last goal given to the robot.
 
