@@ -88,7 +88,6 @@ rosservice call /patrol_rbkairos/goto_pos "x: 0.18
 y: -13.5
 theta: -1.57"
 ```
-N.B. do not copy this command
 
 There is also a `cancel_goto` service that can be used to cancel the last goal given to the robot.
 
