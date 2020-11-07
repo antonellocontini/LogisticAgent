@@ -12,6 +12,7 @@
 
 #define EDGE_REMOVAL_TEST false
 #define VERTEX_REMOVAL_TEST true
+#define VERTEX_ADDITION_TEST true
 
 namespace onlinedcoptaskplanner
 {
@@ -521,10 +522,12 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
     /*vertex_list = { {38, 20},
                     {7, 40},
                     {52, 50} };*/
+
     vertex_list = { {47, 20},
                     {48, 40},
                     {28, 50},
                     {7, 60} };
+
   }
   else if (mapname == "grid")
   {
@@ -819,7 +822,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
         }
       }
 
-      // simulate edge removal at fixed time steps
+      // simulate vertex removal at fixed time steps
       if (VERTEX_REMOVAL_TEST)
       {
         logistic_sim::RemoveVertexRequest req;
@@ -853,6 +856,8 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
           }
         }
       }
+
+
       // if (!first_missions_sent)
       // {
       //   first_valid_timestep = msg->GOAL_STATUS[0];
@@ -1270,6 +1275,20 @@ void OnlineDCOPTaskPlanner::advertise_remove_vertex_service(ros::NodeHandle &nh)
   }
 }
 
+void OnlineDCOPTaskPlanner::advertise_add_vertex_service(ros::NodeHandle &nh)
+{
+  ROS_DEBUG_STREAM("Advertising add_vertex service");
+  add_vertex_service = nh.advertiseService("add_vertex", &OnlineDCOPTaskPlanner::add_vertex, this);
+  if (!add_vertex_service)
+  {
+    ROS_ERROR_STREAM("Can't create add_vertex service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("add_vertex service advertised successfully");
+  }
+}
+
 
 void OnlineDCOPTaskPlanner::print_graph()
 {
@@ -1298,6 +1317,7 @@ std::vector<std::vector<unsigned int>> OnlineDCOPTaskPlanner::build_graph()
 
   return result;
 }
+
 
 bool OnlineDCOPTaskPlanner::remove_vertex(logistic_sim::RemoveVertex::Request &msg, logistic_sim::RemoveVertex::Response &res)
 {
@@ -1335,6 +1355,49 @@ bool OnlineDCOPTaskPlanner::remove_vertex(logistic_sim::RemoveVertex::Request &m
       return false;
     }
   }
+}
+
+
+bool OnlineDCOPTaskPlanner::add_vertex(logistic_sim::AddVertex::Request &msg, logistic_sim::AddVertex::Response &res)
+{
+  int result;
+  
+  ROS_INFO_STREAM("Requested addition of vertex " << msg.vertex_to_add);
+
+  if(sizeof(msg.connected_vertex) != sizeof(msg.edge_cost)){
+    ROS_ERROR_STREAM("Failed addition. List's size is not equal.");
+    return false;
+  }
+
+  for (int i = 0; i < sizeof(msg.connected_vertex); i++)
+  {
+    int vertex_to_connect = msg.connected_vertex[i];
+    int cost = msg.edge_cost[i];
+    result = AddEdge(vertex_web, dimension, msg.vertex_to_add, vertex_to_connect, cost);
+    ROS_ERROR_STREAM_COND(result > 0, "Failed addition!");
+
+    if (result == 0)
+    {
+      edges_mutex.lock();
+
+      logistic_sim::Edge e;
+      e.u = msg.vertex_to_add;
+      e.v = vertex_to_connect;
+      added_edges.push_back(e);
+
+      edges_mutex.unlock();
+
+      res.result = true;
+      return true;
+    }
+    else
+    {
+      res.result = false;
+      return false;
+    }
+
+  }
+
 }
 
 

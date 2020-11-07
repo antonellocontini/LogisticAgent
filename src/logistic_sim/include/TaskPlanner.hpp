@@ -188,6 +188,8 @@ protected:
   void advertise_add_missions_service(ros::NodeHandle &nh);
   virtual void advertise_change_edge_service(ros::NodeHandle &nh);  // empty implementation, used by DCOPTaskPlanner
   virtual void advertise_remove_vertex_service(ros::NodeHandle &nh);  // empty implementation, used by DCOPTaskPlanner
+  virtual void advertise_add_vertex_service(ros::NodeHandle &nh);  // empty implementation, used by DCOPTaskPlanner
+
 
   bool add_missions(logistic_sim::AddMissions::Request &msg, logistic_sim::AddMissions::Response &res);
 

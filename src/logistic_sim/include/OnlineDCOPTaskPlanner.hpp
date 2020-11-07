@@ -2,6 +2,7 @@
 #include "OnlineTaskPlanner.hpp"
 #include "logistic_sim/ChangeEdge.h"
 #include "logistic_sim/RemoveVertex.h"
+#include "logistic_sim/AddVertex.h"
 
 namespace onlinedcoptaskplanner
 {
@@ -17,11 +18,13 @@ struct edge_modification_plan
   const static int ADDITION = 0;
 };
 
+//For vertex Removal
 struct vertex_modification_plan
 {
   uint vertex_id;
   uint timestep;
 };
+
 
 class OnlineDCOPTaskPlanner : public onlinetaskplanner::OnlineTaskPlanner
 {
@@ -61,6 +64,11 @@ protected:
   ros::ServiceServer remove_vertex_service;
   void advertise_remove_vertex_service(ros::NodeHandle &nh) override;
   bool remove_vertex(logistic_sim::RemoveVertex::Request &msg, logistic_sim::RemoveVertex::Response &res);
+
+  ros::ServiceServer add_vertex_service;
+  void advertise_add_vertex_service(ros::NodeHandle &nh) override;
+  bool add_vertex(logistic_sim::AddVertex::Request &msg, logistic_sim::AddVertex::Response &res);
+
 
   // edges that must be removed in the next token cycle
   std::vector<logistic_sim::Edge> removed_edges, added_edges;

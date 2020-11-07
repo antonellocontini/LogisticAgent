@@ -259,26 +259,6 @@ int RemoveEdge_impl (vertex *vertex_web, uint dimension, uint u, uint v)
 }
 
 
-int RemoveVertex(vertex *vertex_web, uint dimension, uint vertex_id)
-{
-	ROS_DEBUG_STREAM("Removing edges connected to the vertex");
-	// check neighbour states
-	for (int i = 0; i < vertex_web[vertex_id].num_neigh; i++)
-	{
-		uint neigh_vertex_id = vertex_web[vertex_id].id_neigh[i];
-		ROS_DEBUG_STREAM("Removing forward edge - vertex: " + neigh_vertex_id);
-		int result = RemoveEdge_impl(vertex_web, dimension, vertex_id, neigh_vertex_id);
-		if (result != 0)
-		{
-			return result;
-		}
-		ROS_DEBUG_STREAM("Removing backward edge - vertex: " + neigh_vertex_id);
-		result = RemoveEdge_impl(vertex_web, dimension, neigh_vertex_id, vertex_id);
-		return result;
-	}
-}
-
-
 int RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v)
 {
   // if (dimension <= u || dimension <= v)

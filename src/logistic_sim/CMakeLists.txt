@@ -71,6 +71,7 @@ add_service_files(
    AddMissions.srv
    ChangeEdge.srv
    RemoveVertex.srv
+   AddVertex.srv
 )
 
 ## Generate actions in the 'action' folder

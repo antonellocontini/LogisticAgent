@@ -1,0 +1,5 @@
+uint32 vertex_to_add
+uint32[] connected_vertex
+uint32[] edge_cost
+---
+bool result
