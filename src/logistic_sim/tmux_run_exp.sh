@@ -2,10 +2,13 @@
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=false
-USE_KAIROS=false
+USE_KAIROS_A=false
+USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
-KAIROS_NAME=robot
-KAIROS_FRAME=robot_map
+KAIROS_NAME_A=fufi
+KAIROS_FRAME_A=fufi_map
+KAIROS_NAME_B=cram
+KAIROS_FRAME_B=cram_map
 INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=icelab_room
@@ -52,13 +55,13 @@ function prepare_tmux {
 function launch_ros {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	if [ "$USE_KAIROS" = "false" ]; then
+	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 		tmux send-keys "roscore &" C-m
 		echo "Launching roscore..."
 	fi
 		until rostopic list &> /dev/null; do sleep 1; done
 		echo "Setting ROS parameters..."
-	if [ "$USE_KAIROS" = "false" ]; then
+	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 		tmux send-keys "rosparam set /use_sim_time True" C-m
 	fi
 		tmux send-keys "rosparam set /navigation_module $NAV" C-m
@@ -83,7 +86,7 @@ function launch_kairos_planner_agents {
 }
 
 function launch_stage {
-	if [ "$USE_KAIROS" = "false" ]; then 
+	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then 
 		tmux selectw -t $SESSION:0
 		tmux selectp -t $SESSION:0.0
 		tmux send-keys "roslaunch logistic_sim map.launch map:=$MAP --wait" C-m
@@ -97,7 +100,7 @@ function launch_robots {
 	n=$(( NROBOTS - 1 ))
 	for i in $(seq 0 $n); do
 		tmux selectp -t $SESSION:1.$i
-		if [ "$USE_KAIROS" = "false" ]; then
+		if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 			if [ "$LOC" = "AMCL" ]; then
 				tmux send-keys "roslaunch logistic_sim robot.launch robotname:=robot_$i mapname:=$MAP use_amcl:=true use_move_base:=true --wait" C-m
 			else
@@ -131,11 +134,22 @@ function launch_taskplanner {
 	sleep 5
 }
 
+# function requires two parameters
+# 1. kairos name
+# 2. kairos map frame
+# 3. order value
 function launch_real_kairos_agent {
+	if [ ! $# -eq 3 ]; then
+		return 1
+	fi
+	if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
+		return 2
+	fi
+	if 
 	tmux selectw -t $SESSION:2
 	echo "Launching agent..."
-	tmux selectp -t $SESSION:2.$i
-	tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP map_frame:=$KAIROS_FRAME agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$i robot_name:=$KAIROS_NAME agent_name:=patrol_robot$i interactive_mode:=$INTERACTIVE_MODE --wait" C-m
+	tmux selectp -t $SESSION:2.$3
+	tmux send-keys "roslaunch logistic_sim agent.launch mapname:=$MAP map_frame:=$2 agents_type:=$ALG agents_number:=$NROBOTS robots_capacity:=$CAPACITY debug_mode:=$DEBUG robot_order:=$3 robot_name:=$1 agent_name:=patrol_robot$3 interactive_mode:=$INTERACTIVE_MODE --wait" C-m
 	tmux select-layout tiled
 }
 
@@ -187,10 +201,15 @@ else
 	launch_stage
 	launch_robots
 	launch_taskplanner
-	if [ "$USE_KAIROS" = "true" ]; then
-		launch_real_kairos_agent
-	else
+	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 		launch_agents
+	else
+		if [ "$USE_KAIROS_A" = "true" ]; then
+			launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" 0
+		fi
+		if [ "$USE_KAIROS_B" = "true" ]; then
+			launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" 1
+		fi
 	fi
 	set_footprints
 fi
