@@ -2,7 +2,7 @@
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=false
-USE_KAIROS_A=false
+USE_KAIROS_A=true
 USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
@@ -11,7 +11,7 @@ KAIROS_NAME_B=cram
 KAIROS_FRAME_B=cram_map
 INTERACTIVE_MODE=true
 SESSION=log_sim
-MAP=icelab_room
+MAP=ice_full_20201005
 NROBOTS=1
 INITPOS=default
 ALG=OnlineDCOPAgent
@@ -55,14 +55,16 @@ function prepare_tmux {
 function launch_ros {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
+	#if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 		tmux send-keys "roscore &" C-m
 		echo "Launching roscore..."
-	fi
+	#fi
 		until rostopic list &> /dev/null; do sleep 1; done
 		echo "Setting ROS parameters..."
 	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 		tmux send-keys "rosparam set /use_sim_time True" C-m
+	else
+		tmux send-keys "rosparam set /use_sim_time False" C-m
 	fi
 		tmux send-keys "rosparam set /navigation_module $NAV" C-m
 	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
@@ -145,7 +147,6 @@ function launch_real_kairos_agent {
 	if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
 		return 2
 	fi
-	if 
 	tmux selectw -t $SESSION:2
 	echo "Launching agent..."
 	tmux selectp -t $SESSION:2.$3

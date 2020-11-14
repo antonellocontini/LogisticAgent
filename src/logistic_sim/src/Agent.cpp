@@ -69,9 +69,11 @@ void Agent::init(int argc, char **argv)
     ros::NodeHandle nh;
 
     // wait a random time (avoid conflicts with other robots starting at the same time...)
+    ROS_INFO_STREAM("Random wait...");
     double r = 3.0 * ((rand() % 1000) / 1000.0);
     ros::Duration wait(r); // seconds
     wait.sleep();
+    ROS_INFO_STREAM("Wait completed");
 
     double initial_x, initial_y;
     std::vector<double> list;
@@ -444,6 +446,7 @@ void Agent::sendGoal(int next_vertex)
     goal.target_pose.pose.position.x = target_x;    // vertex_web[current_vertex].x;
     goal.target_pose.pose.position.y = target_y;    // vertex_web[current_vertex].y;
     goal.target_pose.pose.orientation = angle_quat; //doesn't matter really.
+    ROS_INFO_STREAM("Sending goal to (" << target_x << "," << target_y << ") in frame " << mapframe);
     ac->sendGoal(goal, boost::bind(&Agent::goalDoneCallback, this, _1, _2), boost::bind(&Agent::goalActiveCallback, this), boost::bind(&Agent::goalFeedbackCallback, this, _1));
 }
 
