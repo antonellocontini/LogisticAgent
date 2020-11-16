@@ -1289,6 +1289,20 @@ void OnlineDCOPTaskPlanner::advertise_add_vertex_service(ros::NodeHandle &nh)
   }
 }
 
+void OnlineDCOPTaskPlanner::advertise_add_vertex_by_coordinates_service(ros::NodeHandle &nh)
+{
+  ROS_DEBUG_STREAM("Advertising add_vertex_by_coordinates service");
+  add_vertex_by_coordinates_service = nh.advertiseService("add_vertex_by_coordinates", &OnlineDCOPTaskPlanner::add_vertex_by_coordinates, this);
+  if (!add_vertex_by_coordinates_service)
+  {
+    ROS_ERROR_STREAM("Can't create add_vertex_by_coordinates service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("add_vertex_by_coordinates service advertised successfully");
+  }
+}
+
 
 void OnlineDCOPTaskPlanner::print_graph()
 {
@@ -1329,9 +1343,10 @@ bool OnlineDCOPTaskPlanner::remove_vertex(logistic_sim::RemoveVertex::Request &m
          << "\n";
 
   uint vertex_id = msg.vertex_id;
-  for (int i = 0; i < vertex_web[vertex_id].num_neigh; i++)
+  uint num_neigh = vertex_web[vertex_id].num_neigh;
+  for (int i = 0; i < num_neigh; i++)
   {
-    uint neigh_vertex_id = vertex_web[vertex_id].id_neigh[i];
+    uint neigh_vertex_id = vertex_web[vertex_id].id_neigh[0];
     ROS_INFO_STREAM("Requested remotion of edge (" << vertex_id << "," << neigh_vertex_id << ")");
     result = RemoveEdge(vertex_web, dimension, vertex_id, neigh_vertex_id);
     ROS_ERROR_STREAM_COND(result > 0, "Failed remotion!");
@@ -1347,7 +1362,7 @@ bool OnlineDCOPTaskPlanner::remove_vertex(logistic_sim::RemoveVertex::Request &m
       edges_mutex.unlock();
 
       res.result = true;
-      return true;
+
     }
     else
     {
@@ -1355,6 +1370,7 @@ bool OnlineDCOPTaskPlanner::remove_vertex(logistic_sim::RemoveVertex::Request &m
       return false;
     }
   }
+  return true;
 }
 
 
@@ -1369,7 +1385,7 @@ bool OnlineDCOPTaskPlanner::add_vertex(logistic_sim::AddVertex::Request &msg, lo
     return false;
   }
 
-  for (int i = 0; i < sizeof(msg.connected_vertex); i++)
+  for (int i = 0; i < msg.num_neigh; i++)
   {
     int vertex_to_connect = msg.connected_vertex[i];
     int cost = msg.edge_cost[i];
@@ -1388,7 +1404,84 @@ bool OnlineDCOPTaskPlanner::add_vertex(logistic_sim::AddVertex::Request &msg, lo
       edges_mutex.unlock();
 
       res.result = true;
-      return true;
+    }
+    else
+    {
+      res.result = false;
+      return false;
+    }
+
+  }
+  return true;
+
+}
+
+
+bool OnlineDCOPTaskPlanner::add_vertex_by_coordinates(logistic_sim::AddVertexCoordinates::Request &msg, logistic_sim::AddVertexCoordinates::Response &res)
+{
+  int result;
+
+  ROS_INFO_STREAM("Requested addition of vertex " << msg.vertex_id);
+
+  for (int i = 0; i < dimension; i++)
+  {
+    if (vertex_web[i].id == msg.vertex_id)
+    {
+      ROS_ERROR_STREAM("The vertex is already in the graph.");
+      return false;
+    }
+  }
+
+  if(sizeof(msg.connected_vertex) != sizeof(msg.edge_cost)){
+    ROS_ERROR_STREAM("Failed addition. List's size is not equal.");
+    return false;
+  }
+
+  // Adding vertex to vertex web
+  ROS_INFO_STREAM("Adding vertex to vertex_web");
+  vertex_web = AddVertexCoord(vertex_web, dimension, msg.vertex_id, msg.x, msg.y);
+
+  if (result != 0 ) {
+    ROS_ERROR_STREAM("Failed vertex addition.");
+    return false;
+  }
+
+  dimension = dimension + 1;
+  vertex_mutex.lock();
+
+  logistic_sim::Vertex v;
+  v.id = msg.vertex_id;
+  v.x = msg.x;
+  v.y = msg.y;
+  added_vertex.push_back(v);
+
+  vertex_mutex.unlock();
+
+  // Test
+  print_graph();
+
+
+  ROS_DEBUG_STREAM("Adding edges to the new vertex");
+  for (int i = 0; i < msg.num_neigh; i++)
+  {
+    int vertex_to_connect = msg.connected_vertex[i];
+    int cost = msg.edge_cost[i];
+    ROS_DEBUG_STREAM("Vertex to connect: " + vertex_to_connect);
+    result = AddEdge(vertex_web, dimension, msg.vertex_id, vertex_to_connect, cost);
+    ROS_ERROR_STREAM_COND(result > 0, "Failed addition!");
+
+    if (result == 0)
+    {
+      edges_mutex.lock();
+
+      logistic_sim::Edge e;
+      e.u = msg.vertex_id;
+      e.v = vertex_to_connect;
+      added_edges.push_back(e);
+
+      edges_mutex.unlock();
+
+      res.result = true;
     }
     else
     {
@@ -1398,7 +1491,13 @@ bool OnlineDCOPTaskPlanner::add_vertex(logistic_sim::AddVertex::Request &msg, lo
 
   }
 
+  // Test
+  print_graph();
+  
+  return true;
+
 }
+
 
 
 bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res)

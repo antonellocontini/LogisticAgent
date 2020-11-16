@@ -62,6 +62,7 @@ add_message_files(
   Mission.msg
   Path.msg
   Waypoints.msg
+  Vertex.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -72,6 +73,7 @@ add_service_files(
    ChangeEdge.srv
    RemoveVertex.srv
    AddVertex.srv
+   AddVertexCoordinates.srv
 )
 
 ## Generate actions in the 'action' folder

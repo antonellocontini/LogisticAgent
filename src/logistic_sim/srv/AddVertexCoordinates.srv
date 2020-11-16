@@ -1,4 +1,6 @@
-uint32 vertex_to_add
+uint32 vertex_id
+uint32 x
+uint32 y
 uint32 num_neigh
 uint32[] connected_vertex
 uint32[] edge_cost

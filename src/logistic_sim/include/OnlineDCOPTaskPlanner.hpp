@@ -3,6 +3,7 @@
 #include "logistic_sim/ChangeEdge.h"
 #include "logistic_sim/RemoveVertex.h"
 #include "logistic_sim/AddVertex.h"
+#include "logistic_sim/AddVertexCoordinates.h"
 
 namespace onlinedcoptaskplanner
 {
@@ -69,10 +70,16 @@ protected:
   void advertise_add_vertex_service(ros::NodeHandle &nh) override;
   bool add_vertex(logistic_sim::AddVertex::Request &msg, logistic_sim::AddVertex::Response &res);
 
+  ros::ServiceServer add_vertex_by_coordinates_service;
+  void advertise_add_vertex_by_coordinates_service(ros::NodeHandle &nh) override;
+  bool add_vertex_by_coordinates(logistic_sim::AddVertexCoordinates::Request &msg, logistic_sim::AddVertexCoordinates::Response &res);
+
 
   // edges that must be removed in the next token cycle
   std::vector<logistic_sim::Edge> removed_edges, added_edges;
+  std::vector<logistic_sim::Vertex> added_vertex;
   boost::mutex edges_mutex; // used to avoid conflicts with the token thread and the main thread
+  boost::mutex vertex_mutex; // used to avoid conflicts with the token thread and the main thread
 
   std::vector<bool> _check_conflict_free_impl(uint task_endpoint, std::vector<uint> *homes = nullptr);
   bool check_conflict_free_property(std::vector<uint> *homes = nullptr, double *reachability_factor = nullptr, bool print = true);

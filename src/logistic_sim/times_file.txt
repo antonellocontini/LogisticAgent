@@ -592,3 +592,161 @@ aggregation:	18.3504
 allocation:	0.200885
 aggregation:	17.6102
 allocation:	0.200426
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.2324
+allocation:	0.899705
+aggregation:	20.8056
+allocation:	0.199205
+aggregation:	19.6235
+allocation:	0.199988
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	18.2877
+allocation:	0.199771
+aggregation:	18.7535
+allocation:	0.199802
+aggregation:	16.868
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	21.1003
+allocation:	0.800833
+aggregation:	20.9262
+allocation:	0.199325
+aggregation:	20.1204
+allocation:	0.19994
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.5746
+aggregation:	21.1403
+aggregation:	20.0667
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.8309
+allocation:	0.199995
+aggregation:	20.722
+allocation:	0.199701
+aggregation:	20.1423
+allocation:	0.200886
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.5446
+allocation:	0.199582
+aggregation:	20.621
+allocation:	0.200212
+aggregation:	19.7181
+allocation:	0.499736
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.5625
+allocation:	0.200287
+aggregation:	20.6004
+allocation:	0.199689
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.4465
+allocation:	0.200141
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.3665
+allocation:	0.199393
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.5137
+aggregation:	20.9986
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	23.1755
+allocation:	0.200023
+aggregation:	21.0566
+allocation:	0.20046
+aggregation:	17.6524
+allocation:	0.200029
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	31.0707
+allocation:	0.200216
+aggregation:	18.537
+allocation:	0.199287
+aggregation:	17.5393
+allocation:	0.199315
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	18.1061
+allocation:	0.199377
+aggregation:	18.4774
+allocation:	0.199918
+aggregation:	17.4515
+allocation:	0.199652
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	18.1698
+allocation:	0.199925
+aggregation:	18.4801
+allocation:	0.199982
+aggregation:	17.4484
+allocation:	0.199043
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	17.9947
+allocation:	0.200444
+aggregation:	18.4799
+allocation:	0.199385
+aggregation:	17.4576
+allocation:	0.200063
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	18.1502
+allocation:	0.899895
+aggregation:	18.5534
+allocation:	0.900128
+aggregation:	17.4737
+allocation:	0.204596
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	18.1472
+allocation:	0.799844
+aggregation:	19.4517
+allocation:	0.199564
+aggregation:	17.8903
+allocation:	0.203931
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	18.089
+allocation:	0.200036
+aggregation:	18.4189
+allocation:	0.200524
+aggregation:	17.5812
+allocation:	0.204527
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.1195
+allocation:	0.199509
+aggregation:	20.3972
+allocation:	0.202575
+aggregation:	19.8745
+allocation:	0.199974
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.3825
+allocation:	0.198206
+aggregation:	20.6025
+allocation:	0.198161
+aggregation:	19.6825
+allocation:	0.197588
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.389
+allocation:	0.199333
+aggregation:	20.6442
+allocation:	0.200057
+aggregation:	19.5767
+allocation:	0.200829
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_2_1.txt
+aggregation:	20.4842
+allocation:	0.900173
+aggregation:	20.5656
+allocation:	0.201337
+aggregation:	19.7248
+allocation:	0.199783

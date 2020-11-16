@@ -353,6 +353,40 @@ int AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
 }
 
 
+
+
+vertex *AddVertexCoord (vertex *vertex_web, uint dimension, uint vertex_id, uint x, uint y)
+{
+	// add position in the vertex_web array
+	vertex *new_vertex_web = new vertex[dimension + 1];
+
+	for (int i = 0; i < dimension; i++)
+	{
+		new_vertex_web[i] = vertex_web[i];
+	}
+
+	new_vertex_web[dimension].id = vertex_id;
+	new_vertex_web[dimension].num_neigh = 0;
+	new_vertex_web[dimension].x = x;
+	new_vertex_web[dimension].y = y;
+
+	//vertex_web = new vertex[dimension +1];
+
+	/*for (int i = 0; i < dimension +1; i++)
+	{
+		vertex_web[i] = new_vertex_web[i];
+	}*/
+
+	return new_vertex_web;
+
+}
+
+
+
+
+
+
+
 //integer to array (itoa for linux c)
 char *itoa(int value, char *str, int radix)
 {
