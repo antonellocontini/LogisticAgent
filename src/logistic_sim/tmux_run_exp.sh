@@ -2,7 +2,7 @@
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=false
-USE_KAIROS_A=true
+USE_KAIROS_A=false
 USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
@@ -208,11 +208,11 @@ else
 		launch_agents
 	else
 		if [ "$USE_KAIROS_A" = "true" ]; then
-			echo "Waiting for real Kairos A"
+			tmux send-keys "echo 'Waiting for real Kairos A'" C-m
 			#launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" "$KAIROS_ORDER_A"
 		fi
 		if [ "$USE_KAIROS_B" = "true" ]; then
-			echo "Waiting for real Kairos B"
+			tmux send-keys "echo 'Waiting for real Kairos B'" C-m
 			#launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" "$KAIROS_ORDER_B"
 		fi
 	fi
