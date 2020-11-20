@@ -93,7 +93,7 @@ void Agent::init(int argc, char **argv)
             reading_initial_kairos_pose = false;
             initial_x = initial_kairos_x;
             initial_y = initial_kairos_y;
-            ROS_INFO("Initial pose read from kairos coordinates");
+            ROS_INFO_STREAM("Initial pose read from kairos coordinates: " << initial_x << " " << initial_y);
         } else {
             ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
             ros::shutdown();
@@ -103,16 +103,16 @@ void Agent::init(int argc, char **argv)
     else
     {
         ROS_INFO_STREAM("initial_pos list read correctly");
+        int value = ID_ROBOT;
+        if (value == -1)
+        {
+            value = 0;
+        }
+
+        initial_x = list[2 * value];
+        initial_y = list[2 * value + 1];
     }
 
-    int value = ID_ROBOT;
-    if (value == -1)
-    {
-        value = 0;
-    }
-
-    initial_x = list[2 * value];
-    initial_y = list[2 * value + 1];
 
     //   printf("initial position: x = %f, y = %f\n", initial_x, initial_y);
     current_vertex = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
