@@ -113,7 +113,8 @@ include_directories(
   include
   # src
   ${catkin_INCLUDE_DIRS}
-  ../../lib
+  #../../lib
+  lib
 )
 
 ############
