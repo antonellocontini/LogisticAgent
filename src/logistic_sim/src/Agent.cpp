@@ -437,6 +437,13 @@ void Agent::sendGoal(int next_vertex)
     //Send the goal to the robot (Global Map)
     geometry_msgs::Quaternion angle_quat;
     auto it = vertex_theta.find(next_vertex);
+    if (current_vertex >= 0 && current_vertex == next_vertex)
+    {
+        ROS_INFO("Already on goal...");
+        goal_complete = true;
+        goal_success = true;
+        return;
+    }
     if (it != vertex_theta.end())
     {
       angle_quat = tf::createQuaternionMsgFromYaw(it->second);
