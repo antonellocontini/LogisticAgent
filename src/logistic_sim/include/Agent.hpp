@@ -41,6 +41,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Pose.h>
 #include <ros/package.h> //to get pkg path
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
@@ -152,6 +153,10 @@ protected:
     std::map<uint, double> vertex_theta;
 
     bool interactive_mode;
+
+    // for reading kairos initial pose
+    bool reading_initial_kairos_pose = true;
+    double initial_kairos_x = -1, initial_kairos_y = -1;
 public:
   Agent()
   {
@@ -163,6 +168,7 @@ public:
   }
 
   virtual void init(int argc, char **argv);
+  void kairos_pose_callback(const geometry_msgs::Pose::ConstPtr &msg);
   void set_map_endpoints(ros::NodeHandle &nh);
   void ready();
   virtual void run();

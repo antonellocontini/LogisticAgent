@@ -84,11 +84,26 @@ void Agent::init(int argc, char **argv)
 
     if (list.empty())
     {
-        ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
-        ros::shutdown();
-        exit(-1);
+        ROS_WARN("No initial pose given from paremeter, checking KAIROS robot coordinates...");
+        ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::Pose>(robotname + "/robot_pose", 1, boost::bind(&Agent::kairos_pose_callback, this, _1));
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
+        ros::Duration(0.5).sleep();
+        if (initial_kairos_x != -1 && initial_kairos_y != -1) {
+            reading_initial_kairos_pose = false;
+            initial_x = initial_kairos_x;
+            initial_y = initial_kairos_y;
+            ROS_INFO("Initial pose read from kairos coordinates");
+        } else {
+            ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+            ros::shutdown();
+            exit(-1);
+        }
     }
-    ROS_INFO_STREAM("initial_pos list read correctly");
+    else
+    {
+        ROS_INFO_STREAM("initial_pos list read correctly");
+    }
 
     int value = ID_ROBOT;
     if (value == -1)
@@ -168,6 +183,13 @@ void Agent::init(int argc, char **argv)
     }
 
     c_print("End of initialization, reading parameters", green, P);
+}
+
+void Agent::kairos_pose_callback(const geometry_msgs::Pose::ConstPtr &msg) {
+    if (reading_initial_kairos_pose) {
+        initial_kairos_x = msg->position.x;
+        initial_kairos_y = msg->position.y;
+    }
 }
 
 void Agent::set_map_endpoints(ros::NodeHandle &nh)

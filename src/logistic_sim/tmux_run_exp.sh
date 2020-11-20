@@ -2,7 +2,7 @@
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=false
-USE_KAIROS_A=false
+USE_KAIROS_A=true
 USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
@@ -14,7 +14,7 @@ KAIROS_ORDER_B=1
 INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=ice_full_20201005
-NROBOTS=2
+NROBOTS=1
 INITPOS=default
 ALG=OnlineDCOPAgent
 #LOC=AMCL
@@ -208,10 +208,12 @@ else
 		launch_agents
 	else
 		if [ "$USE_KAIROS_A" = "true" ]; then
-			launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" "$KAIROS_ORDER_A"
+			echo "Waiting for real Kairos A"
+			#launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" "$KAIROS_ORDER_A"
 		fi
 		if [ "$USE_KAIROS_B" = "true" ]; then
-			launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" "$KAIROS_ORDER_B"
+			echo "Waiting for real Kairos B"
+			#launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" "$KAIROS_ORDER_B"
 		fi
 	fi
 	set_footprints
