@@ -2,17 +2,19 @@
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=false
-USE_KAIROS_A=true
+USE_KAIROS_A=false
 USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
 KAIROS_FRAME_A=fufi_map
 KAIROS_NAME_B=cram
 KAIROS_FRAME_B=cram_map
+KAIROS_ORDER_A=0
+KAIROS_ORDER_B=1
 INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=ice_full_20201005
-NROBOTS=1
+NROBOTS=2
 INITPOS=default
 ALG=OnlineDCOPAgent
 #LOC=AMCL
@@ -120,7 +122,7 @@ function launch_robots {
 
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
-	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=true --wait" C-m
+	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=false --wait" C-m
 	# if [ $DEBUG = true ] ; then
 	# 	if [ -f "commands_taskplanner.txt" ] ; then
 	# 		echo "Debug mode activated, gdb commands from file..."
@@ -206,10 +208,10 @@ else
 		launch_agents
 	else
 		if [ "$USE_KAIROS_A" = "true" ]; then
-			launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" 0
+			launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" "$KAIROS_ORDER_A"
 		fi
 		if [ "$USE_KAIROS_B" = "true" ]; then
-			launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" 1
+			launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" "$KAIROS_ORDER_B"
 		fi
 	fi
 	set_footprints
