@@ -28,6 +28,8 @@ uint GetNumberEdges (vertex *vertex_web, uint dimension);
 int RemoveEdge (vertex *vertex_web, uint dimension, uint u, uint v);
 
 int AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost);
+
+vertex* AddVertexCoord (vertex *vertex_web, uint dimension, uint u, uint v, uint cost);
   
 //integer to array (itoa for linux c)
 char* itoa(int value, char* str, int radix);

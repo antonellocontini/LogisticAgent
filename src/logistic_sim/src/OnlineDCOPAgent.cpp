@@ -75,6 +75,27 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
   else if (msg->REPAIR)
   {
+    if (!msg->REMOVED_VERTEX.empty() || !msg->ADDED_VERTEX.empty())
+    {
+      for (const logistic_sim::Vertex &v : msg->REMOVED_VERTEX)
+      {
+        //-------------------------------------------------------------------------------------
+        // TODO
+        //-------------------------------------------------------------------------------------
+        /*int result = RemoveEdge(vertex_web, dimension, e.u, e.v);
+        ROS_ERROR_STREAM_COND(result > 0, "Can't remove edge (" << e.u << "," << e.v << ")");
+        ROS_INFO_STREAM_COND(result == 0, "Edge (" << e.u << "," << e.v << ") removed");*/
+        // update_graph();
+      }
+
+      for (const logistic_sim::Vertex &v : msg->ADDED_VERTEX)
+      {
+        ROS_INFO_STREAM("Adding vertex to vertex_web");
+        vertex_web = AddVertexCoord(vertex_web, dimension, v.id, v.x, v.y);
+      }
+      update_graph();
+    }
+
     if (!msg->REMOVED_EDGES.empty() || !msg->ADDED_EDGES.empty())
     {
       for (const logistic_sim::Edge &e : msg->REMOVED_EDGES)

@@ -77,7 +77,7 @@ protected:
 
   // edges that must be removed in the next token cycle
   std::vector<logistic_sim::Edge> removed_edges, added_edges;
-  std::vector<logistic_sim::Vertex> added_vertex;
+  std::vector<logistic_sim::Vertex> added_vertex, removed_vertex;
   boost::mutex edges_mutex; // used to avoid conflicts with the token thread and the main thread
   boost::mutex vertex_mutex; // used to avoid conflicts with the token thread and the main thread
 

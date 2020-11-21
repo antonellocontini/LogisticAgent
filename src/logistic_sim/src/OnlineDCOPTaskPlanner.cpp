@@ -523,9 +523,10 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
                     {7, 40},
                     {52, 50} };*/
 
-    vertex_list = { {47, 20},
-                    {48, 40},
-                    {28, 50},
+    vertex_list = { 
+                    {23, 15},
+                    {47, 40},
+                    {48, 50},
                     {7, 60} };
 
   }
@@ -584,7 +585,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     edges_mutex.unlock();
     init_token(msg, token);
   }
-  else if (removed_edges.size() != 0 || added_edges.size() != 0)
+  else if (removed_edges.size() != 0 || added_edges.size() != 0 || added_vertex.size() != 0 || removed_vertex.size() != 0)
   {
     // insert edges modifications inside token to notify the agents
     for (const logistic_sim::Edge &e : removed_edges)
@@ -598,6 +599,20 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
       token.ADDED_EDGES.push_back(e);
     }
     added_edges.clear();
+
+    // insert vertex modifications inside token to notify the agents
+    for (const logistic_sim::Vertex &v : removed_vertex)
+    {
+      token.REMOVED_VERTEX.push_back(v);
+    }
+    removed_vertex.clear();
+
+    for (const logistic_sim::Vertex &v : added_vertex)
+    {
+      token.ADDED_VERTEX.push_back(v);
+    }
+    added_vertex.clear();
+
     edges_mutex.unlock();
 
     bool property_validity = check_conflict_free_property();
@@ -638,6 +653,7 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
     token.NEED_REPAIR = true;
     token.HAS_REPAIRED_PATH = std::vector<uint8_t>(TEAM_SIZE, false);
   }
+
   else if (msg->REPAIR)
   {
     edges_mutex.unlock();
@@ -1456,10 +1472,7 @@ bool OnlineDCOPTaskPlanner::add_vertex_by_coordinates(logistic_sim::AddVertexCoo
   added_vertex.push_back(v);
 
   vertex_mutex.unlock();
-
-  // Test
-  print_graph();
-
+  
 
   ROS_DEBUG_STREAM("Adding edges to the new vertex");
   for (int i = 0; i < msg.num_neigh; i++)
