@@ -20,7 +20,7 @@ CAPACITY=3
 TP_NAME=OnlineDCOPTaskPlanner
 #GEN=null
 GEN=file
-DEBUG=false
+DEBUG=true
 MISSIONS_FILE=1.txt
 NRUNS=1
 

@@ -343,13 +343,13 @@ int AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost)
 {
 	ROS_DEBUG_STREAM("Adding forward edge");
 	int result = AddEdge_impl(vertex_web, dimension, u, v, cost);
-  if (result != 0)
-  {
-    return result;
-  }
+	if (result != 0)
+	{
+		return result;
+	}
 
 	ROS_DEBUG_STREAM("Adding backward edge");
-  return AddEdge_impl(vertex_web, dimension, v, u, cost);
+  	return AddEdge_impl(vertex_web, dimension, v, u, cost);
 }
 
 
@@ -367,8 +367,14 @@ vertex *AddVertexCoord (vertex *vertex_web, uint dimension, uint vertex_id, uint
 
 	new_vertex_web[dimension].id = vertex_id;
 	new_vertex_web[dimension].num_neigh = 0;
+
 	new_vertex_web[dimension].x = x;
+	new_vertex_web[dimension].x *= RESOLUTION; //convert to m
+    new_vertex_web[dimension].x += OFFSET_X;
+
 	new_vertex_web[dimension].y = y;
+	new_vertex_web[dimension].y *= RESOLUTION; //convert to m
+    new_vertex_web[dimension].y += OFFSET_Y;
 
 	//vertex_web = new vertex[dimension +1];
 

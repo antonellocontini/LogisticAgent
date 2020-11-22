@@ -23,6 +23,8 @@ void OnlineDCOPAgent::init(int argc, char **argv)
   std::string s = "patrol_robot" + std::to_string(ID_ROBOT);
 }
 
+
+
 void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
   if (msg->ID_RECEIVER != ID_ROBOT)
@@ -92,6 +94,8 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       {
         ROS_INFO_STREAM("Adding vertex to vertex_web");
         vertex_web = AddVertexCoord(vertex_web, dimension, v.id, v.x, v.y);
+        dimension = dimension + 1;
+        //ROS_INFO_STREAM("DIMENSION: " << dimension);
       }
       update_graph();
     }
@@ -114,12 +118,15 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       }
       update_graph();
     }
+    
 
     // last robot removes the edges from the token
     if (msg->ID_RECEIVER == TEAM_SIZE - 1)
     {
       token.REMOVED_EDGES.clear();
       token.ADDED_EDGES.clear();
+      token.REMOVED_VERTEX.clear();
+      token.ADDED_VERTEX.clear();
       token.REPAIR = false;
       token.SINGLE_PLAN_REPAIR = true;
       // reset GOAL_STATUS vector
@@ -222,6 +229,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // calculate path
         // if (ID_ROBOT % 2 == 0)
         // {
+          allocate_memory();
           plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
           if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
           {
@@ -841,6 +849,7 @@ std::vector<unsigned int> OnlineDCOPAgent::spacetime_astar_dyn_mem(
   ROS_WARN_STREAM("Can't find path!!!");
   throw std::string("Can't find path!!!");
 }
+
 
 }  // namespace onlinedcopagent
 

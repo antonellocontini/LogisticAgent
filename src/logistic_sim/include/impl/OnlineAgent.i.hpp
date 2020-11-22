@@ -43,10 +43,11 @@ std::vector<unsigned int> OnlineAgent::spacetime_dijkstra(const std::vector<logi
     std::cout << " " << waypoints[i];
   }
   std::cout << std::endl;
+  
 
   unsigned int source = waypoints.front();
   auto it_waypoints = waypoints.begin() + 1;
-
+  
   // inizializzazione strutture
   for (unsigned int i = 0; i < graph.size(); i++)
   {
