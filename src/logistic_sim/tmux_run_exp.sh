@@ -5,7 +5,7 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:${SCRIPT_DIR}/../rbkairos_sim/rbkair
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=true
 USE_KAIROS_A=true
-USE_KAIROS_B=false
+USE_KAIROS_B=true
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
 KAIROS_FRAME_A=fufi_map
@@ -16,7 +16,7 @@ KAIROS_ORDER_B=1
 INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=ice_full_20201005
-NROBOTS=1
+NROBOTS=2
 INITPOS=default
 ALG=OnlineDCOPAgent
 #LOC=AMCL
@@ -32,7 +32,7 @@ MISSIONS_FILE=1.txt
 NRUNS=1
 
 if [ "$USE_KAIROS_SIM" = "true" ]; then
-	NROBOTS=1	# only one kairos supported
+	MAP="icelab_room"
 fi
 
 function prepare_tmux {
@@ -80,7 +80,7 @@ function launch_ros {
 function launch_kairos_sim {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 x_init_pose_robot_b:=-1.0 y_init_pose_robot_b:=0.0 launch_robot_b:=true --wait" C-m
+	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 x_init_pose_robot_b:=1.299999 y_init_pose_robot_b:=-14.049999 launch_robot_b:=true --wait" C-m
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
 }
@@ -195,6 +195,7 @@ launch_ros
 
 if [ "$USE_KAIROS_SIM" = "true" ]; then
 	launch_kairos_sim
+	launch_taskplanner
 	if [ "$USE_KAIROS_A" = "true" ]; then
 		launch_real_kairos_agent "rbkairos" "rbkairos_map" "$KAIROS_ORDER_A"
 	fi
