@@ -196,10 +196,10 @@ launch_ros
 if [ "$USE_KAIROS_SIM" = "true" ]; then
 	launch_kairos_sim
 	if [ "$USE_KAIROS_A" = "true" ]; then
-		launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" "$KAIROS_ORDER_A"
+		launch_real_kairos_agent "rbkairos" "rbkairos_map" "$KAIROS_ORDER_A"
 	fi
 	if [ "$USE_KAIROS_B" = "true" ]; then
-		launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" "$KAIROS_ORDER_B"
+		launch_real_kairos_agent "rbkairos_b" "rbkairos_b_map" "$KAIROS_ORDER_B"
 	fi
 else
 	launch_stage
