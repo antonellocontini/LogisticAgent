@@ -4,6 +4,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:${SCRIPT_DIR}/../rbkairos_sim/rbkairos_gazebo/models
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=true
+KAIROS_A_SIM_X=-1.0
+KAIROS_A_SIM_Y=0.25
+KAIROS_B_SIM_X=1.3
+KAIROS_B_SIM_Y=-14.05
+
 USE_KAIROS_A=true
 USE_KAIROS_B=true
 #KAIROS_NAME=rbkairos
@@ -31,9 +36,9 @@ DEBUG=false
 MISSIONS_FILE=1.txt
 NRUNS=1
 
-if [ "$USE_KAIROS_SIM" = "true" ]; then
-	MAP="icelab_room"
-fi
+# if [ "$USE_KAIROS_SIM" = "true" ]; then
+# 	MAP="icelab_room"
+# fi
 
 function prepare_tmux {
 	n=$(( NROBOTS - 1 ))
@@ -80,7 +85,11 @@ function launch_ros {
 function launch_kairos_sim {
 	tmux selectw -t $SESSION:0
 	tmux selectp -t $SESSION:0.0
-	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 x_init_pose_robot_b:=1.299999 y_init_pose_robot_b:=-14.049999 launch_robot_b:=true --wait" C-m
+	if [ "$NROBOTS" -eq 2 ]; then
+		tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=false default_map:='icelab_room/icelab_room.yaml' gazebo_world:='worlds/icelab_room.world' x_init_pose_robot_a:=$KAIROS_A_SIM_X y_init_pose_robot_a:=$KAIROS_A_SIM_Y x_init_pose_robot_b:=$KAIROS_B_SIM_X y_init_pose_robot_b:=$KAIROS_B_SIM_Y launch_robot_b:=true --wait" C-m
+	elif [ "$NROBOTS" -eq 1 ]; then
+		tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=false default_map:='icelab_room/icelab_room.yaml' gazebo_world:='worlds/icelab_room.world' x_init_pose_robot_a:=$KAIROS_A_SIM_X y_init_pose_robot_a:=$KAIROS_A_SIM_Y x_init_pose_robot_b:=$KAIROS_B_SIM_X y_init_pose_robot_b:=$KAIROS_B_SIM_Y --wait" C-m
+	fi
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
 }
@@ -196,11 +205,11 @@ launch_ros
 if [ "$USE_KAIROS_SIM" = "true" ]; then
 	launch_kairos_sim
 	launch_taskplanner
-	if [ "$USE_KAIROS_A" = "true" ]; then
-		launch_real_kairos_agent "rbkairos" "rbkairos_map" "$KAIROS_ORDER_A"
+	if [ "$NROBOTS" -ge 1 ]; then
+		launch_real_kairos_agent "rbkairos" "rbkairos_map" "0"
 	fi
-	if [ "$USE_KAIROS_B" = "true" ]; then
-		launch_real_kairos_agent "rbkairos_b" "rbkairos_b_map" "$KAIROS_ORDER_B"
+	if [ "$NROBOTS" -ge 2 ]; then
+		launch_real_kairos_agent "rbkairos_b" "rbkairos_b_map" "1"
 	fi
 else
 	launch_stage
