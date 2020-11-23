@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:${SCRIPT_DIR}/../rbkairos_sim/rbkairos_gazebo/models
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=true
 USE_KAIROS_A=true
