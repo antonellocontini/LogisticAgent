@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
-USE_KAIROS_SIM=false
-USE_KAIROS_A=false
+USE_KAIROS_SIM=true
+USE_KAIROS_A=true
 USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
@@ -81,12 +81,6 @@ function launch_kairos_sim {
 	tmux send-keys "roslaunch rbkairos_sim_bringup rbkairos_complete.launch launch_rviz:=true default_map:='icelab_room/icelab_room.yaml' gazebo_world:='worlds/icelab_room.world' x_init_pose_robot_a:=-1.0 y_init_pose_robot_a:=0.25 --wait" C-m
 	echo "Launching Gazebo w/ Kairos..."
 	sleep 10
-}
-
-function launch_kairos_planner_agents {
-	tmux selectw -t $SESSION:1
-	tmux selectp -t $SESSION:1.0
-	tmux send-keys "roslaunch logistic_sim kairos.launch planner_type:=$TP_NAME agents_type:=$ALG robot_name:=$KAIROS_NAME agent_name:=patrol_$KAIROS_NAME mapname:=$MAP gen_type:=$GEN robot_order:=0 interactive_mode:=$INTERACTIVE_MODE --wait" C-m
 }
 
 function launch_stage {
@@ -199,7 +193,12 @@ launch_ros
 
 if [ "$USE_KAIROS_SIM" = "true" ]; then
 	launch_kairos_sim
-	launch_kairos_planner_agents
+	if [ "$USE_KAIROS_A" = "true" ]; then
+		launch_real_kairos_agent "$KAIROS_NAME_A" "$KAIROS_FRAME_A" "$KAIROS_ORDER_A"
+	fi
+	if [ "$USE_KAIROS_B" = "true" ]; then
+		launch_real_kairos_agent "$KAIROS_NAME_B" "$KAIROS_FRAME_B" "$KAIROS_ORDER_B"
+	fi
 else
 	launch_stage
 	launch_robots

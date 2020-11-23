@@ -46,7 +46,7 @@
     <arg name="robot_order" value="$(arg robot_order)" />
     <arg name="robot_name" value="$(arg robot_name)" />
     <arg name="agent_name" value="$(arg agent_name)" />
-    <arg name="map_frame" value="rbkairos_map" />
+    <!-- <arg name="map_frame" value="rbkairos_map" /> -->
     <arg name="interactive_mode" value="$(arg interactive_mode)" />
     <arg name="map_frame" value="$(arg map_frame)" />
   </include>
