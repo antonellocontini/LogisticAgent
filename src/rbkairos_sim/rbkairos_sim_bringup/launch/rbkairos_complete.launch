@@ -36,6 +36,8 @@
 	<arg name="y_init_pose_robot_b" default="0" />
 	<arg name="z_init_pose_robot_b" default="0" />
 	<arg name="yaw_init_pose_robot_b" default="0" />
+
+	<arg name="default_map" default="willow_garage/willow_garage.yaml"/> <!-- Antonello: needed to load other costmaps! -->
 	
 	<!-- RBKAIROS GAZEBO -->
 	<include file="$(find rbkairos_gazebo)/launch/rbkairos_gazebo.launch">
@@ -67,6 +69,8 @@
 		<arg name="y_init_pose_robot_b" value="$(arg y_init_pose_robot_b)"/>
 		<arg name="z_init_pose_robot_b" value="$(arg z_init_pose_robot_b)"/>
 		<arg name="yaw_init_pose_robot_b" value="$(arg yaw_init_pose_robot_b)"/>
+
+		<arg name="default_map" value="$(arg default_map)" /> <!-- Antonello: needed to load other costmaps! -->
 		
 	</include>
 	
