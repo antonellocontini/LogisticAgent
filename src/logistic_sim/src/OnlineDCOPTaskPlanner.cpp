@@ -11,8 +11,8 @@
 #include "mapf.hpp"
 
 #define EDGE_REMOVAL_TEST false
-#define VERTEX_REMOVAL_TEST true
-#define VERTEX_ADDITION_TEST true
+#define VERTEX_REMOVAL_TEST false
+#define VERTEX_ADDITION_TEST false
 
 namespace onlinedcoptaskplanner
 {
@@ -1319,6 +1319,20 @@ void OnlineDCOPTaskPlanner::advertise_add_vertex_by_coordinates_service(ros::Nod
   }
 }
 
+void OnlineDCOPTaskPlanner::advertise_remove_vertex_by_coordinates_service(ros::NodeHandle &nh)
+{
+  ROS_DEBUG_STREAM("Advertising remove_vertex_by_coordinates service");
+  remove_vertex_by_coordinates_service = nh.advertiseService("remove_vertex_by_coordinates", &OnlineDCOPTaskPlanner::remove_vertex_by_coordinates, this);
+  if (!remove_vertex_by_coordinates_service)
+  {
+    ROS_ERROR_STREAM("Can't create remove_vertex_by_coordinates service");
+  }
+  else
+  {
+    ROS_INFO_STREAM("remove_vertex_by_coordinates service advertised successfully");
+  }
+}
+
 
 void OnlineDCOPTaskPlanner::print_graph()
 {
@@ -1510,6 +1524,64 @@ bool OnlineDCOPTaskPlanner::add_vertex_by_coordinates(logistic_sim::AddVertexCoo
   return true;
 
 }
+
+
+
+bool OnlineDCOPTaskPlanner::remove_vertex_by_coordinates(logistic_sim::RemoveVertex::Request &msg, logistic_sim::RemoveVertex::Response &res)
+{
+  int result;
+  std::string time_str = current_time_str();
+  ROS_INFO_STREAM("Requested remotion of vertex " << msg.vertex_id);
+  log_ss << time_str << "\t"
+         << "Requested remotion of vertex " << msg.vertex_id
+         << "\n";
+
+  uint vertex_id = msg.vertex_id;
+  uint num_neigh = vertex_web[vertex_id].num_neigh;
+  // Edge removal
+  for (int i = 0; i < num_neigh; i++)
+  {
+    uint neigh_vertex_id = vertex_web[vertex_id].id_neigh[0];
+    ROS_INFO_STREAM("Requested remotion of edge (" << vertex_id << "," << neigh_vertex_id << ")");
+    result = RemoveEdge(vertex_web, dimension, vertex_id, neigh_vertex_id);
+    ROS_ERROR_STREAM_COND(result > 0, "Failed remotion!");
+    if (result == 0)
+    {
+      edges_mutex.lock();
+
+      logistic_sim::Edge e;
+      e.u = vertex_id;
+      e.v = neigh_vertex_id;
+      removed_edges.push_back(e);
+
+      edges_mutex.unlock();
+
+      res.result = true;
+
+    }
+    else
+    {
+      res.result = false;
+      return false;
+    }
+  }
+  // Vertex Removal
+  vertex_web = RemoveVertexCoord(vertex_web, dimension, msg.vertex_id);
+  dimension = dimension - 1;
+
+  vertex_mutex.lock();
+
+  logistic_sim::Vertex v;
+  v.id = msg.vertex_id;
+  removed_vertex.push_back(v);
+
+  vertex_mutex.unlock();
+
+  print_graph();
+
+  return true;
+}
+
 
 
 

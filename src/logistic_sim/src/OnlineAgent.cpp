@@ -761,7 +761,13 @@ std::vector<std::vector<unsigned int> > OnlineAgent::build_graph()
   {
     for (int j = 0; j < vertex_web[i].num_neigh; j++)
     {
-      result[i].push_back(vertex_web[i].id_neigh[j]);
+      for (int k = 0; k < dimension; k++)
+      {
+        if (vertex_web[k].id == vertex_web[i].id_neigh[j]) {
+          result[i].push_back(k);
+          break;
+        }
+      }
     }
   }
 

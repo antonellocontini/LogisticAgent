@@ -388,7 +388,23 @@ vertex *AddVertexCoord (vertex *vertex_web, uint dimension, uint vertex_id, uint
 }
 
 
+vertex *RemoveVertexCoord (vertex *vertex_web, uint dimension, uint vertex_id)
+{
+	// remove position in the vertex_web array
+	vertex *new_vertex_web = new vertex[dimension - 1];
 
+	int counter = 0;
+	for (int i = 0; i < dimension; i++)
+	{
+		if (vertex_web[i].id != vertex_id){
+			new_vertex_web[counter] = vertex_web[i];
+			counter++;
+		}
+	}
+
+	return new_vertex_web;
+
+}
 
 
 

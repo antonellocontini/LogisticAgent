@@ -74,6 +74,10 @@ protected:
   void advertise_add_vertex_by_coordinates_service(ros::NodeHandle &nh) override;
   bool add_vertex_by_coordinates(logistic_sim::AddVertexCoordinates::Request &msg, logistic_sim::AddVertexCoordinates::Response &res);
 
+  ros::ServiceServer remove_vertex_by_coordinates_service;
+  void advertise_remove_vertex_by_coordinates_service(ros::NodeHandle &nh) override;
+  bool remove_vertex_by_coordinates(logistic_sim::RemoveVertex::Request &msg, logistic_sim::RemoveVertex::Response &res);
+
 
   // edges that must be removed in the next token cycle
   std::vector<logistic_sim::Edge> removed_edges, added_edges;

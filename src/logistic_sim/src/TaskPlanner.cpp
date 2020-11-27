@@ -476,6 +476,7 @@ void TaskPlanner::init(int argc, char **argv)
   advertise_remove_vertex_service(nh);
   advertise_add_vertex_service(nh);
   advertise_add_vertex_by_coordinates_service(nh);
+  advertise_remove_vertex_by_coordinates_service(nh);
   initialize_amcl_callbacks(nh);
   generate_missions();
   initialize_stats_structure();
@@ -1052,6 +1053,11 @@ void TaskPlanner::advertise_change_edge_service(ros::NodeHandle &nh)
 }
 
 void TaskPlanner::advertise_add_vertex_by_coordinates_service(ros::NodeHandle &nh)
+{
+
+}
+
+void TaskPlanner::advertise_remove_vertex_by_coordinates_service(ros::NodeHandle &nh)
 {
 
 }
