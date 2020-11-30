@@ -1200,3 +1200,87 @@ aggregation:	19.1632
 allocation:	0.0994818
 aggregation:	18.007
 allocation:	0.102304
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	5.84166
+allocation:	0.399931
+aggregation:	5.99382
+allocation:	0.402184
+aggregation:	5.36795
+allocation:	0.399184
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	5.83605
+allocation:	0.399617
+aggregation:	5.91832
+allocation:	0.397309
+aggregation:	5.43842
+allocation:	0.399286
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	18.6714
+allocation:	1.09963
+aggregation:	18.9756
+allocation:	0.402202
+aggregation:	17.9946
+allocation:	0.300684
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	19.1467
+allocation:	0.999249
+aggregation:	19.4141
+allocation:	0.900829
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	19.4465
+allocation:	1.10106
+aggregation:	19.4128
+allocation:	0.897887
+aggregation:	18.382
+allocation:	0.401519
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	18.5618
+allocation:	1.1001
+aggregation:	18.924
+allocation:	0.400086
+aggregation:	17.8815
+allocation:	0.400353
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	5.82388
+allocation:	0.400378
+aggregation:	5.88147
+allocation:	0.400378
+aggregation:	5.4082
+allocation:	0.39574
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	18.4597
+allocation:	1.09986
+aggregation:	18.8949
+allocation:	0.400527
+aggregation:	17.7981
+allocation:	0.400794
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	18.6219
+allocation:	0.899338
+aggregation:	18.8145
+allocation:	0.39945
+aggregation:	17.8678
+allocation:	0.401344
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	18.7114
+allocation:	0.400165
+aggregation:	19.0159
+allocation:	0.400751
+
+icelab_black_OnlineDCOPTaskPlanner_OnlineDCOPAgent_4_1.txt
+aggregation:	18.5855
+allocation:	1.09989
+aggregation:	19.0173
+allocation:	0.399506
+aggregation:	17.94
+allocation:	0.40379

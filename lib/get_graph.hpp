@@ -31,6 +31,8 @@ int AddEdge (vertex *vertex_web, uint dimension, uint u, uint v, uint cost);
 
 vertex* AddVertexCoord (vertex *vertex_web, uint dimension, uint u, uint v, uint cost);
   
+vertex* RemoveVertexCoord (vertex *vertex_web, uint dimension, uint vertex_id);
+  
 //integer to array (itoa for linux c)
 char* itoa(int value, char* str, int radix);
 
