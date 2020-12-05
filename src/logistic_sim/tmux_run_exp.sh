@@ -9,7 +9,7 @@ KAIROS_FRAME=robot_map
 INTERACTIVE_MODE=false
 SESSION=log_sim
 MAP=icelab_black
-NROBOTS=4
+NROBOTS=2
 INITPOS=default
 ALG=OnlineDCOPAgent
 #LOC=AMCL
@@ -20,7 +20,7 @@ CAPACITY=3
 TP_NAME=OnlineDCOPTaskPlanner
 #GEN=null
 GEN=file
-DEBUG=true
+DEBUG=false
 MISSIONS_FILE=1.txt
 NRUNS=1
 

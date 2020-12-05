@@ -87,6 +87,7 @@ void OnlineAgent::allocate_memory()
   queue = new st_location[MAX_TIME * MAX_TIME];
 }
 
+
 void OnlineAgent::init(int argc, char **argv)
 {
   Agent::init(argc, argv);

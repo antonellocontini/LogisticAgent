@@ -405,6 +405,13 @@ void Agent::sendGoal(int next_vertex)
 {
     goal_canceled_by_user = false;
 
+    for (int k = 0; k < dimension; k++)
+    {
+        if (vertex_web[k].id == next_vertex) {
+            next_vertex = k;
+        }
+    }
+
     double target_x = vertex_web[next_vertex].x,
            target_y = vertex_web[next_vertex].y;
 

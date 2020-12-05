@@ -1,4 +1,5 @@
 #include "OnlineDCOPAgent.hpp"
+#include <fstream>
 
 template <class T>
 bool check_vector_equal(const std::vector<T> &v, const T &val)
@@ -87,6 +88,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         //ROS_INFO_STREAM("DIMENSION: " << dimension);
       }
       update_graph();
+      allocate_memory();
     }
 
     if (!msg->REMOVED_EDGES.empty() || !msg->ADDED_EDGES.empty())
@@ -118,6 +120,41 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // update_graph();
       }
       update_graph();
+
+      std::ofstream myfile;
+      std::string s = "/home/denis/Scrivania/test/vertex_web_" + std::to_string(msg->ID_RECEIVER) + ".txt";
+      myfile.open(s);
+      myfile << "Vertex Web\n\n";
+      for (int i = 0; i < dimension; i++)
+      {
+        myfile << "Vertex: " << vertex_web[i].id << "\n";
+        myfile << "Vertex Neigh: ";
+        for (int j = 0; j < vertex_web[i].num_neigh; j++)
+        {
+          myfile << vertex_web[i].id_neigh[j] << ", ";
+        }
+        myfile << "\n";
+      }
+
+      myfile.close();
+
+      s = "/home/denis/Scrivania/test/graph_" + std::to_string(msg->ID_RECEIVER) + ".txt";
+      myfile.open(s);
+      myfile << "Map Graph\n\n";
+      for (unsigned int i = 0; i < map_graph.size(); i++)
+      {
+        myfile << "Vertex: " << i << "\n";
+        myfile << "Vertex Neigh: ";
+        for (unsigned int j = 0; j < map_graph[i].size(); j++)
+        {
+          myfile << map_graph[i][j] << ", ";
+        }
+        myfile << "\n";
+      }
+      
+      myfile.close();
+
+      allocate_memory();
     }
     
 
@@ -230,7 +267,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         // calculate path
         // if (ID_ROBOT % 2 == 0)
         // {
-          allocate_memory();
+          //allocate_memory();
           plan_and_update_token(waypoints, robot_paths, token, first_leg, last_leg);
           if (token.TRAILS[ID_ROBOT].PATH.size() == 1 && !token.HOME_TRAILS[ID_ROBOT].PATH.empty())
           {
