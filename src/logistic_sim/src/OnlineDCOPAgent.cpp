@@ -117,13 +117,19 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         ROS_INFO_STREAM("Removing vertex from vertex_web");
         vertex_web = RemoveVertexCoord(vertex_web, dimension, v.id);
         dimension = dimension - 1;
+        if (current_vertex >= v.id)
+        {
+          current_vertex = current_vertex - 1;
+        }
         // update_graph();
       }
       update_graph();
 
-      std::ofstream myfile;
+      // TEST ONLY
+      /*std::ofstream myfile;
       std::string s = "/home/denis/Scrivania/test/vertex_web_" + std::to_string(msg->ID_RECEIVER) + ".txt";
       myfile.open(s);
+      myfile << "Current Vertex: " << current_vertex << "\n";
       myfile << "Vertex Web\n\n";
       for (int i = 0; i < dimension; i++)
       {
@@ -152,7 +158,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
         myfile << "\n";
       }
       
-      myfile.close();
+      myfile.close();*/
 
       allocate_memory();
     }
@@ -402,7 +408,7 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
     {
       for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)
       {
-        if (vertex_web[current_vertex].id_neigh[i] == next_vertex)
+        if (vertex_web[current_vertex].id_neigh[i] == vertex_web[next_vertex].id)
         {
           edge_length += vertex_web[current_vertex].cost[i];
           break;

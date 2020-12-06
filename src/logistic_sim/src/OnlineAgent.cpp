@@ -510,6 +510,7 @@ void OnlineAgent::token_priority_coordination(const logistic_sim::TokenConstPtr 
   {
     // aggiorno distanza percorsa nel token
     uint edge_length = 0;
+
     if (current_vertex < dimension)
     {
       for (int i = 0; i < vertex_web[current_vertex].num_neigh; i++)

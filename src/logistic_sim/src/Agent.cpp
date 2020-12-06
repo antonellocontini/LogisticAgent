@@ -407,7 +407,7 @@ void Agent::sendGoal(int next_vertex)
 
     for (int k = 0; k < dimension; k++)
     {
-        if (vertex_web[k].id == next_vertex) {
+        if (vertex_web[k].id == vertex_web[next_vertex].id) {
             next_vertex = k;
         }
     }
