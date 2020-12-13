@@ -10,7 +10,7 @@
 #include "mapd_time_test.hpp"
 #include "mapf.hpp"
 
-#define EDGE_REMOVAL_TEST false
+#define EDGE_REMOVAL_TEST true
 #define VERTEX_REMOVAL_TEST false
 #define VERTEX_ADDITION_TEST false
 

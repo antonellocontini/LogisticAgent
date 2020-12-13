@@ -84,6 +84,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       {
         ROS_INFO_STREAM("Adding vertex to vertex_web");
         vertex_web = AddVertexCoord(vertex_web, dimension, v.id, v.x, v.y);
+        deallocate_memory();
         dimension = dimension + 1;
         //ROS_INFO_STREAM("DIMENSION: " << dimension);
       }
@@ -116,6 +117,7 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
       {
         ROS_INFO_STREAM("Removing vertex from vertex_web");
         vertex_web = RemoveVertexCoord(vertex_web, dimension, v.id);
+        deallocate_memory();
         dimension = dimension - 1;
         if (current_vertex >= v.id)
         {

@@ -65,6 +65,7 @@ protected:
   unsigned int ***visited;
   st_location *queue;
   const unsigned int WHITE = 0, GRAY = 1, BLACK = 2, MAX_TIME = 300U, MAX_WAYPOINTS = 64U;
+  void deallocate_memory();
   void allocate_memory();
 
   // update graph and min hop matrix from the basic representation
