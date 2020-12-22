@@ -1,0 +1,8 @@
+#src_vertex: [2]
+#src_theta: [0.1016]
+#dst_vertex: [12,12,15]
+#dst_theta: [0.0742,0.0874,0.1266]
+src_vertex: [8]
+src_theta: [1.6689]
+dst_vertex: [3,3,11]
+dst_theta: [-1.4924,-1.4924,-1.4336]

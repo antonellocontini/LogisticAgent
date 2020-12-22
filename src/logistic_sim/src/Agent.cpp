@@ -69,9 +69,11 @@ void Agent::init(int argc, char **argv)
     ros::NodeHandle nh;
 
     // wait a random time (avoid conflicts with other robots starting at the same time...)
+    ROS_INFO_STREAM("Random wait...");
     double r = 3.0 * ((rand() % 1000) / 1000.0);
     ros::Duration wait(r); // seconds
     wait.sleep();
+    ROS_INFO_STREAM("Wait completed");
 
     double initial_x, initial_y;
     std::vector<double> list;
@@ -82,20 +84,35 @@ void Agent::init(int argc, char **argv)
 
     if (list.empty())
     {
-        ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
-        ros::shutdown();
-        exit(-1);
+        ROS_WARN("No initial pose given from paremeter, checking KAIROS robot coordinates...");
+        ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::Pose>(robotname + "/robot_pose", 1, boost::bind(&Agent::kairos_pose_callback, this, _1));
+        ros::Duration(0.5).sleep();
+        ros::spinOnce();
+        ros::Duration(0.5).sleep();
+        if (initial_kairos_x != -1 && initial_kairos_y != -1) {
+            reading_initial_kairos_pose = false;
+            initial_x = initial_kairos_x;
+            initial_y = initial_kairos_y;
+            ROS_INFO_STREAM("Initial pose read from kairos coordinates: " << initial_x << " " << initial_y);
+        } else {
+            ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+            ros::shutdown();
+            exit(-1);
+        }
     }
-    ROS_INFO_STREAM("initial_pos list read correctly");
-
-    int value = ID_ROBOT;
-    if (value == -1)
+    else
     {
-        value = 0;
+        ROS_INFO_STREAM("initial_pos list read correctly");
+        int value = ID_ROBOT;
+        if (value == -1)
+        {
+            value = 0;
+        }
+
+        initial_x = list[2 * value];
+        initial_y = list[2 * value + 1];
     }
 
-    initial_x = list[2 * value];
-    initial_y = list[2 * value + 1];
 
     //   printf("initial position: x = %f, y = %f\n", initial_x, initial_y);
     current_vertex = IdentifyVertex(vertex_web, dimension, initial_x, initial_y);
@@ -166,6 +183,13 @@ void Agent::init(int argc, char **argv)
     }
 
     c_print("End of initialization, reading parameters", green, P);
+}
+
+void Agent::kairos_pose_callback(const geometry_msgs::Pose::ConstPtr &msg) {
+    if (reading_initial_kairos_pose) {
+        initial_kairos_x = msg->position.x;
+        initial_kairos_y = msg->position.y;
+    }
 }
 
 void Agent::set_map_endpoints(ros::NodeHandle &nh)
@@ -420,6 +444,13 @@ void Agent::sendGoal(int next_vertex)
     //Send the goal to the robot (Global Map)
     geometry_msgs::Quaternion angle_quat;
     auto it = vertex_theta.find(next_vertex);
+    if (current_vertex >= 0 && current_vertex == next_vertex)
+    {
+        ROS_INFO("Already on goal...");
+        goal_complete = true;
+        goal_success = true;
+        return;
+    }
     if (it != vertex_theta.end())
     {
       angle_quat = tf::createQuaternionMsgFromYaw(it->second);
@@ -451,6 +482,7 @@ void Agent::sendGoal(int next_vertex)
     goal.target_pose.pose.position.x = target_x;    // vertex_web[current_vertex].x;
     goal.target_pose.pose.position.y = target_y;    // vertex_web[current_vertex].y;
     goal.target_pose.pose.orientation = angle_quat; //doesn't matter really.
+    ROS_INFO_STREAM("Sending goal to (" << target_x << "," << target_y << ") in frame " << mapframe);
     ac->sendGoal(goal, boost::bind(&Agent::goalDoneCallback, this, _1, _2), boost::bind(&Agent::goalActiveCallback, this), boost::bind(&Agent::goalFeedbackCallback, this, _1));
 }
 
