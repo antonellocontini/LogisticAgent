@@ -5,14 +5,6 @@ USE_KAIROS_SIM=false
 USE_KAIROS_A=false
 USE_KAIROS_B=false
 #KAIROS_NAME=rbkairos
-<<<<<<< HEAD
-KAIROS_NAME=robot
-KAIROS_FRAME=robot_map
-INTERACTIVE_MODE=false
-SESSION=log_sim
-MAP=icelab_black
-NROBOTS=6
-=======
 KAIROS_NAME_A=fufi
 KAIROS_FRAME_A=fufi_map
 KAIROS_NAME_B=cram
@@ -23,7 +15,6 @@ INTERACTIVE_MODE=true
 SESSION=log_sim
 MAP=ice_full_20201005
 NROBOTS=2
->>>>>>> master
 INITPOS=default
 ALG=OnlineDCOPAgent
 #LOC=AMCL
