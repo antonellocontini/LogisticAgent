@@ -9,6 +9,7 @@
   <arg name="missions_file" default="1.txt"/>
   <arg name="debug_mode" default="false"/>
   <arg name="gdb_file" default=""/>
+  <arg name="robot_names" default=""/>
 
 
   <rosparam file="$(find logistic_sim)/maps/$(arg mapname)/vertex.yaml" command="load" />
@@ -16,10 +17,10 @@
   <!-- launch without gdb -->
   <node name="task_planner" pkg="logistic_sim" type="$(arg planner_type)" output="screen"
         unless="$(arg debug_mode)"
-        args="$(arg mapname) $(arg agents_type) $(arg agents_number) $(arg gen_type) $(arg robots_capacity) $(arg missions_file)" />
+        args="$(arg mapname) $(arg agents_type) $(arg agents_number) $(arg gen_type) $(arg robots_capacity) $(arg missions_file) $(arg robot_names)" />
 
   <node name="task_planner" pkg="logistic_sim" type="$(arg planner_type)" output="screen"
         if="$(arg debug_mode)"
         launch-prefix="gdb -ex run --args"
-        args="$(arg mapname) $(arg agents_type) $(arg agents_number) $(arg gen_type) $(arg robots_capacity) $(arg missions_file)" />
+        args="$(arg mapname) $(arg agents_type) $(arg agents_number) $(arg gen_type) $(arg robots_capacity) $(arg missions_file) $(arg robot_names)" />
 </launch>

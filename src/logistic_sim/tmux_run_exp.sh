@@ -2,8 +2,8 @@
 
 #ROS_MASTER_URI=http://SXLSK-190911AA:11311
 USE_KAIROS_SIM=false
-USE_KAIROS_A=false
-USE_KAIROS_B=false
+USE_KAIROS_A=true
+USE_KAIROS_B=true
 #KAIROS_NAME=rbkairos
 KAIROS_NAME_A=fufi
 KAIROS_FRAME_A=fufi_map
@@ -65,13 +65,14 @@ function launch_ros {
 		echo "Setting ROS parameters..."
 	if [ "$USE_KAIROS_A" = "false" ] && [ "$USE_KAIROS_B" = "false" ]; then
 		tmux send-keys "rosparam set /use_sim_time True" C-m
+		tmux send-keys "rosparam set /navigation_module $NAV" C-m
+		tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
+		IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
+		tmux send-keys "./setinitposes.py $MAP 	\"$IPOSES\"" C-m
 	else
+		tmux send-keys "rosparam delete /initial_pos" C-m
 		tmux send-keys "rosparam set /use_sim_time False" C-m
 	fi
-		tmux send-keys "rosparam set /navigation_module $NAV" C-m
-	tmux send-keys "rosparam set /initial_positions $INITPOS" C-m
-	IPOSES=$(cat params/initial_poses.txt | grep "$MAP"_"$NROBOTS" | grep -o "\[.*\]")
-	tmux send-keys "./setinitposes.py $MAP 	\"$IPOSES\"" C-m
 	sleep 1
 }
 
@@ -122,7 +123,7 @@ function launch_robots {
 
 function launch_taskplanner {
 	tmux selectw -t $SESSION:3
-	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=false --wait" C-m
+	tmux send-keys "roslaunch logistic_sim task_planner.launch planner_type:=$TP_NAME mapname:=$MAP agents_type:=$ALG agents_number:=$NROBOTS gen_type:=$GEN robots_capacity:=$CAPACITY missions_file:=$MISSIONS_FILE debug_mode:=$DEBUG robot_names:='$KAIROS_NAME_A,$KAIROS_NAME_B' --wait" C-m
 	# if [ $DEBUG = true ] ; then
 	# 	if [ -f "commands_taskplanner.txt" ] ; then
 	# 		echo "Debug mode activated, gdb commands from file..."

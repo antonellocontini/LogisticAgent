@@ -174,10 +174,15 @@ protected:
   // temporaneo
   std::ofstream times_file;
 
+  bool reading_initial_kairos_pose = true;
+  std::vector<double> initial_kairos_x, initial_kairos_y;
+  std::vector<std::string> kairos_name;
+
   void write_missions_on_file(std::string filename = "");
 
   // methods needed for initialization
   void read_cmdline_parameters(int argc, char **argv);
+  void kairos_pose_callback(const geometry_msgs::Pose::ConstPtr &msg, uint robot_id);
   void set_map_endpoints(ros::NodeHandle &nh);
   void calculate_aggregation_paths();
   virtual void build_map_graph();
