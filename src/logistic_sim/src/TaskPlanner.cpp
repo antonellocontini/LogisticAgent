@@ -929,6 +929,25 @@ void TaskPlanner::read_cmdline_parameters(int argc, char **argv)
   TEAM_CAPACITY = atoi(argv[5]);
   // task set file name (if generation = FILE)
   task_set_file = argv[6];
+  std::string names = std::string(argv[7]);
+  ROS_INFO_STREAM(names);
+
+  initial_kairos_x = std::vector<double>(TEAM_SIZE);
+  initial_kairos_y = std::vector<double>(TEAM_SIZE);
+  kairos_name = std::vector<std::string>(TEAM_SIZE);
+  size_t pos = 0;
+  std::string delimiter = ",";
+  std::string str_token;
+  uint i = 0;
+  while ((pos = names.find(delimiter)) != std::string::npos) {
+    str_token = names.substr(0, pos);
+    kairos_name[i] = str_token;
+    ROS_INFO_STREAM(str_token);
+    names.erase(0, pos + delimiter.length());
+    i++;
+  }
+  ROS_INFO_STREAM(names);
+  kairos_name[i] = names;
 }
 
 void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
@@ -973,9 +992,34 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
 
   if (list.empty())
   {
-    ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
-    ros::shutdown();
+    list = std::vector<double>(TEAM_SIZE * 2);
+    for (int i=0; i<TEAM_SIZE; i++)
+    {
+      uint robot_id = i;
+      std::string robotname = kairos_name[robot_id];
+      ROS_WARN("No initial pose given from paremeter, checking KAIROS robot coordinates...");
+      ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::Pose>(robotname + "/robot_pose", 1, boost::bind(&TaskPlanner::kairos_pose_callback, this, _1, robot_id));
+      ros::Duration(0.5).sleep();
+      ros::spinOnce();
+      ros::Duration(0.5).sleep();
+      if (initial_kairos_x[robot_id] != -1 && initial_kairos_y[robot_id] != -1) {
+          list[2 * robot_id] = initial_kairos_x[robot_id];
+          list[2 * robot_id + 1] = initial_kairos_y[robot_id];
+          ROS_INFO_STREAM("Initial pose read from kairos " << robot_id << " coordinates: " << initial_kairos_x[robot_id] << " " << initial_kairos_y[robot_id]);
+      } else {
+          ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+          ros::shutdown();
+          exit(-1);
+      }
+    }
+    reading_initial_kairos_pose = false;
   }
+
+  // if (list.empty())
+  // {
+  //   ROS_ERROR("No initial positions given: check \"initial_pos\" parameter.");
+  //   ros::shutdown();
+  // }
   // read each agent home coordinates to find their home vertex
   for (int value = 0; value < TEAM_SIZE; value++)
   {
@@ -983,9 +1027,16 @@ void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
     double home_y = list[2 * value + 1];
     uint v = IdentifyVertex(vertex_web, dimension, home_x, home_y);
     home_vertex.push_back(v);
-    // std::cout << "Robot " << value << "\tVertice iniziale: " << v << std::endl;
+    ROS_INFO_STREAM("Robot " << value << " initial vertex: " << v);
   }
   ROS_INFO_STREAM("Map endpoints setted");
+}
+
+void TaskPlanner::kairos_pose_callback(const geometry_msgs::Pose::ConstPtr &msg, uint robot_id) {
+    if (reading_initial_kairos_pose) {
+        initial_kairos_x[robot_id] = msg->position.x;
+        initial_kairos_y[robot_id] = msg->position.y;
+    }
 }
 
 void TaskPlanner::calculate_aggregation_paths()
