@@ -70,6 +70,7 @@ add_service_files(
    RobotReady.srv
    AddMissions.srv
    ChangeEdge.srv
+   NewPaths.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -145,6 +146,12 @@ add_library(mapdLib
 ########################################################################################################################
 
 ## Declare a cpp executable 
+add_executable(OnlineDummyAgent src/OnlineDummyAgent.cpp src/OnlineAgent.cpp)
+add_dependencies(OnlineDummyAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+## Specify libraries to link a library or executable target against
+target_link_libraries(OnlineDummyAgent Agent algorithmsLib mapdLib ${catkin_LIBRARIES})
+
+## Declare a cpp executable 
 add_executable(OnlineDCOPAgent src/OnlineDCOPAgent.cpp src/OnlineAgent.cpp)
 add_dependencies(OnlineDCOPAgent ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
@@ -174,6 +181,11 @@ add_library(libTaskPlanner
 add_dependencies(libTaskPlanner ${PROJECT_NAME}_generate_messages_cpp  ${catkin_EXPORTED_TARGETS})
 
 ########################################################################################################################
+
+add_executable(OnlineDummyTaskPlanner src/OnlineDummyTaskPlanner.cpp src/OnlineTaskPlanner.cpp)
+add_dependencies(OnlineDummyTaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ ## Specify libraries to link a library or executable target against
+target_link_libraries(OnlineDummyTaskPlanner libTaskPlanner algorithmsLib partitionLib mapdLib ${catkin_LIBRARIES})
 
 add_executable(OnlineRecoveryMATaskPlanner src/OnlineRecoveryMATaskPlanner.cpp src/OnlineTaskPlanner.cpp)
 add_dependencies(OnlineRecoveryMATaskPlanner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

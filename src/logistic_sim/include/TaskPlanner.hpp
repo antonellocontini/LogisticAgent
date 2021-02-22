@@ -192,6 +192,7 @@ protected:
   void advertise_add_missions_service(ros::NodeHandle &nh);
   virtual void advertise_change_edge_service(ros::NodeHandle &nh);  // empty implementation, used by DCOPTaskPlanner
   bool add_missions(logistic_sim::AddMissions::Request &msg, logistic_sim::AddMissions::Response &res);
+  virtual void advertise_new_paths_service(ros::NodeHandle &nh) {} // empty implementation, used by DummyTaskPlanner
 
   std::vector<ros::Subscriber> real_pos_sub, amcl_pos_sub;
   std::vector<nav_msgs::Odometry> last_real_pos;

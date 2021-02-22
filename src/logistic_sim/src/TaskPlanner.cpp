@@ -473,6 +473,7 @@ void TaskPlanner::init(int argc, char **argv)
   advertise_robot_ready_service(nh);
   advertise_add_missions_service(nh);
   advertise_change_edge_service(nh);
+  advertise_new_paths_service(nh);
   initialize_amcl_callbacks(nh);
   generate_missions();
   initialize_stats_structure();
