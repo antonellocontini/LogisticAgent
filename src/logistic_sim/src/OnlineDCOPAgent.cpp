@@ -322,7 +322,10 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
         {
           ROS_INFO_STREAM("Task completed!");
           task_waypoints.pop_front();
-          assigned_missions.pop_front();
+          if (!assigned_missions.empty())
+          {
+            assigned_missions.pop_front();
+          }
           ROS_INFO_STREAM("Remaining missions: " << assigned_missions.size());
         }
       }
