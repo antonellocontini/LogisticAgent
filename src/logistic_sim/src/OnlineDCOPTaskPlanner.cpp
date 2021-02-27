@@ -518,7 +518,13 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
                   { 45, 49, 40, edge_modification_plan::REMOVAL },
                   { 0, 1, 50, edge_modification_plan::REMOVAL },
                   { 42, 46, 60, edge_modification_plan::REMOVAL },
-                  { 30, 31, 80, edge_modification_plan::REMOVAL } };
+                  { 30, 31, 80, edge_modification_plan::REMOVAL },
+                  // ADDITION AFTER 10 STEPS DELAY
+                  { 28, 31, 55, edge_modification_plan::ADDITION },
+                  { 45, 49, 65, edge_modification_plan::ADDITION },
+                  { 0, 1, 85, edge_modification_plan::ADDITION },
+                  { 42, 46, 100, edge_modification_plan::ADDITION },
+                  { 30, 31, 120, edge_modification_plan::ADDITION } };
     /*vertex_list = { {38, 20},
                     {7, 40},
                     {52, 50} };*/
