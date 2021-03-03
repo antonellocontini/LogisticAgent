@@ -41,10 +41,12 @@ Inside the script there are many parameters that can be configured:
 The `ALG` parameter sets which agents algorithm to run:
 * `OnlineDCOPAgent` implements the online allocation and planning algorithm
 * `OnlineCentralizedAgent` is used in conjunction with two different centralized approaches (one with optimal allocation and the other with a greedy strategy)
+* `OnlineDummyAgent` implements a dummy agent which accepts a path given through the `NewPaths` service and follows it.
 
 The `TP_NAME` parameter sets the task planner:
 * `OnlineDCOPTaskPlanner` must be used together with `OnlineDCOPAgent`
 * `OnlineGlobalTaskPlanner` and `OnlineGreedyTaskPlanner` must be used with `OnlineCentralizedAgent` and they implements the two approaches aforementioned.
+* `OnlineDummyTaskPlanner` must be used together with `OnlineDummyAgent`.
 
 The `GEN` parameter sets how the tasks are generated:
 * `uniform` creates tasks uniformly distributed in terms of delivery locations and demand values
