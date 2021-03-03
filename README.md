@@ -64,8 +64,10 @@ In this moment only the `icelab_black`,`icelab_room`,`grid` and `model5` maps ar
 If you want to use the kairos simulator the `USE_KAIROS_SIM` flag must be set to `true`.
 To use the kairos simulator its packages must be installed, instructions can be found [here](https://github.com/RobotnikAutomation/rbkairos_sim).
 
-If you want to use the real robot then the `USE_KAIROS` flag must be set to `true`.
-In this case the `ROS_MASTER_URI` must be set to the robot's one, because roscore runs on the robot.
+
+This package also supports the use of two real RB-KAIROS in conjunction with the `multimaster_fkie` package.
+
+Check out the Wiki for setup.
 
 ## Debugging
 If the `DEBUG` flag is set to `True` the agents and the task planner will run inside gdb. Custom gdb commands can be given to the robots and the taskplanner by creating specific named files inside the `src/logistic_sim` directory:
