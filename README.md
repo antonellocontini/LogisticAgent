@@ -17,9 +17,6 @@ To compile just `cd` into the repo and run `catkin_make`, if compilation fails y
 After compiling the code run `source devel/setup.bash` to add the workspace to the environment (it is good practice to add this script to your `.bashrc` file).
 
 ### Running
-There are two ways to launch the simulation, one using `tmux` (recommended) and another using `xterm`
-
-#### tmux
 To run a simulation head into the `src/logistic_sim` directory and run `./tmux_run_exp.sh`.
 
 This script uses `tmux` to organize the terminals of the different nodes so it is recommended to know at least how to switch between windows and panes. The nodes are organized in different windows:
@@ -31,9 +28,6 @@ This script uses `tmux` to organize the terminals of the different nodes so it i
 The script lands on the agents window.
 
 If you desire to terminate the simulation prematurely press ctrl-b X (assuming you're using the default tmux prefix key).
-
-#### xterm
-Inside `src/logistic_sim` directory run `./run_exp.sh` to start the simulation. To stop the simulation run `./stop_experiment.sh`
 
 #### Parameters
 Inside the script there are many parameters that can be configured:
@@ -60,7 +54,7 @@ In this example two missions are inserted, one with a single delivery location a
 
 The `NROBOTS` parameter sets the number of robots to run in the simulation, currently only configurations of 2, 4 or 6 robots are defined, but different ones can be made in the `params/initial_poses.txt` file. This file contains the starting positions of the robots for each map.
 
-In this moment only the `icelab_black`,`icelab_room`,`grid` and `model5` maps are working.
+Currently only the `ice_full_20201005`,`icelab_black`,`icelab_room`,`grid` and `model5` maps are working.
 
 ## RB-KAIROS
 If you want to use the kairos simulator the `USE_KAIROS_SIM` flag must be set to `true`.
