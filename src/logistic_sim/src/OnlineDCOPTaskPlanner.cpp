@@ -38,6 +38,10 @@ std::string current_time_filename_str()
   return std::string(c_str);
 }
 
+/*!
+  Initializes the random number generator for the local repair
+  currently the seed is fixed for reproducibility purpose
+*/
 OnlineDCOPTaskPlanner::OnlineDCOPTaskPlanner(ros::NodeHandle &nh_, const std::string &name)
   : OnlineTaskPlanner(nh_, name)
 {
@@ -501,6 +505,9 @@ void search_function(const std::vector<std::vector<uint>> &waypoints, const mapd
   return;
 }
 
+/*!
+  Initializes the edge removal for the tests
+*/
 void OnlineDCOPTaskPlanner::init(int argc, char **argv)
 {
   OnlineTaskPlanner::init(argc, argv);
@@ -557,6 +564,9 @@ void OnlineDCOPTaskPlanner::init(int argc, char **argv)
   }
 }
 
+/*!
+  Callback for handling the token
+*/
 void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
   if (msg->ID_RECEIVER != TASK_PLANNER_ID)
@@ -935,6 +945,9 @@ void OnlineDCOPTaskPlanner::token_callback(const logistic_sim::TokenConstPtr &ms
   ros::spinOnce();
 }
 
+/*!
+  Initializes the token and sets timers to detect stuck robots
+*/
 void OnlineDCOPTaskPlanner::init_token(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   token.HEADER.seq = 1;
@@ -952,6 +965,9 @@ void OnlineDCOPTaskPlanner::init_token(const logistic_sim::TokenConstPtr &msg, l
   last_goal_status = std::vector<unsigned int>(TEAM_SIZE, 0);
 }
 
+/*!
+  Implementation of the multi agent replanning
+*/
 void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   // get valid paths
@@ -1088,6 +1104,7 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 
   // mapf_attempts = 1;
 
+  // First attempt to find a path to home configuration
   ROS_INFO_STREAM("Attempt " << mapf_attempts << "/" << max_mapf_attempts << " to find a path to home configuration");
   mapf::search_tree test_mapf(map_graph, test_destination, test_mapf_is, other_paths_map);
   uint time_limit = 1 * 30;
@@ -1112,6 +1129,10 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
 
   // update last goal time to prevent shutdown
   last_goal_time = ros::Time::now();
+  // if result is not empty then MA search has found valid paths
+  // Paths are inserted in the token,
+  // MA stats are updated
+  // and token state flags are updated
   if (!result.empty())
   {
     astar_durations.push_back(total_search_duration);
@@ -1140,6 +1161,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.SUCCESSFULL_MA_REPAIR++;
     // write_statistics(token, true);
   }
+  // if search has failed and the max number of attempts
+  // has been reached, then the shutdown is issued
   else if (mapf_attempts == max_mapf_attempts)
   {
     std::string log_filename = current_time_filename_str() + ".log";
@@ -1154,6 +1177,8 @@ void OnlineDCOPTaskPlanner::multi_agent_repair(const logistic_sim::TokenConstPtr
     token.SHUTDOWN = true;
     // getc(stdin);
   }
+  // search has failed, start local search
+  // to generate a new home configuration
   else
   {
     logistic_sim::Token temp_token = token;
@@ -1225,6 +1250,8 @@ void OnlineDCOPTaskPlanner::print_graph()
   test.close();
 }
 
+// build alternative represntation for the graph
+// useful for the MA replanner
 std::vector<std::vector<unsigned int>> OnlineDCOPTaskPlanner::build_graph()
 {
   std::vector<std::vector<unsigned int>> result = std::vector<std::vector<unsigned int>>(dimension);
@@ -1239,6 +1266,7 @@ std::vector<std::vector<unsigned int>> OnlineDCOPTaskPlanner::build_graph()
   return result;
 }
 
+// callback for the /change_edge service
 bool OnlineDCOPTaskPlanner::change_edge(logistic_sim::ChangeEdge::Request &msg, logistic_sim::ChangeEdge::Response &res)
 {
   int result;
@@ -1332,9 +1360,12 @@ struct conflict_free_state
   }
 };
 
-// implements tree search but tells which robots can reach a particular vertex from home
-// for now no heuristic
-// use reverse search, search path from vertex to
+/*!
+  implementaion of the conflict free check
+  implements tree search but tells which robots can reach a particular vertex from home
+  for now no heuristic
+  use reverse search, search path from vertex to
+*/
 std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_endpoint, std::vector<uint> *homes)
 {
   std::vector<uint> destinations;
@@ -1404,6 +1435,12 @@ std::vector<bool> OnlineDCOPTaskPlanner::_check_conflict_free_impl(uint task_end
   return result;
 }
 
+/*!
+  Checks if the configuration given in input is a good home configuration
+  \param homes pointer to the tested configuration
+  \param reachability_factor pointer to double, the function writes over it the percentage of reachable homes, used by the local search heuristic
+  \param print tells whether to print debug information
+*/
 bool OnlineDCOPTaskPlanner::check_conflict_free_property(std::vector<uint> *homes, double *reachability_factor,
                                                          bool print)
 {
@@ -1916,6 +1953,16 @@ std::vector<uint> OnlineDCOPTaskPlanner::create_random_config(
   return random_config;
 }
 
+/*!
+  Implements the local search used by the MA replanner
+  Uses random restart hill-climbing to find a configuration
+  where the check_conflict_free_property() holds true.
+  Uses the number of homes reachable from the near configurations
+  as heuristic to guid the search
+  \param robot_ids vector with the ids of the agents that are replanning
+  \param other_paths vector with the paths of the agents that are not replanning
+  \param search_duration stores the duration of the local search
+*/
 std::vector<uint> OnlineDCOPTaskPlanner::local_search_recovery_config(const std::vector<std::vector<uint>> &waypoints,
                                                                       const std::vector<uint> &robot_ids,
                                                                       const std::vector<std::vector<uint>> &other_paths,
