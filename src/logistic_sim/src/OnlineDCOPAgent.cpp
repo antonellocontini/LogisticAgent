@@ -16,13 +16,19 @@ bool check_vector_equal(const std::vector<T> &v, const T &val)
 namespace onlinedcopagent
 {
 
-
+/*!
+  Sets the ROS agent name
+*/
 void OnlineDCOPAgent::init(int argc, char **argv)
 {
   onlineagent::OnlineAgent::init(argc, argv);
   std::string s = "patrol_robot" + std::to_string(ID_ROBOT);
 }
 
+
+/*!
+  Callback for handling the token
+*/
 void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
 {
   if (msg->ID_RECEIVER != ID_ROBOT)
@@ -291,6 +297,12 @@ void OnlineDCOPAgent::token_callback(const logistic_sim::TokenConstPtr &msg)
   }
 }
 
+/*!
+  Function to handle the robot movement coordination.
+  Updates statistics on distance travelled.
+  If new tasks are added of graph is modified this function
+  checks that robots are synchronized before changing state in the token
+*/
 void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   // avanzamento dei robot
@@ -455,6 +467,9 @@ void OnlineDCOPAgent::token_priority_coordination(const logistic_sim::TokenConst
   token.NEXT_VERTEX[ID_ROBOT] = next_vertex;
 }
 
+/*!
+  Calls the spacetime A* function and inserts the path in the token
+*/
 void OnlineDCOPAgent::plan_and_update_token(const std::vector<uint> &waypoints,
                                             std::vector<logistic_sim::Path> &robot_paths, logistic_sim::Token &token,
                                             std::vector<unsigned int> &first_leg, std::vector<unsigned int> &last_leg)
@@ -484,6 +499,9 @@ void OnlineDCOPAgent::plan_and_update_token(const std::vector<uint> &waypoints,
                                     token.HOME_TRAILS[ID_ROBOT].PATH.end());
 }
 
+/*!
+  Allocate a new task to the agent
+*/
 void OnlineDCOPAgent::token_priority_alloc_plan(const logistic_sim::TokenConstPtr &msg, logistic_sim::Token &token)
 {
   /* uso solo fase ALLOCATE
@@ -619,6 +637,9 @@ uint OnlineDCOPAgent::calculate_h_value(const single_agent_node &n, const std::v
   // return min_hops_matrix[n.vertex][waypoints[n.waypoint]];
 }
 
+/*!
+  TODO: complete implementation of spacetime A* using STD library structures
+*/
 std::vector<unsigned int> OnlineDCOPAgent::spacetime_astar_dyn_mem(
     const std::vector<logistic_sim::Path> &other_paths, const std::vector<std::vector<unsigned int>> &graph,
     const std::vector<unsigned int> &waypoints, const std::vector<std::vector<unsigned int>> &min_hops_matrix,
