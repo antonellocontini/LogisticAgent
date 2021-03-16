@@ -459,6 +459,10 @@ TaskPlanner::TaskPlanner(ros::NodeHandle &nh_, const std::string &name) : name(n
   nh_.setParam("/simulation_running", "true");
 }
 
+/*!
+  Initialization method for the task planner
+  Advertise services, read map graph and initializes token
+*/
 void TaskPlanner::init(int argc, char **argv)
 {
   if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug))
@@ -486,6 +490,10 @@ void TaskPlanner::init(int argc, char **argv)
   ROS_INFO("Initialization completed");
 }
 
+/*!
+  Main-thread loop
+  creates multi-item tasks starting from single-item tasks using set partition
+*/
 void TaskPlanner::run()
 {
   ROS_INFO_STREAM("Generating mission windows");
@@ -517,6 +525,11 @@ void TaskPlanner::run()
   ros::waitForShutdown();
 }
 
+/*!
+  Calculates the cost of a path given a list of waypoints
+  This function is used by the task aggregation algorithm to evaluate
+  the best way of aggregating single-item tasks
+*/
 int TaskPlanner::compute_cost_of_route(std::vector<uint> &route)
 {
   int custo_final = 0;
@@ -559,6 +572,9 @@ logistic_sim::Mission TaskPlanner::create_mission(uint type, int id)
   return m;
 }
 
+/*!
+  Inserts a window of multi-item tasks inside the token
+*/
 void TaskPlanner::insert_mission_window(std::vector<logistic_sim::Mission> &window)
 {
   // mission_windows is accessed also in the token callback thread, hence the mutex
@@ -574,6 +590,10 @@ int TaskPlanner::my_random(int n)
   return rand() % n + 1;
 }
 
+/*!
+  Generates random single-item tasks
+  Tasks differs for demand and destination
+*/
 void TaskPlanner::random_mission(uint n_missions)
 {
   std::vector<logistic_sim::Mission> r;
@@ -722,6 +742,9 @@ void TaskPlanner::missions_generator(std::string &type_gen)
   }
 }
 
+/*!
+  Callback for the /robot_ready service
+*/
 bool TaskPlanner::robot_ready(logistic_sim::RobotReady::Request &req, logistic_sim::RobotReady::Response &res)
 {
   uint id_robot = req.ID_ROBOT;
@@ -792,6 +815,11 @@ void TaskPlanner::write_missions_on_file(std::string filename)
   missions_file.close();
 }
 
+/*!
+  Aggregates single-item tasks into multi-item tasks
+  Iterates through all the possible partitions to find
+  the one with the best value (min{path/demand})
+*/
 std::vector<logistic_sim::Mission> TaskPlanner::set_partition(const std::vector<logistic_sim::Mission> &ts)
 {
   auto start = std::chrono::system_clock::now();
@@ -947,6 +975,10 @@ void TaskPlanner::read_cmdline_parameters(int argc, char **argv)
   kairos_name[i] = names;
 }
 
+/*!
+  Reads which vertices are pickup and delivery endpoints by ROS parameters
+  /src_vertex and /dst_vertex
+*/
 void TaskPlanner::set_map_endpoints(ros::NodeHandle &nh)
 {
   XmlRpc::XmlRpcValue src, dst;
@@ -1203,6 +1235,9 @@ std::vector<logistic_sim::Mission> TaskPlanner::read_simple_missions(std::istrea
   return missions;
 }
 
+/*!
+  Generates multi-item tasks based on the GENERATION command line parameter
+*/
 void TaskPlanner::generate_missions()
 {
   if (GENERATION == "null")
@@ -1291,6 +1326,9 @@ void TaskPlanner::wait_agents()
   }
 }
 
+/*!
+  Initializes token fields and sends it to the first agent
+*/
 void TaskPlanner::initialize_token()
 {
   logistic_sim::Token token;
